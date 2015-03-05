@@ -145,10 +145,10 @@ static void displayParsedBasicInfo() {
 	int memSize=getMemoryFilledSize();
 	int symbolEntries=getNumberEntriesInSymbolTable();
 #ifndef HOST_STANDALONE
-	printf("%d bytes for code, %ld bytes for symbol table (%d entries), %d bytes free\n",
+	printf("%d bytes for code, %u bytes for symbol table (%d entries), %d bytes free\n",
 			memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries, (0x8000-CORE_DATA_START)-(memSize+(symbolEntries*5)));
 #else
-	printf("%d bytes for code, %ld bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
+	printf("%d bytes for code, %u bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
 #endif
 }
 

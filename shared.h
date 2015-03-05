@@ -40,10 +40,10 @@ struct core_ctrl {
 } __attribute__((aligned(8)));
 
 struct shared_basic {
-	struct core_ctrl core_ctrl[16] __attribute__((aligned(8)));
+	struct core_ctrl core_ctrl[16];
 	unsigned int length;
 	unsigned short symbol_size;
 	char * edata, * data, allInSharedMemory;
-};
+} __attribute__((aligned(8)));
 
 #endif /* SHARED_H_ */

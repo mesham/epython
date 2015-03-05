@@ -1,5 +1,5 @@
 CC=e-gcc
-CFLAGS=-I ../ -I ../interpreter
+CFLAGS=-I ../ -I ../interpreter -O1 -Os
 LDFLAGS=-T ${EPIPHANY_HOME}/bsps/current/fast.ldf -Wl,--gc-sections
 
 ebasic-device: main.o device-functions.o ../interpreter/interpreter.o

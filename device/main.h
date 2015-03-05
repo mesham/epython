@@ -29,7 +29,7 @@
 
 #include "shared.h"
 
-extern struct shared_basic * sharedData;
+extern volatile struct shared_basic * sharedData;
 extern int myId;
 
 #endif /* MAIN_H_ */

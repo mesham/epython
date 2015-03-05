@@ -44,7 +44,7 @@ void sendData(struct value_defn, int);
 struct value_defn recvData(int);
 struct value_defn bcastData(struct value_defn, int);
 struct value_defn reduceData(struct value_defn, unsigned short);
-void cpy(void*, void *, unsigned int);
+void cpy(volatile void*, volatile void *, unsigned int);
 struct value_defn performMathsOp(unsigned short, struct value_defn);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn);
 void raiseError(char *);

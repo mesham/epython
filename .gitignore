@@ -29,3 +29,7 @@
 *.x86_64
 *.hex
 
+# Eclipse
+.project
+.cproject
+

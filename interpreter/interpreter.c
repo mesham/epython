@@ -390,7 +390,11 @@ static int determine_logical_expression(char * assembled, int currentPoint) {
 			if (expressionId == LT_TOKEN) return value1 < value2;
 			if (expressionId == LEQ_TOKEN) return value1 <= value2;
 		} else if (expression1.type == expression2.type && expression1.type == STRING_TYPE) {
-			if (expressionId == EQ_TOKEN) return checkStringEquality(expression1, expression2);
+			if (expressionId == EQ_TOKEN) {
+				return checkStringEquality(expression1, expression2);
+			} else {
+				raiseError("Can only test for equality with strings");
+			}
 		}
 	}
 	return 0;

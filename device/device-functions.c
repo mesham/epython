@@ -217,6 +217,7 @@ void sendData(struct value_defn to_send, int target) {
 	if (!sharedData->core_ctrl[target].active) {
 		raiseError("Attempting to send to inactive core");
 	} else {
+		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
 		communication_data[5]=1;
@@ -332,7 +333,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator)
 /**
  * Copies an amount of data from one core to another
  */
-void cpy(void* to, void * from, unsigned int size) {
+void cpy(volatile void* to, volatile void * from, unsigned int size) {
 	unsigned int i;
 	char *cto=(char*) to, *cfrom=(char*) from;
 	for (i=0;i<size;i++) {

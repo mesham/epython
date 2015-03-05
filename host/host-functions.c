@@ -268,7 +268,7 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 	return result;
 }
 
-void cpy(void* to, void * from, unsigned int size) {
+void cpy(volatile void* to, volatile void * from, unsigned int size) {
 	unsigned int i;
 	char *cto=(char*) to, *cfrom=(char*) from;
 	for (i=0;i<size;i++) {

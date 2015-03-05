@@ -29,7 +29,7 @@
 #include "interpreter.h"
 #include "main.h"
 
-struct shared_basic * sharedData;
+volatile struct shared_basic * sharedData;
 int myId;
 
 int main() {
