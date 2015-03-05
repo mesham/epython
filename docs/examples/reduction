@@ -1,0 +1,7 @@
+/*
+Illustration of global reduction across all cores, here we find the maximum random number - can also do min, sum and prod
+To run: ebasic reduction
+*/
+
+reduce max random % 100 into a
+print "The highest random number is "+a

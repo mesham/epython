@@ -1,0 +1,36 @@
+Epiphany Basic
+--------------------------
+This is an interpreter for a BASIC like language which will run on the Epiphany chip and allows for common parallel activities such as communication and synchronisation. Full language documentation can be found in the docs folder. Example codes can be found in docs/examples
+
+Installation
+-------------------
+Type make
+If you wish to install it (into the bin directory) then sudo make install
+
+If you do not install it then you can still run ebasic from the current directory, as ./ebasic.sh but ensure that ebasic-device.srec is in the current directory when you run the interpreter. The ebasic.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
+
+Hello world
+--------------------
+Create a file called hello, then put in the line
+print "Hello world from core "+coreid
+
+save it, and execute ebasic hello (or ./ebasic.sh hello if you have not done make install.)
+
+Each core will display the Hello world message to the screen along with their core id
+
+64 cores
+--------------
+eBASIC has been developed and tested on a 16 core Epiphany machine, if you have a 64 core chip machine then it should work (still on 16 cores), and it should be trivial to edit the source to support the full 64 cores.
+
+Troubleshooting
+----------------------------
+Often these are set by default, but if it complains that it can not find e-gcc or the libraries, then you will need to set these environment varaibles:
+
+export PATH=/opt/adapteva/esdk/tools/e-gnu/bin:$PATH
+export EPIPHANY_HOME=/opt/adapteva/esdk
+
+(you might want to place this in your .bashrc file)
+
+Rebuilding the parser/lexer
+----------------------------------------------
+To rebuild the parser and lexer too, then do make full

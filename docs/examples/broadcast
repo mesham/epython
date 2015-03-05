@@ -1,0 +1,7 @@
+/*
+Illustration of broadcasting a value from one core (0 here) to each other and displaying the result
+To run: ebasic broadcast
+*/
+
+bcast random % 100 from 0 into a
+print "The random number from core 0 is "+a

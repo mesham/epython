@@ -1,0 +1,10 @@
+/*
+Illustration of printing, core id and conditional statements
+To run: ebasic coreidentity
+*/
+
+print "Hello world from core "+coreid
+
+if coreid=0 then
+	print "Hello only from core "+coreid
+end if

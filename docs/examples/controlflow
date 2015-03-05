@@ -1,0 +1,14 @@
+/*
+Illustrates control flow, you can limit the cores run with the -c argument
+i.e. ebasic controlflow will run on all cores
+i.e. ebasic -c 1 controlflow will run on core 1 only
+i.e. ebasic -c 1,2,3,4,9 controlflow will run on cores 1,2,3,4 and 9
+i.e. ebasic -c 1:7 controlflow will run on cores 1 to 7 inclusive
+*/
+
+
+if coreid=0 or coreid=1 then
+print "Core id is 0 or 1"
+else
+print "Core id is not 0 or 1"
+end if
