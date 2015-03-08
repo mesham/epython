@@ -32,6 +32,8 @@
 #include "configuration.h"
 #ifndef HOST_STANDALONE
 #include "device-support.h"
+#else
+#define TOTAL_CORES 1
 #endif
 
 static void parseCommandLineArguments(struct ebasicconfiguration*, int, char**);
