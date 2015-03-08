@@ -40,6 +40,7 @@
 #include "interpreter.h"
 #include "device-support.h"
 #include "configuration.h"
+#include "shared.h"
 
 struct timeval tval_before[TOTAL_CORES];
 extern e_platform_t e_platform;

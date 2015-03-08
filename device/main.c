@@ -29,10 +29,13 @@
 #include "interpreter.h"
 #include "main.h"
 
+volatile e_barrier_t  barriers[TOTAL_CORES];
+e_barrier_t  *tgt_bars[TOTAL_CORES];
 volatile struct shared_basic * sharedData;
 int myId;
 
 int main() {
+	e_barrier_init(barriers, tgt_bars);
 	myId=e_group_config.core_row * e_group_config.group_cols + e_group_config.core_col;
 	sharedData=(void*) (e_emem_config.base + EXTERNAL_MEM_ABSOLUTE_START);
 

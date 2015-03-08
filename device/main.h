@@ -26,9 +26,11 @@
 
 #ifndef MAIN_H_
 #define MAIN_H_
-
+#include <e-lib.h>
 #include "shared.h"
 
+extern volatile e_barrier_t  barriers[TOTAL_CORES]; // barriers array
+extern e_barrier_t  *tgt_bars[TOTAL_CORES]; // barriers array
 extern volatile struct shared_basic * sharedData;
 extern int myId;
 

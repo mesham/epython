@@ -35,7 +35,6 @@ static char communication_data[6];
 
 static int slength(char*);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
-static void waitOnAllRecvFromAllCores();
 static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
 
@@ -254,20 +253,7 @@ struct value_defn recvData(int source) {
  * Synchronises all cores
  */
 void syncCores(void) {
-	char data;
-	int i, row, col;
-	for (i=0;i<16;i++) {
-		if (i == myId || !sharedData->core_ctrl[i].active) continue;
-		row=i/e_group_config.group_cols;
-		col=i-(row*e_group_config.group_cols);
-		data=1;
-		e_write(&e_group_config, &data, row, col, sharedData->core_ctrl[i].postbox_start + (myId*6)+5, 1);
-	}
-	waitOnAllRecvFromAllCores();
-	data=0;
-	for (i=0;i<16;i++) {
-		cpy(sharedData->core_ctrl[myId].postbox_start + (i*6)+5, &data, 1);
-	}
+	e_barrier(barriers, tgt_bars);
 }
 
 /**
@@ -338,22 +324,6 @@ void cpy(volatile void* to, volatile void * from, unsigned int size) {
 	char *cto=(char*) to, *cfrom=(char*) from;
 	for (i=0;i<size;i++) {
 		cto[i]=cfrom[i];
-	}
-}
-
-/**
- * Awaits the receiving of data from all cores
- */
-static void waitOnAllRecvFromAllCores() {
-	int i, completed=0;
-	char data;
-	while (!completed) {
-		completed=1;
-		for (i=0;i<16;i++) {
-			if (i == myId || !sharedData->core_ctrl[i].active) continue;
-			cpy(&data, sharedData->core_ctrl[myId].postbox_start + (i*6)+5, 1);
-			if (!data) completed=0;
-		}
 	}
 }
 

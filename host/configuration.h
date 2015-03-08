@@ -27,7 +27,6 @@
 #ifndef CONFIGURATION_H_
 #define CONFIGURATION_H_
 
-#define TOTAL_CORES 16
 #define VERSION_IDENT "0.1"
 
 // Configuration structure which is filled based upon command line arguments
