@@ -380,9 +380,11 @@ static int determine_logical_expression(char * assembled, int currentPoint) {
 			if (expressionId == GEQ_TOKEN) return value1 >= value2;
 			if (expressionId == LT_TOKEN) return value1 < value2;
 			if (expressionId == LEQ_TOKEN) return value1 <= value2;
-		} else if (expression1.type == expression2.type && expression1.type == REAL_TYPE) {
+		} else if (expression1.type == REAL_TYPE || expression2.type == REAL_TYPE) {
 			float value1=getFloat(expression1.data);
 			float value2=getFloat(expression2.data);
+			if (expression1.type==INT_TYPE) value1=(float) getInt(expression1.data);
+			if (expression2.type==INT_TYPE) value2=(float) getInt(expression2.data);
 			if (expressionId == EQ_TOKEN) return value1 == value2;
 			if (expressionId == NEQ_TOKEN) return value1 != value2;
 			if (expressionId == GT_TOKEN) return value1 > value2;
@@ -475,16 +477,13 @@ static struct value_defn computeExpressionResult(unsigned short operator, char *
 		float value1=getFloat(v1.data);
 		float value2=getFloat(v2.data);
 		float result;
-		if (v1.type==INT_TYPE) {
-			int iv1=getInt(v1.data);
-			value1=(float) iv1;
-		}
+		if (v1.type==INT_TYPE) value1=(float) getInt(v1.data);
 		if (v2.type==INT_TYPE) {
-			int i, iv2=getInt(v2.data);
-			value2=(float) iv2;
+			value2=(float) getInt(v2.data);
 			if (operator == POW_TOKEN) {
+				int i;
 				result=value1;
-				for (i=1;i<iv2;i++) result=result*value1;
+				for (i=1;i<(int) value2;i++) result=result*value1;
 			}
 		}
 		if (operator == ADD_TOKEN) result=value1+value2;
