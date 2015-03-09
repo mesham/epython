@@ -189,9 +189,10 @@ static void deactivateCore(struct ebasicconfiguration* configuration, int coreId
  * Initialises the cores by setting up their data structures and loading the interpreter onto the cores
  */
 static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct ebasicconfiguration* configuration) {
-	unsigned int i;
+	unsigned int i, j;
 	char allActive=1;
 	for (i=0;i<TOTAL_CORES;i++) {
+		for (j=0;j<15;j++) basicState->core_ctrl[i].data[j]=0;
 		basicState->core_ctrl[i].core_run=0;
 		basicState->core_ctrl[i].core_busy=0;
 		basicState->core_ctrl[i].core_command=0;
