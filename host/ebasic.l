@@ -52,7 +52,7 @@ STRING_CHARS [[:print:]]{-}[\"]
 \/\*					{BEGIN(COMMENTS);}
 <COMMENTS>\*\/			{BEGIN(INITIAL);}
 <COMMENTS>\n            { ++line_num; }
-<SINGLELINECOMMENT>\n	{ ++line_num;BEGIN(INITIAL); }
+<SINGLELINECOMMENT>\n	{ ++line_num;BEGIN(INITIAL); return NEWLINE; }
 <COMMENTS,SINGLELINECOMMENT>.		;
 
 \r\n|\n                                 { ++line_num; return NEWLINE; }
@@ -95,6 +95,8 @@ NOT|"!"                                 return NOT;
 ELSE                                    return ELSE;
 SEND									return SEND;
 RECV									return RECV;
+SENDRECV								return SENDRECV;
+TOFROM									return TOFROM;
 SYNC									return SYNC;
 BCAST									return BCAST;
 REDUCE									return REDUCE;
@@ -106,6 +108,9 @@ PROD									return PROD;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 END{WS}IF								return ENDIF;
+END{WS}DO								return ENDDO;
+DO										return DO;
+WHILE									return WHILE;
 LET                                     return LET;
 STOP                                    return STOP;
 FOR                                     return FOR;
@@ -118,6 +123,7 @@ THEN                                    return THEN;
 PRINT                                   return PRINT;
 INPUT                                   return INPUT;
 COREID									return COREID;
+NUMCORES								return NUMCORES;
 RANDOM									return RANDOM;
 SQRT									return SQRT;
 SIN										return SIN;

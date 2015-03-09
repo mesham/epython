@@ -37,6 +37,7 @@ static struct symbol_node * symbolTable;
 static int currentSymbolEntries;
 // The absolute ID of the local core
 static int localCoreId;
+static int numActiveCores;
 
 static int handleInput(char*, int);
 static int handleInputWithString(char*, int);
@@ -50,6 +51,8 @@ static int handleFor(char*, int);
 static int handleSend(char*, int);
 static int handleRecv(char*, int);
 static int handleRecvToArray(char*, int);
+static int handleSendRecv(char*, int);
+static int handleSendRecvArray(char*, int);
 static int handleBcast(char*, int);
 static int handleReduction(char*, int);
 static int handleSync(char*, int);
@@ -65,10 +68,12 @@ static float getFloat(void*);
 /**
  * Entry function which will process the assembled code and perform the required actions
  */
-void processAssembledCode(char * assembled, unsigned int length, unsigned short numberSymbols, int coreId) {
+void processAssembledCode(char * assembled, unsigned int length, unsigned short numberSymbols,
+		int coreId, int numberActiveCores) {
 	stopInterpreter=0;
 	currentSymbolEntries=0;
 	localCoreId=coreId;
+	numActiveCores=numberActiveCores;
 	symbolTable=initialiseSymbolTable(numberSymbols);
 	unsigned int i;
 	for (i=0;i<length;) {
@@ -90,6 +95,8 @@ void processAssembledCode(char * assembled, unsigned int length, unsigned short 
 		if (command == SEND_TOKEN) i=handleSend(assembled, i);
 		if (command == RECV_TOKEN) i=handleRecv(assembled, i);
 		if (command == RECVTOARRAY_TOKEN) i=handleRecvToArray(assembled, i);
+		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i);
+		if (command == SENDRECVARRAY_TOKEN) i=handleSendRecvArray(assembled, i);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i);
 		if (stopInterpreter) return;
@@ -200,6 +207,59 @@ static int handleRecvToArray(char * assembled, int currentPoint) {
 
 	struct value_defn retrievedData=recvData(getInt(source_expression.data));
 
+	variableSymbol->value.type=retrievedData.type;
+	char * ptr;
+	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+	cpy(ptr+(getInt(index.data) *4), retrievedData.data, 4);
+	return currentPoint;
+}
+
+/**
+ * Handles the sendrecv call, which does both P2P in one action with 1 synchronisation
+ */
+static int handleSendRecv(char * assembled, int currentPoint) {
+	unsigned short varId=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+
+	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned int);
+	struct value_defn tosend_expression=getExpressionValue(assembled, currentPoint);
+	currentPoint+=expressionLen;
+
+	expressionLen=getUInt(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned int);
+	struct value_defn target_expression=getExpressionValue(assembled, currentPoint);
+	currentPoint+=expressionLen;
+
+	variableSymbol->value=sendRecvData(tosend_expression, getInt(target_expression.data));
+	return currentPoint;
+}
+
+/**
+ * Handles the sendrecv call into an array, which does both P2P in one action with 1 synchronisation
+ */
+static int handleSendRecvArray(char * assembled, int currentPoint) {
+	unsigned short varId=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+
+	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned int);
+	struct value_defn index=getExpressionValue(assembled, currentPoint);
+	currentPoint+=expressionLen;
+
+	expressionLen=getUInt(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned int);
+	struct value_defn tosend_expression=getExpressionValue(assembled, currentPoint);
+	currentPoint+=expressionLen;
+
+	expressionLen=getUInt(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned int);
+	struct value_defn target_expression=getExpressionValue(assembled, currentPoint);
+	currentPoint+=expressionLen;
+
+	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data));
 	variableSymbol->value.type=retrievedData.type;
 	char * ptr;
 	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
@@ -380,7 +440,8 @@ static int determine_logical_expression(char * assembled, int currentPoint) {
 			if (expressionId == GEQ_TOKEN) return value1 >= value2;
 			if (expressionId == LT_TOKEN) return value1 < value2;
 			if (expressionId == LEQ_TOKEN) return value1 <= value2;
-		} else if (expression1.type == REAL_TYPE || expression2.type == REAL_TYPE) {
+		} else if ((expression1.type == REAL_TYPE || expression1.type == INT_TYPE) &&
+				(expression2.type == REAL_TYPE || expression2.type == INT_TYPE)) {
 			float value1=getFloat(expression1.data);
 			float value2=getFloat(expression2.data);
 			if (expression1.type==INT_TYPE) value1=(float) getInt(expression1.data);
@@ -423,6 +484,9 @@ static struct value_defn getExpressionValue(char * assembled, int currentPoint) 
 	} else if (expressionId == COREID_TOKEN) {
 		value.type=INT_TYPE;
 		cpy(value.data, &localCoreId, sizeof(int));
+	} else if (expressionId == NUMCORES_TOKEN) {
+		value.type=INT_TYPE;
+		cpy(value.data, &numActiveCores, sizeof(int));
 	} else if (expressionId == RANDOM_TOKEN) {
 		value=performMathsOp(RANDOM_MATHS_OP, value);
 	} else if (expressionId == MATHS_TOKEN) {

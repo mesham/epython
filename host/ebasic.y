@@ -29,9 +29,9 @@ void yyerror (char const *msg) {
 
 %token NEWLINE
 %token REM
-%token DIM SDIM LET STOP ENDIF ELSE COMMA
+%token DIM SDIM LET STOP ENDIF ENDDO ELSE COMMA DO WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN COREID SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD
+%token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
 %token ADD SUB
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
@@ -74,11 +74,14 @@ statement
 	: RECV ident FROM expression { $$=appendRecvStatement($2, $4); }
 	| RECV ident SLBRACE expression SRBRACE FROM expression { $$=appendRecvIntoArrayStatement($2, $4, $7); }
 	| SEND expression TO expression { $$=appendSendStatement($2, $4); }
+	| SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }
+	| SENDRECV expression TOFROM expression INTO ident SLBRACE expression SRBRACE { $$=appendSendRecvStatementIntoArray($2, $4, $6, $8); }
 	| BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
 	| REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
 	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	
 	| SDIM ident SLBRACE expression SRBRACE { $$=appendDeclareSharedArray($2, $4); }
 	| FOR declareident EQ expression TO expression lines NEXT { $$=appendForStatement($2, $4, $6, $7); leaveScope(); }
+	| DO openwhileblock expression lines closedoblock { $$=appendDoWhileStatement($3, $4); } 
 	| GOTO INTEGER { $$=appendGotoStatement($2); }
 	| IF expression openifblock lines closeifblock { $$=appendIfStatement($2, $4); }
 	| IF expression openifblock lines elseifblock lines closeifblock { $$=appendIfElseStatement($2, $4, $6); }
@@ -112,6 +115,13 @@ openifblock
 elseifblock
 	: ELSE { leaveScope(); enterScope(); }
 ;
+
+openwhileblock
+	: WHILE { enterScope(); }
+;
+
+closedoblock
+	: ENDDO { leaveScope(); }
 
 closeifblock
 	: ENDIF { leaveScope(); }
@@ -188,6 +198,7 @@ constant
         : INTEGER { $$=createIntegerExpression($1); }
         | REAL { $$=createRealExpression($1); }
         | COREID { $$=createCoreIdExpression(); }
+        | NUMCORES { $$=createNumCoresExpression(); }
         | RANDOM { $$=createRandomExpression(); }
 		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 		| unary_operator REAL { $$=createRealExpression($1 * $2); }

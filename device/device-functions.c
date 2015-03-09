@@ -250,6 +250,32 @@ struct value_defn recvData(int source) {
 }
 
 /**
+ * Combines the send and receive operations for a matching core. This is useful as it will block on the entire operation
+ * rather than individual ones, so can greatly ease considerations of synchronisation. Basically it sends a message,
+ * blocks on receive and then blocks on the initial send to form one overall block
+ */
+struct value_defn sendRecvData(struct value_defn to_send, int target) {
+	struct value_defn receivedData;
+	if (!sharedData->core_ctrl[target].active) {
+		raiseError("Attempting to send to inactive core");
+	} else {
+		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+		communication_data[0]=to_send.type;
+		cpy(&communication_data[1], to_send.data, 4);
+		communication_data[5]=1;
+		int row=target/e_group_config.group_cols;
+		int col=target-(row*e_group_config.group_cols);
+		e_write(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+		receivedData=recvData(target);
+		communication_data[5]=1;
+		while (communication_data[5] == 1) {
+			e_read(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+		}
+	}
+	return receivedData;
+}
+
+/**
  * Synchronises all cores
  */
 void syncCores(void) {

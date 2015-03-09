@@ -182,6 +182,15 @@ int* getArrayAddress(int size, char shared) {
 }
 
 /**
+ * Called when running in host standalone mode, the function for sending and receiving data between cores,
+ * this is empty (dummy) as in standalone mode it is on the host only.
+ */
+struct value_defn sendRecvData(struct value_defn to_send, int target) {
+	struct value_defn dummy;
+	return dummy;
+}
+
+/**
  * Called when running in host standalone mode, the function for sending data between cores, this is empty (dummy)
  * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
  */

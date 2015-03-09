@@ -50,6 +50,6 @@ struct symbol_node {
 
 extern char stopInterpreter;
 
-void processAssembledCode(char*, unsigned int, unsigned short, int);
+void processAssembledCode(char*, unsigned int, unsigned short, int, int);
 
 #endif /* INTERPRETER_H_ */

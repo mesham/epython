@@ -166,6 +166,42 @@ struct memorycontainer* appendSendStatement(struct memorycontainer* toSendExpres
 }
 
 /**
+ * Appends a sendrecv statement, which combined both p2p operations with one synchronisation
+ */
+struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target, char* identifier) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short)*2 + toSendExpression->length+target->length+ sizeof(unsigned int)*2;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+	position=appendStatement(memoryContainer, SENDRECV_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	position=appendExpression(memoryContainer, toSendExpression, position);
+	position=appendExpression(memoryContainer, target, position);
+	return memoryContainer;
+}
+
+/**
+ * Appends a sendrecv statement writing to an array, which combined both p2p operations with one synchronisation
+ */
+struct memorycontainer* appendSendRecvStatementIntoArray(struct memorycontainer* toSendExpression, struct memorycontainer* target,
+		char* identifier, struct memorycontainer* arrayIndex) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short)*2 + toSendExpression->length+target->length+arrayIndex->length+sizeof(unsigned int)*3;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+	position=appendStatement(memoryContainer, SENDRECVARRAY_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	position=appendExpression(memoryContainer, arrayIndex, position);
+	position=appendExpression(memoryContainer, toSendExpression, position);
+	position=appendExpression(memoryContainer, target, position);
+	return memoryContainer;
+}
+
+/**
  * Appends and returns the declaration of an array into shared (parallella) memory
  */
 struct memorycontainer* appendDeclareSharedArray( char* identifier, struct memorycontainer* exp1) {
@@ -256,7 +292,7 @@ struct memorycontainer* appendGotoStatement(int lineNumber) {
  * Appends and returns a for iteration. This puts in the assignment of the initial value to the variable, the normal stuff and then
  * termination check at each iteration along with jumping to next iteration if applicable
  */
-struct memorycontainer* appendForStatement( char * identifier, struct memorycontainer* exp1, struct memorycontainer* exp2, struct memorycontainer* block) {
+struct memorycontainer* appendForStatement(char * identifier, struct memorycontainer* exp1, struct memorycontainer* exp2, struct memorycontainer* block) {
 	struct memorycontainer* initialLet=appendLetStatement(identifier, exp1);
 	struct memorycontainer* incrementLet=appendLetStatement(identifier, createAddExpression(createIdentifierExpression(identifier), createIntegerExpression(1)));
 
@@ -270,7 +306,7 @@ struct memorycontainer* appendForStatement( char * identifier, struct memorycont
 	unsigned int position=0;
 
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
-	defn->next=NULL;
+	defn->next=memoryContainer->lineDefns;
 	defn->type=0;
 	defn->linenumber=currentForLine;
 	defn->currentpoint=initialLet->length;
@@ -288,6 +324,49 @@ struct memorycontainer* appendForStatement( char * identifier, struct memorycont
 	defn->linenumber=currentForLine;
 	defn->currentpoint=position;
 	memoryContainer->lineDefns=defn;
+	currentForLine--;
+	return memoryContainer;
+}
+
+/**
+ * Appends in a do while statement, which assembles down to an if statement with jump at the end of the block
+ * to retest the condition and either do another iteration or not
+ */
+struct memorycontainer* appendDoWhileStatement(struct memorycontainer* expression, struct memorycontainer* block) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short) * 2 + expression->length + (block != NULL ? block->length : 0) + (sizeof(unsigned int)*3);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+	position=appendStatement(memoryContainer, IF_TOKEN, position);
+	position=appendExpression(memoryContainer, expression, position);
+	if (block != NULL) {
+		unsigned int blockLen=block->length + 6;
+		memcpy(&memoryContainer->data[position], &blockLen, sizeof(unsigned int));
+		position+=sizeof(unsigned int);
+		position=appendStatementMemory(memoryContainer, block, position);
+	} else {
+		unsigned int blockLen=6;
+		memcpy(&memoryContainer->data[position], &blockLen, sizeof(unsigned int));
+		position+=sizeof(unsigned int);
+	}
+	position=appendStatement(memoryContainer, GOTO_TOKEN, position);
+
+	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+	defn->next=memoryContainer->lineDefns;
+	defn->type=0;
+	defn->linenumber=currentForLine;
+	defn->currentpoint=0;
+	memoryContainer->lineDefns=defn;
+
+	defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+	defn->next=memoryContainer->lineDefns;
+	defn->type=1;
+	defn->linenumber=currentForLine;
+	defn->currentpoint=position;
+	memoryContainer->lineDefns=defn;
+
 	currentForLine--;
 	return memoryContainer;
 }
@@ -474,11 +553,25 @@ struct memorycontainer* createRandomExpression() {
  */
 struct memorycontainer* createCoreIdExpression() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(int) + sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned short);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	unsigned short token=COREID_TOKEN;
+	memcpy(&memoryContainer->data[0], &token, sizeof(unsigned short));
+	return memoryContainer;
+}
+
+/**
+ * Creates a number of cores (integer) expression for getting the number of active cores
+ */
+struct memorycontainer* createNumCoresExpression() {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned short token=NUMCORES_TOKEN;
 	memcpy(&memoryContainer->data[0], &token, sizeof(unsigned short));
 	return memoryContainer;
 }

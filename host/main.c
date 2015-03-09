@@ -106,7 +106,7 @@ static void runCodeOnEpiphany(struct ebasicconfiguration* configuration) {
  * Runs the code on the host if compiled in standalone mode (helpful for development)
  */
 static void runCodeOnHost() {
-	processAssembledCode(getAssembledCode(), getMemoryFilledSize(), getNumberEntriesInSymbolTable(), 0);
+	processAssembledCode(getAssembledCode(), getMemoryFilledSize(), getNumberEntriesInSymbolTable(), 0, 1);
 }
 #endif
 

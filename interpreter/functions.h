@@ -42,6 +42,7 @@ struct symbol_node* initialiseSymbolTable(int);
 int* getArrayAddress(int,char);
 void sendData(struct value_defn, int);
 struct value_defn recvData(int);
+struct value_defn sendRecvData(struct value_defn, int);
 struct value_defn bcastData(struct value_defn, int);
 struct value_defn reduceData(struct value_defn, unsigned short);
 void cpy(volatile void*, volatile void *, unsigned int);

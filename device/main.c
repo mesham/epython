@@ -43,7 +43,10 @@ int main() {
 	sharedData->core_ctrl[myId].core_busy=1;
 	sharedData->core_ctrl[myId].core_run=1;
 
-	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId);
+	int activeCores=0, i;
+	for (i=0;i<TOTAL_CORES;i++) if (sharedData->core_ctrl[i]->active) activeCores++;
+
+	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, activeCores);
 	sharedData->core_ctrl[myId].core_busy=0;
 	sharedData->core_ctrl[myId].core_run=0;
 	return 0;
