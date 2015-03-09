@@ -219,11 +219,13 @@ void sendData(struct value_defn to_send, int target) {
 		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
-		communication_data[5]=1;
+		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
+		communication_data[5]=syncValues[target];
 		int row=target/e_group_config.group_cols;
 		int col=target-(row*e_group_config.group_cols);
 		e_write(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
-		while (communication_data[5] == 1) {
+		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
+		while (communication_data[5] != syncValues[target]) {
 			e_read(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
 		}
 	}
@@ -238,10 +240,12 @@ struct value_defn recvData(int source) {
 		raiseError("Attempting to receive from inactive core");
 	} else {
 		cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
-		while (communication_data[5] != 1) {
+		syncValues[source]=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		while (communication_data[5] != syncValues[source]) {
 			cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
 		}
-		communication_data[5]=0;
+		syncValues[source]=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		communication_data[5]=syncValues[source];
 		cpy(sharedData->core_ctrl[myId].postbox_start + (source*6), communication_data, 6);
 		to_recv.type=communication_data[0];
 		cpy(to_recv.data, &communication_data[1], 4);
@@ -262,13 +266,13 @@ struct value_defn sendRecvData(struct value_defn to_send, int target) {
 		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
-		communication_data[5]=1;
+		communication_data[5]=syncValues[target]==255 ? 0 : syncValues[target]+1;
 		int row=target/e_group_config.group_cols;
 		int col=target-(row*e_group_config.group_cols);
 		e_write(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
 		receivedData=recvData(target);
-		communication_data[5]=1;
-		while (communication_data[5] == 1) {
+		communication_data[5]=syncValues[target]==0 ? 255 : syncValues[target]-1;
+		while (communication_data[5] != syncValues[target]) {
 			e_read(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
 		}
 	}
@@ -312,13 +316,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator)
 	}
 	for (i=0;i<16;i++) {
 		if (i == myId || !sharedData->core_ctrl[i].active) continue;
-		if (i < myId) {
-			sendData(to_send, i);
-			retrieved=recvData(i);
-		} else {
-			retrieved=recvData(i);
-			sendData(to_send, i);
-		}
+		retrieved=sendRecvData(to_send, i);
 		if (to_send.type==INT_TYPE) {
 			cpy(&tempInt, retrieved.data, sizeof(int));
 			if (operator==0) intV+=tempInt;

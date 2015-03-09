@@ -32,6 +32,7 @@
 extern volatile e_barrier_t  barriers[TOTAL_CORES]; // barriers array
 extern e_barrier_t  *tgt_bars[TOTAL_CORES]; // barriers array
 extern volatile struct shared_basic * sharedData;
+extern volatile char syncValues[TOTAL_CORES];
 extern int myId;
 
 #endif /* MAIN_H_ */

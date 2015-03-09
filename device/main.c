@@ -31,6 +31,7 @@
 
 volatile e_barrier_t  barriers[TOTAL_CORES];
 e_barrier_t  *tgt_bars[TOTAL_CORES];
+volatile char syncValues[TOTAL_CORES];
 volatile struct shared_basic * sharedData;
 int myId;
 
@@ -44,7 +45,10 @@ int main() {
 	sharedData->core_ctrl[myId].core_run=1;
 
 	int activeCores=0, i;
-	for (i=0;i<TOTAL_CORES;i++) if (sharedData->core_ctrl[i].active) activeCores++;
+	for (i=0;i<TOTAL_CORES;i++) {
+		syncValues[i]=0;
+		if (sharedData->core_ctrl[i].active) activeCores++;
+	}
 
 	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, activeCores);
 	sharedData->core_ctrl[myId].core_busy=0;
