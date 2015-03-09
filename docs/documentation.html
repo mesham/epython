@@ -31,7 +31,7 @@ a=a+b
 print b
 </pre>
 <h3>Arrays</h3>
-The language supports arrays of integers and reals via the <i>dim</i> and <i>sdim</i> statements. The first will allocate the array into the default location (which will be core memory unless overridden by command line arguments) and the second, <i>sdim</i>, will allocate into shared memory which is larger but slower to access.
+The language supports one dimensional arrays of integers and reals via the <i>dim</i> and <i>sdim</i> statements. The first will allocate the array into the default location (which will be core memory unless overridden by command line arguments) and the second, <i>sdim</i>, will allocate into shared memory which is larger but slower to access.
 <pre>
 dim a[100]
 for i=0 to 99
@@ -52,8 +52,14 @@ print "Hello world from core "+coreid
 </pre>
 <pre>
 if coreid=0 then
-print "Hello only from core "+coreid
+  print "Hello only from core "+coreid
 end if
+</pre>
+
+<h3>numcores</h3>
+This expression determines the number of cores (integer) that the BASIC code was run with.
+<pre>
+print "Number of cores: "+numcores
 </pre>
 
 <h3>Point to point communication</h3>
@@ -66,6 +72,23 @@ else if coreid = 1 then
   print "Got value "+a+" from core 0"
 end if
 end if
+</pre>
+
+<h3>Sendrecv</h3>
+With the <i>sendrecv</i> command the programmer can send some data to and receive from another core in the same statement. Most importantly there is only one blocking point for both of these operations, rather than two if implemented as separate send and recv calls. This is especially useful in halo swapping code.
+<pre>
+a=0
+b=0
+if coreid > 0 then
+  // Message left core with my core id
+  sendrecv coreid tofrom coreid-1 into a
+end if
+
+if coreid < numcores-1 then
+  // Message right core with my core id
+  sendrecv coreid tofrom coreid+1 into b
+end if
+print "Values are "+a+" and "+b
 </pre>
 
 <h3>Collective communication</h3>
@@ -92,21 +115,31 @@ print "After sync from core "+coreid
 <section>
 <a name="flow"></a>
 <h2>Control flow</h2>
+Code blocks have their own scope, i.e. if a variable is declared in a block (first seen) then it will only be available to that block and sub blocks.
 <h3>Conditional</h3>
 eBASIC implements conditionals via the <i>if</i> statement, <i>if expression then then-block end if</i> or <i>if expression then then-block else else-block end if</i> or <i>if expression then statement</i>. The later is constrained to a single statement (on the same line) whereas the other two can have any number of statements, including other conditionals in their <i>then-block</I> or <i>else-block</i>. The <i>expression</i> should be a logical expression and eBASIC supports, = (equality test), != (not equals), < (smaller than), <= (smaller or equals), > (greater than) and >= (greater or equals.) It is also possible to and expressions together via <i>and</i>, you can also or expressions via <i>or</i>. Note the only operator supported for strings is equality testing. It is possible to combine integers and reals when testing, in such cases integers are tested as floats.
 <pre>
 if coreid=0 or coreid=1 then
-print "Core id is 0 or 1"
+  print "Core id is 0 or 1"
 else
-print "Core id is not 0 or 1"
+  print "Core id is not 0 or 1"
 end if
 </pre>
-<h3>Loops</h3>
-Loops are implemented via the <i>for</i> keyword, <i>for identifier=expression1 to expression2 block next</i> . Where identifier is the variable holding the integer index (it is created if does not already exist) and set to be the result of <i>expression1</i> initially. On each iteration it is incremented by 1 and will continue to loop until it passes the integer value of <i>expression2</i> .
+<h3>For loops</h3>
+For loops are implemented via the <i>for</i> keyword, <i>for identifier=expression1 to expression2 block next</i> . Where identifier is the variable holding the integer index (it is created if does not already exist) and set to be the result of <i>expression1</i> initially. On each iteration it is incremented by 1 and will continue to loop until it passes the integer value of <i>expression2</i> .
 <pre>
 for i=1 to 10
-print "iteration "+i
+  print "iteration "+i
 next
+</pre>
+<h3>Do while loops</h3>
+Do while loops are more flexible than the for loop as these continue whilst some condition is true. They are implemented via the <i>do while</i> keyword, <i>do while expression block end do</i>.
+<pre>
+i=0
+do while i<10
+  print i
+  i=i+1
+end do
 </pre>
 <h3>Goto</h3>
 Optionally lines can be given a line number (provided at the start of the line) and the <i>goto</i> statement can be used to set control flow to that line.
