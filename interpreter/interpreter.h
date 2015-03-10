@@ -45,7 +45,7 @@ struct value_defn {
 // A node in the symbol table - its id and value
 struct symbol_node {
 	unsigned short id;
-	struct value_defn value __attribute__((aligned(4)));
+	struct value_defn value __attribute__((aligned(8)));
 };
 
 extern char stopInterpreter;
