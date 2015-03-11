@@ -28,6 +28,7 @@
 #include "shared.h"
 #include "interpreter.h"
 #include "main.h"
+#include "functions.h"
 
 volatile e_barrier_t  barriers[TOTAL_CORES];
 e_barrier_t  *tgt_bars[TOTAL_CORES];
@@ -48,6 +49,10 @@ int main() {
 	for (i=0;i<TOTAL_CORES;i++) {
 		syncValues[i]=0;
 		if (sharedData->core_ctrl[i].active) activeCores++;
+	}
+
+	if (sharedData->codeOnCores) {
+		cpy(sharedData->edata, sharedData->esdata, sharedData->length);
 	}
 
 	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, activeCores);

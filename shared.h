@@ -44,7 +44,7 @@ struct shared_basic {
 	struct core_ctrl core_ctrl[16];
 	unsigned int length;
 	unsigned short symbol_size;
-	char * edata, * data, allInSharedMemory;
+	char *edata, *data, *esdata, allInSharedMemory, codeOnCores;
 } __attribute__((aligned(8)));
 
 #endif /* SHARED_H_ */

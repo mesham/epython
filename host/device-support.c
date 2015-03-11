@@ -42,6 +42,8 @@
 #include "configuration.h"
 #include "shared.h"
 
+#define SYMBOL_TABLE_EXTRA 2
+
 struct timeval tval_before[TOTAL_CORES];
 extern e_platform_t e_platform;
 e_mem_t management_DRAM;
@@ -98,6 +100,7 @@ struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configura
 	}
 	basicCode->symbol_size=getNumberEntriesInSymbolTable();
 	basicCode->allInSharedMemory=configuration->forceDataOnShared;
+	basicCode->codeOnCores=codeOnCore==1;
 
 	initialiseCores(basicCode, codeOnCore, configuration);
 	placeBasicCode(basicCode, codeOnCore, configuration->intentActive);
@@ -197,7 +200,8 @@ static void initialiseCores(struct shared_basic * basicState, int codeOnCore, st
 		basicState->core_ctrl[i].core_busy=0;
 		basicState->core_ctrl[i].core_command=0;
 		basicState->core_ctrl[i].symbol_table=(void*) CORE_DATA_START;
-		basicState->core_ctrl[i].postbox_start=(void*) (CORE_DATA_START+(basicState->symbol_size*sizeof(struct symbol_node))+(codeOnCore?basicState->length:0));
+		basicState->core_ctrl[i].postbox_start=(void*) (CORE_DATA_START+(basicState->symbol_size*
+				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA))+(codeOnCore?basicState->length:0));
 		if (!configuration->forceDataOnShared) {
 			// If on core then store after the symbol table and code
 			basicState->core_ctrl[i].data_start=basicState->core_ctrl[i].postbox_start+100;
@@ -256,20 +260,15 @@ static int doesFileExist(char * filename) {
  * Places the bytecode representation of the users BASIC code onto the cores
  */
 static void placeBasicCode(struct shared_basic * basicState, int codeOnCore, char * intentActive) {
-	unsigned int i;
+	basicState->data=(void*) (SHARED_CODE_AREA_START+management_DRAM.base);
+	basicState->esdata=(void*) (SHARED_CODE_AREA_START+(void*)management_DRAM.ephy_base);
+	memcpy(basicState->data, getAssembledCode(), basicState->length);
 	if (!codeOnCore) {
-		basicState->data=(void*) (SHARED_CODE_AREA_START+management_DRAM.base);
-		basicState->edata=(void*) (SHARED_CODE_AREA_START+(void*)management_DRAM.ephy_base);
-		memcpy(basicState->data, getAssembledCode(), basicState->length);
+		basicState->edata=basicState->esdata;
 	} else {
-		// Place code after symbol table (which is 5 bytes per entry)
-		basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*sizeof(struct symbol_node));
-		for (i=0;i<TOTAL_CORES;i++) {
-			if (intentActive[i]) {
-				int row=i/epiphany.cols;
-				e_write(&epiphany, row, i-(row*epiphany.cols), (off_t) basicState->edata, getAssembledCode(), basicState->length);
-			}
-		}
+		// Place code after symbol table
+		basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*
+				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA));
 	}
 }
 
