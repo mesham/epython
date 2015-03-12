@@ -1743,7 +1743,7 @@ yyreduce:
         case 2:
 /* Line 1787 of yacc.c  */
 #line 55 "ebasic.y"
-    { setMemory((yyvsp[(1) - (1)].data)); }
+    { compileMemory((yyvsp[(1) - (1)].data)); }
     break;
 
   case 4:

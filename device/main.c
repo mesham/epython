@@ -30,14 +30,18 @@
 #include "main.h"
 #include "functions.h"
 
-volatile e_barrier_t  barriers[TOTAL_CORES];
-e_barrier_t  *tgt_bars[TOTAL_CORES];
+volatile e_barrier_t syncbarriers[TOTAL_CORES], collectivebarriers[TOTAL_CORES];
+e_barrier_t *sync_tgt_bars[TOTAL_CORES], *collective_tgt_bars[TOTAL_CORES];
 volatile char syncValues[TOTAL_CORES];
 volatile struct shared_basic * sharedData;
-int myId;
+int myId, lowestCoreId;
 
+static void init_barrier(volatile e_barrier_t[], e_barrier_t *[]);
+
+/**
+ * Core entry point, sets the stuff up and then runs the interpreter
+ */
 int main() {
-	e_barrier_init(barriers, tgt_bars);
 	myId=e_group_config.core_row * e_group_config.group_cols + e_group_config.core_col;
 	sharedData=(void*) (e_emem_config.base + EXTERNAL_MEM_ABSOLUTE_START);
 
@@ -46,17 +50,47 @@ int main() {
 	sharedData->core_ctrl[myId].core_run=1;
 
 	int activeCores=0, i;
+	lowestCoreId=TOTAL_CORES;
 	for (i=0;i<TOTAL_CORES;i++) {
 		syncValues[i]=0;
-		if (sharedData->core_ctrl[i].active) activeCores++;
+		if (sharedData->core_ctrl[i].active) {
+			if (i< lowestCoreId) lowestCoreId=i;
+			activeCores++;
+		}
 	}
+
+	init_barrier(syncbarriers, sync_tgt_bars);
+	init_barrier(collectivebarriers, collective_tgt_bars);
 
 	if (sharedData->codeOnCores) {
 		cpy(sharedData->edata, sharedData->esdata, sharedData->length);
 	}
 
+	syncCores();
 	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, activeCores);
 	sharedData->core_ctrl[myId].core_busy=0;
 	sharedData->core_ctrl[myId].core_run=0;
 	return 0;
+}
+
+/**
+ * Initialises an Epiphany barrier, this is based upon the version in elib, but works when core 0 is not in use
+ * and over a subset of cores
+ */
+static void init_barrier(volatile e_barrier_t barrier_array[], e_barrier_t  * target_barrier_array[]) {
+	int i, row, col;
+	for (i=0; i<TOTAL_CORES; i++)
+		barrier_array[i] = 0;
+
+	if (myId == lowestCoreId) {
+		for (i=0; i<TOTAL_CORES; i++) {
+			row=i/e_group_config.group_cols;
+			col=i-(row*e_group_config.group_cols);
+			target_barrier_array[i] = (e_barrier_t *) e_get_global_address(row, col, (void *) &(barrier_array[0]));
+		}
+	} else {
+		row=lowestCoreId/e_group_config.group_cols;
+		col=lowestCoreId-(row*e_group_config.group_cols);
+		target_barrier_array[0] = (e_barrier_t *) e_get_global_address(row, col, (void *) &(barrier_array[myId]));
+	}
 }

@@ -52,7 +52,7 @@ void yyerror (char const *msg) {
 
 %%
 
-program : lines { setMemory($1); }
+program : lines { compileMemory($1); }
 
 lines
         : line

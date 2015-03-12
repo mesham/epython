@@ -36,26 +36,30 @@ struct memorycontainer* assembledMemory=NULL;
 static unsigned int findLocationOfLineNumber(struct lineDefinition*, int);
 
 /**
- * Sets the memory at the end by going through and resolving relative links (i.e. gotos)
+ * Compiles the memory by going through and resolving relative links (i.e. gotos) and adds a stop at the end
  */
-void setMemory(struct memorycontainer* memory) {
+void compileMemory(struct memorycontainer* memory) {
+	struct memorycontainer* stopStatement=appendStopStatement();
 	if (memory != NULL) {
-		struct lineDefinition * root=memory->lineDefns, *r2;
+		struct memorycontainer* compiledMem=appendMemory(memory, stopStatement);
+		struct lineDefinition * root=compiledMem->lineDefns, *r2;
 		while (root != NULL) {
 			if (root->type==1) {
-				unsigned int lineLocation=findLocationOfLineNumber(memory->lineDefns, root->linenumber);
-				memcpy(&memory->data[root->currentpoint], &lineLocation, sizeof(unsigned int));
+				unsigned int lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
+				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned int));
 			}
 			root=root->next;
 		}
 		// Clear up the memory used for these line definition nodes
-		root=memory->lineDefns;
+		root=compiledMem->lineDefns;
 		while (root != NULL) {
 			r2=root->next;
 			free(root);
 			root=r2;
 		}
-		assembledMemory=memory;
+		assembledMemory=compiledMem;
+	} else {
+		assembledMemory=stopStatement;
 	}
 }
 

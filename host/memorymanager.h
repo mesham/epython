@@ -29,7 +29,7 @@
 
 #include "byteassembler.h"
 
-void setMemory(struct memorycontainer*);
+void compileMemory(struct memorycontainer*);
 void setLineNumber(struct memorycontainer*, int);
 struct memorycontainer* appendMemory(struct memorycontainer*, struct memorycontainer*);
 unsigned int appendStatement(struct memorycontainer*, unsigned short, unsigned int);

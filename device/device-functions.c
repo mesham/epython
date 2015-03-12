@@ -30,10 +30,11 @@
 #include "interpreter.h"
 #include <e-lib.h>
 
-static unsigned int localDataEntries=0, sharedDataEntries=0;
-static char communication_data[6];
+volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
+volatile static char communication_data[6];
 
 static int slength(char*);
+static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
 static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
@@ -223,10 +224,11 @@ void sendData(struct value_defn to_send, int target) {
 		communication_data[5]=syncValues[target];
 		int row=target/e_group_config.group_cols;
 		int col=target-(row*e_group_config.group_cols);
-		e_write(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+		char * remoteMemory=(char*) e_get_global_address(row, col, sharedData->core_ctrl[target].postbox_start + (myId*6));
+		cpy(remoteMemory, communication_data, 6);
 		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
 		while (communication_data[5] != syncValues[target]) {
-			e_read(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+			cpy(communication_data, remoteMemory, 6);
 		}
 	}
 }
@@ -269,11 +271,12 @@ struct value_defn sendRecvData(struct value_defn to_send, int target) {
 		communication_data[5]=syncValues[target]==255 ? 0 : syncValues[target]+1;
 		int row=target/e_group_config.group_cols;
 		int col=target-(row*e_group_config.group_cols);
-		e_write(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+		char * remoteMemory=(char*) e_get_global_address(row, col, sharedData->core_ctrl[target].postbox_start + (myId*6));
+		cpy(remoteMemory, communication_data, 6);
 		receivedData=recvData(target);
 		communication_data[5]=syncValues[target]==0 ? 255 : syncValues[target]-1;
 		while (communication_data[5] != syncValues[target]) {
-			e_read(&e_group_config, communication_data, row, col, sharedData->core_ctrl[myId].postbox_start + (myId*6), 6);
+			cpy(communication_data, remoteMemory, 6);
 		}
 	}
 	return receivedData;
@@ -283,7 +286,34 @@ struct value_defn sendRecvData(struct value_defn to_send, int target) {
  * Synchronises all cores
  */
 void syncCores(void) {
-	e_barrier(barriers, tgt_bars);
+	performBarrier(syncbarriers, sync_tgt_bars);
+}
+
+/**
+ * Performs a barrier, based on the version in elib but works over a subset of cores (based on coreid) and when
+ * core 0 is not in use
+ */
+static void performBarrier(volatile e_barrier_t barrier_array[], e_barrier_t  * target_barrier_array[]) {
+	// Barrier as a Flip-Flop
+	if (myId == lowestCoreId) {
+		int i;
+		barrier_array[myId] = 1;
+		// poll on all slots
+		for (i=1; i<TOTAL_CORES; i++) {
+			if (sharedData->core_ctrl[i].active) while (barrier_array[i] == 0) {};
+		}
+		for (i=0; i<TOTAL_CORES; i++) {
+			if (sharedData->core_ctrl[i].active) barrier_array[i] = 0;
+		}
+		// set remote slots
+		for (i=1; i<TOTAL_CORES; i++) {
+			if (sharedData->core_ctrl[i].active) *(target_barrier_array[i]) = 1;
+		}
+	} else {
+		*(target_barrier_array[0]) = 1;
+		while (barrier_array[0] == 0) {};
+		barrier_array[0] = 0;
+	}
 }
 
 /**
@@ -314,6 +344,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator)
 	} else {
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
+	performBarrier(collectivebarriers, collective_tgt_bars);
 	for (i=0;i<16;i++) {
 		if (i == myId || !sharedData->core_ctrl[i].active) continue;
 		retrieved=sendRecvData(to_send, i);
