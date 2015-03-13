@@ -338,7 +338,7 @@ struct memorycontainer* appendForStatement(char * identifier, struct memoryconta
  */
 struct memorycontainer* appendDoWhileStatement(struct memorycontainer* expression, struct memorycontainer* block) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + expression->length + (block != NULL ? block->length : 0) + (sizeof(unsigned short)*2);
+	memoryContainer->length=sizeof(unsigned short) * 4 + expression->length + (block != NULL ? block->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -346,12 +346,12 @@ struct memorycontainer* appendDoWhileStatement(struct memorycontainer* expressio
 	position=appendStatement(memoryContainer, IF_TOKEN, position);
 	position=appendMemory(memoryContainer, expression, position);
 	if (block != NULL) {
-		unsigned short blockLen=(unsigned short) block->length + 6;
+		unsigned short blockLen=(unsigned short) block->length + 4;
 		memcpy(&memoryContainer->data[position], &blockLen, sizeof(unsigned short));
 		position+=sizeof(unsigned short);
 		position=appendMemory(memoryContainer, block, position);
 	} else {
-		unsigned short blockLen=6;
+		unsigned short blockLen=4;
 		memcpy(&memoryContainer->data[position], &blockLen, sizeof(unsigned short));
 		position+=sizeof(unsigned short);
 	}
@@ -380,7 +380,7 @@ struct memorycontainer* appendDoWhileStatement(struct memorycontainer* expressio
  */
 struct memorycontainer* appendIfStatement(struct memorycontainer* expressionContainer, struct memorycontainer* thenBlock) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + expressionContainer->length + sizeof(unsigned short) +
+	memoryContainer->length=sizeof(unsigned short)*2 + expressionContainer->length +
 			(thenBlock != NULL ? thenBlock->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
@@ -407,7 +407,7 @@ struct memorycontainer* appendIfStatement(struct memorycontainer* expressionCont
 struct memorycontainer* appendIfElseStatement(struct memorycontainer* expressionContainer, struct memorycontainer* thenBlock,
 		struct memorycontainer* elseBlock) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + expressionContainer->length + (sizeof(unsigned short)*2) +
+	memoryContainer->length=sizeof(unsigned short)*4 + expressionContainer->length +
 			(thenBlock != NULL ? thenBlock->length : 0) + (elseBlock != NULL ? elseBlock->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
@@ -416,7 +416,7 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
 	position=appendStatement(memoryContainer, IFELSE_TOKEN, position);
 	position=appendMemory(memoryContainer, expressionContainer, position);
 
-	unsigned short combinedThenGotoLength=(unsigned short) (thenBlock != NULL ? thenBlock->length : 0)+6;
+	unsigned short combinedThenGotoLength=(unsigned short) (thenBlock != NULL ? thenBlock->length : 0)+4;
 	memcpy(&memoryContainer->data[position], &combinedThenGotoLength, sizeof(unsigned short));
 	position+=sizeof(unsigned short);
 
