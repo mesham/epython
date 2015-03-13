@@ -33,7 +33,7 @@
 // This is set at the end of parsing to be the entire byte code representation of the users BASIC program
 struct memorycontainer* assembledMemory=NULL;
 
-static unsigned int findLocationOfLineNumber(struct lineDefinition*, int);
+static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
 
 /**
  * Compiles the memory by going through and resolving relative links (i.e. gotos) and adds a stop at the end
@@ -41,12 +41,12 @@ static unsigned int findLocationOfLineNumber(struct lineDefinition*, int);
 void compileMemory(struct memorycontainer* memory) {
 	struct memorycontainer* stopStatement=appendStopStatement();
 	if (memory != NULL) {
-		struct memorycontainer* compiledMem=appendMemory(memory, stopStatement);
+		struct memorycontainer* compiledMem=concatenateMemory(memory, stopStatement);
 		struct lineDefinition * root=compiledMem->lineDefns, *r2;
 		while (root != NULL) {
 			if (root->type==1) {
-				unsigned int lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
-				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned int));
+				unsigned short lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
+				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
 			}
 			root=root->next;
 		}
@@ -66,9 +66,9 @@ void compileMemory(struct memorycontainer* memory) {
 /**
  * Given a line number will return the byte location of this in the memory
  */
-static unsigned int findLocationOfLineNumber(struct lineDefinition * root, int lineNumber) {
+static unsigned short findLocationOfLineNumber(struct lineDefinition * root, int lineNumber) {
 	while (root != NULL) {
-		if (root->type==0 && root->linenumber == lineNumber) return root->currentpoint;
+		if (root->type==0 && root->linenumber == lineNumber) return (unsigned short) root->currentpoint;
 		root=root->next;
 	}
 	fprintf(stderr, "Can not find line %d in goto\n", lineNumber);
@@ -90,7 +90,7 @@ void setLineNumber(struct memorycontainer* memory, int lineNumber) {
 /**
  * Concatenates two memory structures together and returns the result of this
  */
-struct memorycontainer* appendMemory(struct memorycontainer* m1, struct memorycontainer* m2) {
+struct memorycontainer* concatenateMemory(struct memorycontainer* m1, struct memorycontainer* m2) {
 	if (m1 == NULL) return m2;
 	if (m2 == NULL) return m1;
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
@@ -134,10 +134,9 @@ unsigned int appendVariable(struct memorycontainer* memory, unsigned short varia
 }
 
 /**
- * Appends a complex statement with memory container to some memory, but does not include the length of this
- *  - i.e. it is a statement rather than expression, and returns the new current location (for next entry)
+ * Appends some memory to some other existing memory at a specific location
  */
-unsigned int appendStatementMemory(struct memorycontainer* memory, struct memorycontainer* statement, unsigned int position) {
+unsigned int appendMemory(struct memorycontainer* memory, struct memorycontainer* statement, unsigned int position) {
 	memcpy(&memory->data[position], statement->data, statement->length);
 
 	struct lineDefinition * root=statement->lineDefns, *r2;
@@ -153,31 +152,6 @@ unsigned int appendStatementMemory(struct memorycontainer* memory, struct memory
 	// Free up the statement memory
 	free(statement->data);
 	free(statement);
-	return position;
-}
-
-/**
- * Appends an expression to some memory (which includes the length of this at the start),
- * and returns the new current location (for next entry)
- */
-unsigned int appendExpression(struct memorycontainer* memory, struct memorycontainer* expression, unsigned int position) {
-	memcpy(&memory->data[position], &expression->length, sizeof(unsigned int));
-	position+=sizeof(unsigned int);
-	memcpy(&memory->data[position], expression->data, expression->length);
-
-	struct lineDefinition * root=expression->lineDefns, *r2;
-	while (root != NULL) {
-		root->currentpoint+=position;
-		r2=root->next;
-		root->next=memory->lineDefns;
-		memory->lineDefns=root;
-		root=r2;
-	}
-	position+=expression->length;
-
-	// Free up the expression memory
-	free(expression->data);
-	free(expression);
 	return position;
 }
 

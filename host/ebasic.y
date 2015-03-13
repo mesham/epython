@@ -56,7 +56,7 @@ program : lines { compileMemory($1); }
 
 lines
         : line
-        | lines line { $$=appendMemory($1, $2); }
+        | lines line { $$=concatenateMemory($1, $2); }
 ;
 
 line

@@ -284,3 +284,7 @@ void cpy(volatile void* to, volatile void * from, unsigned int size) {
 		cto[i]=cfrom[i];
 	}
 }
+
+int slength(char * v) {
+	return strlen(v);
+}

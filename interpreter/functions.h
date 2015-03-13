@@ -50,5 +50,6 @@ struct value_defn performMathsOp(unsigned short, struct value_defn);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn);
 void raiseError(char *);
 void syncCores(void);
+int slength(char*);
 
 #endif /* FUNCTIONS_H_ */

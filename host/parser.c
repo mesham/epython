@@ -1749,7 +1749,7 @@ yyreduce:
   case 4:
 /* Line 1787 of yacc.c  */
 #line 59 "ebasic.y"
-    { (yyval.data)=appendMemory((yyvsp[(1) - (2)].data), (yyvsp[(2) - (2)].data)); }
+    { (yyval.data)=concatenateMemory((yyvsp[(1) - (2)].data), (yyvsp[(2) - (2)].data)); }
     break;
 
   case 5:

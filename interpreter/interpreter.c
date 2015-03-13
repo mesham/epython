@@ -57,10 +57,9 @@ static int handleBcast(char*, int);
 static int handleReduction(char*, int);
 static int handleSync(char*, int);
 static struct symbol_node* getVariableSymbol(unsigned short);
-static struct value_defn getExpressionValue(char*, int);
-static int determine_logical_expression(char*, int);
-static struct value_defn computeExpressionResult(unsigned short, char*, int);
-static unsigned int getUInt(void*);
+static struct value_defn getExpressionValue(char*, int*);
+static int determine_logical_expression(char*, int*);
+static struct value_defn computeExpressionResult(unsigned short, char*, int*);
 static unsigned short getUShort(void*);
 static int getInt(void*);
 static float getFloat(void*);
@@ -115,15 +114,8 @@ static int handleSync(char * assembled, int currentPoint) {
  * Sending of data from one core to another
  */
 static int handleSend(char * assembled, int currentPoint) {
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn to_send_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn target_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn to_send_expression=getExpressionValue(assembled, &currentPoint);
+	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
 
 	sendData(to_send_expression, getInt(target_expression.data));
 	return currentPoint;
@@ -139,10 +131,7 @@ static int handleReduction(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value=reduceData(broadcast_expression, reductionOperator);
 	return currentPoint;
@@ -156,15 +145,8 @@ static int handleBcast(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn source_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
+	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value=bcastData(broadcast_expression, getInt(source_expression.data));
 	return currentPoint;
@@ -178,10 +160,7 @@ static int handleRecv(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn source_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value=recvData(getInt(source_expression.data));
 	return currentPoint;
@@ -195,15 +174,8 @@ static int handleRecvToArray(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn index=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn source_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn index=getExpressionValue(assembled, &currentPoint);
+	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 
 	struct value_defn retrievedData=recvData(getInt(source_expression.data));
 
@@ -222,15 +194,8 @@ static int handleSendRecv(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn tosend_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn target_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint);
+	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value=sendRecvData(tosend_expression, getInt(target_expression.data));
 	return currentPoint;
@@ -244,20 +209,9 @@ static int handleSendRecvArray(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn index=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn tosend_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn target_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn index=getExpressionValue(assembled, &currentPoint);
+	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint);
+	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
 
 	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data));
 	variableSymbol->value.type=retrievedData.type;
@@ -271,7 +225,7 @@ static int handleSendRecvArray(char * assembled, int currentPoint) {
  * Goto some absolute location in the byte code
  */
 static int handleGoto(char * assembled, int currentPoint) {
-	return getUInt(&assembled[currentPoint]);
+	return getUShort(&assembled[currentPoint]);
 }
 
 /**
@@ -282,16 +236,12 @@ static int handleFor(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn to_expression=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	unsigned int blockLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
+	struct value_defn to_expression=getExpressionValue(assembled, &currentPoint);
+	unsigned short blockLen=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
 
 	if (getInt(variableSymbol->value.data) <= getInt(to_expression.data)) return currentPoint;
-	currentPoint+=blockLen+sizeof(unsigned short) + sizeof(unsigned int); // For the goto at end
+	currentPoint+=blockLen+sizeof(unsigned short)*2;
 	return currentPoint;
 }
 
@@ -299,13 +249,10 @@ static int handleFor(char * assembled, int currentPoint) {
  * Conditional, with or without else block
  */
 static int handleIf(char * assembled, int currentPoint) {
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	int conditionalResult=determine_logical_expression(assembled, currentPoint);
-	currentPoint+=expressionLen;
-	if (conditionalResult) return currentPoint+sizeof(unsigned int);
-	unsigned int blockLen=getUInt(&assembled[currentPoint]);
-	return currentPoint+sizeof(unsigned int)+blockLen;
+	int conditionalResult=determine_logical_expression(assembled, &currentPoint);
+	if (conditionalResult) return currentPoint+sizeof(unsigned short);
+	unsigned short blockLen=getUShort(&assembled[currentPoint]);
+	return currentPoint+sizeof(unsigned short)+blockLen;
 }
 
 /**
@@ -328,10 +275,7 @@ static int handleInputWithString(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn string_display=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn string_display=getExpressionValue(assembled, &currentPoint);
 	variableSymbol->value=getInputFromUserWithString(string_display);
 	return currentPoint;
 }
@@ -340,10 +284,7 @@ static int handleInputWithString(char * assembled, int currentPoint) {
  * Print some value to the user
  */
 static int handlePrint(char * assembled, int currentPoint) {
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn result=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn result=getExpressionValue(assembled, &currentPoint);
 	displayToUser(result);
 	return currentPoint;
 }
@@ -356,10 +297,7 @@ static int handleDimArray(char * assembled, int currentPoint, char inSharedMemor
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn size=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn size=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value.type=INT_TYPE;
 	int * address=getArrayAddress(getInt(size.data), inSharedMemory);
@@ -375,15 +313,8 @@ static int handleArraySet(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn index=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
-
-	expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	struct value_defn value=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	struct value_defn index=getExpressionValue(assembled, &currentPoint);
+	struct value_defn value=getExpressionValue(assembled, &currentPoint);
 
 	variableSymbol->value.type=value.type;
 	char * ptr;
@@ -400,37 +331,25 @@ static int handleLet(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 
-	unsigned int expressionLen=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
-	variableSymbol->value=getExpressionValue(assembled, currentPoint);
-	currentPoint+=expressionLen;
+	variableSymbol->value=getExpressionValue(assembled, &currentPoint);
 	return currentPoint;
 }
 
 /**
  * Determines a logical expression based upon two operands and an operator
  */
-static int determine_logical_expression(char * assembled, int currentPoint) {
-	unsigned short expressionId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
+static int determine_logical_expression(char * assembled, int * currentPoint) {
+	unsigned short expressionId=getUShort(&assembled[*currentPoint]);
+	*currentPoint+=sizeof(unsigned short);
 	if (expressionId == AND_TOKEN || expressionId == OR_TOKEN) {
-		unsigned int expr1_len=getUInt(&assembled[currentPoint]);
-		currentPoint+=sizeof(unsigned int);
 		int s1=determine_logical_expression(assembled, currentPoint);
-		currentPoint+=expr1_len + sizeof(unsigned int);
 		int s2=determine_logical_expression(assembled, currentPoint);
 		if (expressionId == AND_TOKEN) return s1 && s2;
 		if (expressionId == OR_TOKEN) return s1 || s2;
 	} else if (expressionId == EQ_TOKEN || expressionId == NEQ_TOKEN || expressionId == GT_TOKEN || expressionId == GEQ_TOKEN ||
 			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN) {
-		unsigned int expr1_len=getUInt(&assembled[currentPoint]);
-		currentPoint+=sizeof(unsigned int);
 		struct value_defn expression1=getExpressionValue(assembled, currentPoint);
-		currentPoint+=expr1_len;
-		unsigned int expr2_len=getUInt(&assembled[currentPoint]);
-		currentPoint+=sizeof(unsigned int);
 		struct value_defn expression2=getExpressionValue(assembled, currentPoint);
-		currentPoint+=expr2_len;
 		if (expression1.type == expression2.type && expression1.type == INT_TYPE) {
 			int value1=getInt(expression1.data);
 			int value2=getInt(expression2.data);
@@ -466,21 +385,24 @@ static int determine_logical_expression(char * assembled, int currentPoint) {
 /**
  * Gets the value of an expression, which is number, string, identifier or mathematical
  */
-static struct value_defn getExpressionValue(char * assembled, int currentPoint) {
+static struct value_defn getExpressionValue(char * assembled, int * currentPoint) {
 	struct value_defn value;
 
-	unsigned short expressionId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
+	unsigned short expressionId=getUShort(&assembled[*currentPoint]);
+	*currentPoint+=sizeof(unsigned short);
 	if (expressionId == INTEGER_TOKEN) {
 		value.type=INT_TYPE;
-		cpy(value.data, &assembled[currentPoint], sizeof(int));
+		cpy(value.data, &assembled[*currentPoint], sizeof(int));
+		*currentPoint+=sizeof(int);
 	} else if (expressionId == REAL_TOKEN) {
 		value.type=REAL_TYPE;
-		cpy(value.data, &assembled[currentPoint], sizeof(float));
+		cpy(value.data, &assembled[*currentPoint], sizeof(float));
+		*currentPoint+=sizeof(float);
 	} else if (expressionId == STRING_TOKEN) {
 		value.type=STRING_TYPE;
-		char * strPtr=assembled + currentPoint;
+		char * strPtr=assembled + *currentPoint;
 		cpy(&value.data, &strPtr, sizeof(char*));
+		*currentPoint+=(slength(strPtr)+1);
 	} else if (expressionId == COREID_TOKEN) {
 		value.type=INT_TYPE;
 		cpy(value.data, &localCoreId, sizeof(int));
@@ -490,16 +412,15 @@ static struct value_defn getExpressionValue(char * assembled, int currentPoint) 
 	} else if (expressionId == RANDOM_TOKEN) {
 		value=performMathsOp(RANDOM_MATHS_OP, value);
 	} else if (expressionId == MATHS_TOKEN) {
-		unsigned short maths_op=getUShort(&assembled[currentPoint]);
-		currentPoint+=sizeof(unsigned short);
+		unsigned short maths_op=getUShort(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(unsigned short);
 		value=performMathsOp(maths_op, getExpressionValue(assembled, currentPoint));
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
-		unsigned short variable_id=getUShort(&assembled[currentPoint]);
-		currentPoint+=sizeof(unsigned short);
+		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(unsigned short);
 		struct symbol_node* variableSymbol=getVariableSymbol(variable_id);
 		value=variableSymbol->value;
 		if (expressionId == ARRAYACCESS_TOKEN) {
-			currentPoint+=sizeof(unsigned int);
 			struct value_defn index=getExpressionValue(assembled, currentPoint);
 			char * ptr;
 			cpy(&ptr, variableSymbol->value.data, sizeof(int*));
@@ -516,13 +437,10 @@ static struct value_defn getExpressionValue(char * assembled, int currentPoint) 
  * Computes the result of a simple mathematical expression, if one is a real and the other an integer
  * then raises to be a real
  */
-static struct value_defn computeExpressionResult(unsigned short operator, char * assembled, int currentPoint) {
+static struct value_defn computeExpressionResult(unsigned short operator, char * assembled, int * currentPoint) {
 	struct value_defn value;
 
-	unsigned int exp1_len=getUInt(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned int);
 	struct value_defn v1=getExpressionValue(assembled, currentPoint);
-	currentPoint+=sizeof(unsigned int) + exp1_len;
 	struct value_defn v2=getExpressionValue(assembled, currentPoint);
 	value.type=v1.type==INT_TYPE && v2.type==INT_TYPE ? INT_TYPE : v1.type==STRING_TYPE || v2.type==STRING_TYPE ? STRING_TYPE : REAL_TYPE;
 	if (value.type==INT_TYPE) {
@@ -597,16 +515,6 @@ static int getInt(void* data) {
 static float getFloat(void* data) {
 	float v;
 	cpy(&v, data, sizeof(float));
-	return v;
-}
-
-/**
- * Helper method to get an unsigned integer from data (needed as casting to integer directly requires 4 byte alignment
- * which we do not want to enforce as it wastes memory.)
- */
-static unsigned int getUInt(void* data) {
-	unsigned int v;
-	cpy(&v, data, sizeof(unsigned int));
 	return v;
 }
 

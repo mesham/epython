@@ -33,7 +33,6 @@
 volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
 volatile static char communication_data[6];
 
-static int slength(char*);
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
 static struct value_defn doGetInputFromUser();
@@ -397,7 +396,7 @@ static int copyStringToSharedMemoryAndSetLocation(char * string, int start) {
 /**
  * Gets the length of a string
  */
-static int slength(char * v) {
+int slength(char * v) {
 	int i=0;
 	while (v[i]!='\0') i++;
 	return i;

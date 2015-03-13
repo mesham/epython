@@ -31,10 +31,9 @@
 
 void compileMemory(struct memorycontainer*);
 void setLineNumber(struct memorycontainer*, int);
-struct memorycontainer* appendMemory(struct memorycontainer*, struct memorycontainer*);
+struct memorycontainer* concatenateMemory(struct memorycontainer*, struct memorycontainer*);
 unsigned int appendStatement(struct memorycontainer*, unsigned short, unsigned int);
-unsigned int appendStatementMemory(struct memorycontainer*, struct memorycontainer*, unsigned int);
-unsigned int appendExpression(struct memorycontainer*, struct memorycontainer*, unsigned int);
+unsigned int appendMemory(struct memorycontainer*, struct memorycontainer*, unsigned int);
 unsigned int appendVariable(struct memorycontainer*, unsigned short, unsigned int);
 unsigned int getMemoryFilledSize(void);
 void setMemoryFilledSize(unsigned int);
