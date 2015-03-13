@@ -550,8 +550,7 @@ struct memorycontainer* createRandomExpression() {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=RANDOM_TOKEN;
-	memcpy(&memoryContainer->data[0], &token, sizeof(unsigned short));
+	appendStatement(memoryContainer, RANDOM_TOKEN, 0);
 	return memoryContainer;
 }
 
@@ -564,8 +563,7 @@ struct memorycontainer* createCoreIdExpression() {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=COREID_TOKEN;
-	memcpy(&memoryContainer->data[0], &token, sizeof(unsigned short));
+	appendStatement(memoryContainer, COREID_TOKEN, 0);
 	return memoryContainer;
 }
 
@@ -578,8 +576,7 @@ struct memorycontainer* createNumCoresExpression() {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=NUMCORES_TOKEN;
-	memcpy(&memoryContainer->data[0], &token, sizeof(unsigned short));
+	appendStatement(memoryContainer, NUMCORES_TOKEN, 0);
 	return memoryContainer;
 }
 
@@ -592,10 +589,7 @@ struct memorycontainer* createIntegerExpression(int number) {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=INTEGER_TOKEN;
-	unsigned int location=0;
-	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned short));
-	location+=sizeof(unsigned short);
+	int location=appendStatement(memoryContainer, INTEGER_TOKEN, 0);
 	memcpy(&memoryContainer->data[location], &number, sizeof(int));
 	return memoryContainer;
 }
@@ -609,10 +603,7 @@ struct memorycontainer* createRealExpression(float number) {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=REAL_TOKEN;
-	unsigned int location=0;
-	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned short));
-	location+=sizeof(unsigned short);
+	int location=appendStatement(memoryContainer, REAL_TOKEN, 0);
 	memcpy(&memoryContainer->data[location], &number, sizeof(float));
 	return memoryContainer;
 }
@@ -626,11 +617,8 @@ struct memorycontainer* createIdentifierExpression( char * identifier) {
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=IDENTIFIER_TOKEN, var_id=getVariableId(identifier, 0);
-	unsigned int location=0;
-	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned short));
-	location+=sizeof(unsigned short);
-	memcpy(&memoryContainer->data[location], &var_id, sizeof(unsigned short));
+	int location=appendStatement(memoryContainer, IDENTIFIER_TOKEN, 0);
+	appendVariable(memoryContainer, getVariableId(identifier, 0), location);
 	return memoryContainer;
 }
 
@@ -819,8 +807,7 @@ static struct memorycontainer* createExpression(unsigned short token, struct mem
 	memoryContainer->lineDefns=NULL;
 
 	unsigned int location=0;
-	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned short));
-	location+=sizeof(unsigned short);
+	location=appendStatement(memoryContainer, token, location);
 	memcpy(&memoryContainer->data[location], expression1->data, expression1->length);
 	location+=expression1->length;
 	memcpy(&memoryContainer->data[location], expression2->data, expression2->length);

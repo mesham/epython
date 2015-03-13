@@ -11,8 +11,9 @@ for i=0 to 66
   re = x
   im = y
   for j=0 to 20
-    re = re*re - im*im + x
+    re_next = re*re - im*im + x
     im = 2*re*im + y
+    re=re_next
   next
   if re*re + im*im < 4 then
     outstr = outstr+"#"
