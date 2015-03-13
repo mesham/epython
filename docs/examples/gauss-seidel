@@ -29,7 +29,7 @@ for i=1 to local_size
 next
 reduce sum tmpnorm into tmpnorm
 bnorm=sqrt tmpnorm
-
+sync
 norm=1.0
 its=0
 do while norm >= 1e-4 and its < MAX_ITS
