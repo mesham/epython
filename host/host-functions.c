@@ -175,9 +175,11 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		int totalLen=strlen(str1)+21;
 		char * newString=(char*) malloc(totalLen);
 		if (v2.type==INT_TYPE) {
-			sprintf(newString,"%s%d", str1, *((int*) v2.data));
+			int int_v=*((int*) v2.data);
+			sprintf(newString,"%s%d", str1, int_v);
 		} else if (v2.type==REAL_TYPE) {
-			sprintf(newString,"%s%f", str1, *((float*) v2.data));
+			float f=*((float*) v2.data);
+			sprintf(newString,"%s%f", str1, f);
 		}
 		cpy(&result.data, &newString, sizeof(char*));
 	} else {
@@ -186,9 +188,11 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		int totalLen=strlen(str2)+21;
 		char * newString=(char*) malloc(totalLen);
 		if (v1.type==INT_TYPE) {
-			sprintf(newString,"%d%s", *((int*) v1.data), str2);
+			int int_v=*((int*) v2.data);
+			sprintf(newString,"%d%s", int_v, str2);
 		} else if (v2.type==REAL_TYPE) {
-			sprintf(newString,"%f%s", *((float*) v1.data), str2);
+			float f=*((float*) v1.data);
+			sprintf(newString,"%f%s", f, str2);
 		}
 		cpy(&result.data, &newString, sizeof(char*));
 	}
