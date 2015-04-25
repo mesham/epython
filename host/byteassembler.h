@@ -77,6 +77,8 @@ struct memorycontainer* createIntegerExpression(int);
 struct memorycontainer* createIdentifierExpression(char*);
 struct memorycontainer* createIdentifierArrayAccessExpression(char*, struct memorycontainer*);
 struct memorycontainer* createNumberExpression(float);
+struct memorycontainer* createIsHostExpression(void);
+struct memorycontainer* createIsDeviceExpression(void);
 struct memorycontainer* createOrExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createAndExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createEqExpression(struct memorycontainer*, struct memorycontainer*);

@@ -611,6 +611,18 @@ static int determine_logical_expression(char * assembled, int * currentPoint) {
 				raiseError("Can only test for equality with strings");
 			}
 		}
+	} else if (expressionId == ISHOST_TOKEN) {
+#ifdef HOST_INTERPRETER
+		return 1;
+#else
+		return 0;
+#endif
+	} else if (expressionId == ISDEVICE_TOKEN) {
+#ifdef HOST_INTERPRETER
+		return 0;
+#else
+		return 1;
+#endif
 	}
 	return 0;
 }

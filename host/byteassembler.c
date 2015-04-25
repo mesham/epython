@@ -639,6 +639,26 @@ struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, 
 	return memoryContainer;
 }
 
+struct memorycontainer* createIsHostExpression(void) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	appendStatement(memoryContainer, ISHOST_TOKEN, 0);
+	return memoryContainer;
+}
+
+struct memorycontainer* createIsDeviceExpression(void) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	appendStatement(memoryContainer, ISDEVICE_TOKEN, 0);
+	return memoryContainer;
+}
+
 struct memorycontainer* createOrExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	return createExpression(OR_TOKEN, expression1, expression2);
 }

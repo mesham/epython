@@ -88,37 +88,39 @@ extern int yydebug;
      TOFROM = 297,
      ADD = 298,
      SUB = 299,
-     MULT = 300,
-     DIV = 301,
-     MOD = 302,
-     AND = 303,
-     OR = 304,
-     NEQ = 305,
-     LEQ = 306,
-     GEQ = 307,
-     LT = 308,
-     GT = 309,
-     EQ = 310,
-     NOT = 311,
-     SQRT = 312,
-     SIN = 313,
-     COS = 314,
-     TAN = 315,
-     ASIN = 316,
-     ACOS = 317,
-     ATAN = 318,
-     SINH = 319,
-     COSH = 320,
-     TANH = 321,
-     FLOOR = 322,
-     CEIL = 323,
-     LOG = 324,
-     LOG10 = 325,
-     LPAREN = 326,
-     RPAREN = 327,
-     SLBRACE = 328,
-     SRBRACE = 329,
-     POW = 330
+     ISHOST = 300,
+     ISDEVICE = 301,
+     MULT = 302,
+     DIV = 303,
+     MOD = 304,
+     AND = 305,
+     OR = 306,
+     NEQ = 307,
+     LEQ = 308,
+     GEQ = 309,
+     LT = 310,
+     GT = 311,
+     EQ = 312,
+     NOT = 313,
+     SQRT = 314,
+     SIN = 315,
+     COS = 316,
+     TAN = 317,
+     ASIN = 318,
+     ACOS = 319,
+     ATAN = 320,
+     SINH = 321,
+     COSH = 322,
+     TANH = 323,
+     FLOOR = 324,
+     CEIL = 325,
+     LOG = 326,
+     LOG10 = 327,
+     LPAREN = 328,
+     RPAREN = 329,
+     SLBRACE = 330,
+     SRBRACE = 331,
+     POW = 332
    };
 #endif
 /* Tokens.  */
@@ -164,37 +166,39 @@ extern int yydebug;
 #define TOFROM 297
 #define ADD 298
 #define SUB 299
-#define MULT 300
-#define DIV 301
-#define MOD 302
-#define AND 303
-#define OR 304
-#define NEQ 305
-#define LEQ 306
-#define GEQ 307
-#define LT 308
-#define GT 309
-#define EQ 310
-#define NOT 311
-#define SQRT 312
-#define SIN 313
-#define COS 314
-#define TAN 315
-#define ASIN 316
-#define ACOS 317
-#define ATAN 318
-#define SINH 319
-#define COSH 320
-#define TANH 321
-#define FLOOR 322
-#define CEIL 323
-#define LOG 324
-#define LOG10 325
-#define LPAREN 326
-#define RPAREN 327
-#define SLBRACE 328
-#define SRBRACE 329
-#define POW 330
+#define ISHOST 300
+#define ISDEVICE 301
+#define MULT 302
+#define DIV 303
+#define MOD 304
+#define AND 305
+#define OR 306
+#define NEQ 307
+#define LEQ 308
+#define GEQ 309
+#define LT 310
+#define GT 311
+#define EQ 312
+#define NOT 313
+#define SQRT 314
+#define SIN 315
+#define COS 316
+#define TAN 317
+#define ASIN 318
+#define ACOS 319
+#define ATAN 320
+#define SINH 321
+#define COSH 322
+#define TANH 323
+#define FLOOR 324
+#define CEIL 325
+#define LOG 326
+#define LOG10 327
+#define LPAREN 328
+#define RPAREN 329
+#define SLBRACE 330
+#define SRBRACE 331
+#define POW 332
 
 
 
@@ -211,7 +215,7 @@ typedef union YYSTYPE
 
 
 /* Line 2053 of yacc.c  */
-#line 215 "parser.h"
+#line 219 "parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

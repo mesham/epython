@@ -92,6 +92,8 @@ NOT|"!"                                 return NOT;
 "]"										return SRBRACE;
 "("                                     return LPAREN;
 ")"                                     return RPAREN;
+ISHOST									return ISHOST;
+ISDEVICE								return ISDEVICE;
 ELSE                                    return ELSE;
 SEND									return SEND;
 RECV									return RECV;

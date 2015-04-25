@@ -33,14 +33,14 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
-%token ADD SUB
+%token ADD SUB ISHOST ISDEVICE
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE
 
 %left ADD SUB
 %left MULT DIV MOD
 %left AND OR
-%left NEQ LEQ GEQ LT GT EQ
+%left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE
 %right NOT
 %right POW
 
@@ -145,6 +145,8 @@ equality_expression
 	: relational_expression { $$=$1; }
 	| equality_expression EQ relational_expression { $$=createEqExpression($1, $3); }
 	| equality_expression NEQ relational_expression { $$=createNeqExpression($1, $3); }
+	| ISHOST { $$=createIsHostExpression(); }
+	| ISDEVICE { $$=createIsDeviceExpression(); }
 ;
 
 relational_expression
