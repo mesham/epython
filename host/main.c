@@ -61,7 +61,7 @@ void loadByteCode(char*);
 static void runCodeOnHost(struct ebasicconfiguration*);
 static void * runSpecificHostProcess(void*);
 #ifndef HOST_STANDALONE
-static void runCodeOnEpiphany(void*);
+static void* runCodeOnEpiphany(void*);
 #endif
 
 /*
@@ -107,11 +107,12 @@ static void doParse(char * contents) {
 /*
  * Runs the code on the Epiphany cores, acts as a monitor whilst it is running and then finalises the cores afterwards
  */
-static void runCodeOnEpiphany(void * raw_configuration) {
+static void* runCodeOnEpiphany(void * raw_configuration) {
 	struct ebasicconfiguration* configuration=(struct ebasicconfiguration*) raw_configuration
 	struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
 	monitorCores(deviceState, configuration);
 	finaliseCores();
+	return NULL;
 }
 #endif
 
