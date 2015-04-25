@@ -188,7 +188,7 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		int totalLen=strlen(str2)+21;
 		char * newString=(char*) malloc(totalLen);
 		if (v1.type==INT_TYPE) {
-			int int_v=*((int*) v2.data);
+			int int_v=*((int*) v1.data);
 			sprintf(newString,"%d%s", int_v, str2);
 		} else if (v2.type==REAL_TYPE) {
 			float f=*((float*) v1.data);
