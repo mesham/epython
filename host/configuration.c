@@ -64,6 +64,11 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
 		displayHelp();
 		exit(0);
 	} else {
+#ifdef HOST_STANDALONE
+		configuration->hostProcs=1;
+#else
+		configuration->hostProcs=0;
+#endif
 		int i;
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
@@ -90,9 +95,16 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
 				} else {
 					configuration->loadByteFilename=argv[++i];
 				}
-			} else if (areStringsEqualIgnoreCase(argv[i], "-h")) {
+			} else if (areStringsEqualIgnoreCase(argv[i], "-help")) {
 				displayHelp();
 				exit(0);
+			} else if (areStringsEqualIgnoreCase(argv[i], "-h")) {
+				if (i+1 ==argc) {
+					fprintf(stderr, "You must provide a number of host processes to use\n");
+					exit(0);
+				} else {
+					configuration->hostProcs=atoi(argv[++i]);
+				}
 			} else if (areStringsEqualIgnoreCase(argv[i], "-c")) {
 				if (i+1 ==argc) {
 					fprintf(stderr, "When specifying core placement you must provide arguments\n");
@@ -167,6 +179,7 @@ static void displayHelp() {
 	printf("ebasic [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
 #ifndef HOST_STANDALONE
 	printf("-c placement   Specify core placement; can be a single id, all, a range (a:b) or a list (a,b,c,d)\n");
+	printf("-h processes   Specify number of process on the host\n");
 	printf("-t             Display core run timing information\n");
 	printf("-codecore      Placement code on each core (default up to %d bytes length)\n", CORE_CODE_MAX_SIZE);
 	printf("-codeshared    Placement code in shared memory (automatic after %d bytes in length)\n", CORE_CODE_MAX_SIZE);
@@ -175,7 +188,7 @@ static void displayHelp() {
 	printf("-s             Display parse statistics\n");
 	printf("-o filename    Write out the compiled byte representation of processed BASIC code and exits (does not run code)\n");
 	printf("-l filename    Loads from compiled byte representation of code and runs this\n");
-	printf("-h             Display this help and quit\n");
+	printf("-help          Display this help and quit\n");
 }
 
 /**

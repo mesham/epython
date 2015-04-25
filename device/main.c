@@ -32,7 +32,7 @@
 
 volatile e_barrier_t syncbarriers[TOTAL_CORES], collectivebarriers[TOTAL_CORES];
 e_barrier_t *sync_tgt_bars[TOTAL_CORES], *collective_tgt_bars[TOTAL_CORES];
-volatile char syncValues[TOTAL_CORES];
+volatile unsigned char syncValues[TOTAL_CORES];
 volatile struct shared_basic * sharedData;
 int myId, lowestCoreId;
 

@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "configuration.h"
 #include "interpreter.h"
@@ -38,19 +39,28 @@
 #include "device-support.h"
 #endif
 
+// Wrapper for the context which is passed into a thread
+struct hostRunningThreadWrapper {
+	char * assembledCode;
+	unsigned int memoryFilledSize;
+	unsigned short entriesInSymbolTable;
+	int hostThreadId, numberProcesses;
+};
+
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
 
 extern int yyparse();
 extern int yy_scan_string(const char*);
+extern void initThreadedAspectsForInterpreter(int);
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
 static void displayParsedBasicInfo(void);
 void writeOutByteCode(char*);
 void loadByteCode(char*);
-#ifdef HOST_STANDALONE
-static void runCodeOnHost(void);
-#else
+static void runCodeOnHost(struct ebasicconfiguration*);
+static void * runSpecificHostProcess(void*);
+#ifndef HOST_STANDALONE
 static void runCodeOnEpiphany(struct ebasicconfiguration*);
 #endif
 
@@ -70,11 +80,13 @@ int main (int argc, char *argv[]) {
 	if (configuration->compiledByteFilename != NULL) {
 		writeOutByteCode(configuration->compiledByteFilename);
 	} else {
-#ifdef HOST_STANDALONE
-		runCodeOnHost();
-#else
+#ifndef HOST_STANDALONE
 		runCodeOnEpiphany(configuration);
+		runCodeOnHost(configuration);
+#else
+		runCodeOnHost(configuration);
 #endif
+		pthread_exit(NULL);
 	}
 	free(configuration->intentActive);
 	free(configuration);
@@ -101,14 +113,37 @@ static void runCodeOnEpiphany(struct ebasicconfiguration* configuration) {
 }
 #endif
 
-#ifdef HOST_STANDALONE
 /**
  * Runs the code on the host if compiled in standalone mode (helpful for development)
  */
-static void runCodeOnHost() {
-	processAssembledCode(getAssembledCode(), getMemoryFilledSize(), getNumberEntriesInSymbolTable(), 0, 1);
+static void runCodeOnHost(struct ebasicconfiguration* configuration) {
+	struct hostRunningThreadWrapper * threadWrappers=(struct hostRunningThreadWrapper *)
+			malloc(sizeof(struct hostRunningThreadWrapper) * configuration->hostProcs);
+	pthread_t threads[configuration->hostProcs];
+	int i;
+	char * assembledCode=getAssembledCode();
+	unsigned int memoryFilledSize=getMemoryFilledSize();
+	unsigned short entriesInSymbolTable=getNumberEntriesInSymbolTable();
+	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs);
+	for (i=0;i<configuration->hostProcs;i++) {
+		threadWrappers[i].assembledCode=assembledCode;
+		threadWrappers[i].memoryFilledSize=memoryFilledSize;
+		threadWrappers[i].entriesInSymbolTable=entriesInSymbolTable;
+		threadWrappers[i].hostThreadId=i;
+		threadWrappers[i].numberProcesses=configuration->hostProcs;
+		pthread_create(&threads[i], NULL, runSpecificHostProcess, (void*)&threadWrappers[i]);
+	}
 }
-#endif
+
+/**
+ * Host thread entry point, which calls on to the interpreter
+ */
+static void * runSpecificHostProcess(void * rawThreadContext) {
+	struct hostRunningThreadWrapper * threadContext= (struct hostRunningThreadWrapper*) rawThreadContext;
+	processAssembledCode(threadContext->assembledCode, threadContext->memoryFilledSize, threadContext->entriesInSymbolTable,
+			threadContext->hostThreadId, threadContext->numberProcesses, threadContext->hostThreadId);
+	return NULL;
+}
 
 /**
  * Given the name of a BASIC file will read it and return the char array containing the contents, an error

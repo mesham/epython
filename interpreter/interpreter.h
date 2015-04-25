@@ -48,8 +48,12 @@ struct symbol_node {
 	struct value_defn value __attribute__((aligned(8)));
 };
 
+#ifdef HOST_INTERPRETER
+extern char * stopInterpreter;
+void processAssembledCode(char*, unsigned int, unsigned short, int, int, int);
+void initThreadedAspectsForInterpreter(int);
+#else
 extern char stopInterpreter;
-
 void processAssembledCode(char*, unsigned int, unsigned short, int, int);
-
+#endif
 #endif /* INTERPRETER_H_ */

@@ -1,10 +1,10 @@
-CFLAGS := -Wall -Wextra -Wno-unused-parameter -Wmissing-prototypes -ansi -std=c99 -I ../interpreter
+CFLAGS := -DHOST_INTERPRETER -Wall -Wextra -Wno-unused-parameter -Wmissing-prototypes -ansi -std=c99 -I ../interpreter
 OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o configuration.o
 
 ifeq ($(STANDALONE),1)
 CFLAGS+= -DHOST_STANDALONE
 OBJECTS+= ../interpreter/interpreter.o host-functions.o
-LIBS=-lm
+LIBS=-lm -lpthread
 else
 CFLAGS+= -I../ -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
 OBJECTS+=device-support.o

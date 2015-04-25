@@ -31,7 +31,7 @@
 #include <e-lib.h>
 
 volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
-volatile static char communication_data[6];
+volatile static unsigned char communication_data[6];
 
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);

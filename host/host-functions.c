@@ -30,15 +30,43 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#include <pthread.h>
+
 #include "functions.h"
 #include "basictokens.h"
 #include "interpreter.h"
+#include "host-functions.h"
+
+volatile unsigned char **sharedComm, **syncValues;
+int total_threads, sync_counter;
+pthread_mutex_t barrier_mutex;
 
 static int getTypeOfInput(char*);
 static struct value_defn performGetInputFromUser(char*);
 
 /**
- * Called when running in host standalone mode, will display to the user
+ * Initiates the host communication data, this is called once (i.e. not by each thread) and will
+ * set up the state & memory for each thread to use
+ */
+void initHostCommunicationData(int total_number_threads) {
+	int i, j;
+	sharedComm=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
+	syncValues=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
+	for (i=0;i<total_number_threads;i++) {
+		sharedComm[i]=(unsigned char*) malloc(total_number_threads*6);
+		syncValues[i]=(unsigned char*) malloc(total_number_threads);
+		for (j=0;j<total_number_threads;j++) {
+			syncValues[i][j]=0;
+			sharedComm[i][j*6+5]=0;
+		}
+	}
+	pthread_mutex_init(&barrier_mutex, NULL);
+	total_threads=total_number_threads;
+	sync_counter=0;
+}
+
+/**
+ * Called when running on the host, will display to the user
  */
 void displayToUser(struct value_defn value) {
 	if (value.type == INT_TYPE) {
@@ -53,7 +81,7 @@ void displayToUser(struct value_defn value) {
 }
 
 /**
- * Called when running in host standalone mode, will check for string equality
+ * Called when running on the host, will check for string equality
  */
 int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 	char *c_str1, *c_str2;
@@ -63,7 +91,7 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 }
 
 /**
- * Called when running in host standalone mode, will get input from user displaying a message string
+ * Called when running on the host, will get input from user displaying a message string
  */
 struct value_defn getInputFromUserWithString(struct value_defn toDisplay) {
 	if (toDisplay.type != STRING_TYPE) raiseError("Can only display strings with input statement");
@@ -73,7 +101,7 @@ struct value_defn getInputFromUserWithString(struct value_defn toDisplay) {
 }
 
 /**
- * Called when running in host standalone mode, will get input from the user
+ * Called when running on the host, will get input from the user
  */
 struct value_defn getInputFromUser() {
 	return performGetInputFromUser(NULL);
@@ -128,7 +156,7 @@ static int getTypeOfInput(char * input) {
 }
 
 /**
- * Called when running in host standalone mode, contatenates two strings (or a string with integer/real)
+ * Called when running on the host, contatenates two strings (or a string with integer/real)
  */
 struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
 	struct value_defn result;
@@ -168,64 +196,135 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 }
 
 /**
- * Called when running in host standalone mode, initialises the symbol table
+ * Called when running on the host, initialises the symbol table
  */
 struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 	return (struct symbol_node*) malloc(sizeof(struct symbol_node) * numberSymbols);
 }
 
 /**
- * Called when running in host standalone mode, will get the memory address to store some array into
+ * Called when running on the host, will get the memory address to store some array into
  */
 int* getArrayAddress(int size, char shared) {
 	return (int*) malloc(sizeof(int) * size);
 }
 
 /**
- * Called when running in host standalone mode, the function for sending and receiving data between cores,
- * this is empty (dummy) as in standalone mode it is on the host only.
+ * Called when running on the host, the function for sending and receiving data between processes
  */
-struct value_defn sendRecvData(struct value_defn to_send, int target) {
-	struct value_defn dummy;
-	return dummy;
+struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId) {
+	struct value_defn receivedData;
+	//if (!sharedData->core_ctrl[target].active) {
+	//	raiseError("Attempting to send to inactive core");
+	//} else {
+	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	volatile unsigned char communication_data[6];
+	communication_data[0]=to_send.type;
+	cpy(&communication_data[1], to_send.data, 4);
+	communication_data[5]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+	char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
+	cpy(remoteMemory, communication_data, 6);
+	receivedData=recvData(target, threadId);
+	communication_data[5]=syncValues[threadId][target]==0 ? 255 : syncValues[threadId][target]-1;
+	while (communication_data[5] != syncValues[threadId][target]) {
+		cpy(communication_data, remoteMemory, 6);
+	}
+	//}
+	return receivedData;
 }
 
 /**
- * Called when running in host standalone mode, the function for sending data between cores, this is empty (dummy)
- * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
+ * Called when running on the host, the function for sending data between processes
  */
-void sendData(struct value_defn to_send, int target) {
-
+void sendData(struct value_defn to_send, int target, int threadId) {
+	//if (!sharedData->core_ctrl[target].active) {
+	//	raiseError("Attempting to send to inactive core");
+	//} else {
+		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+		volatile unsigned char communication_data[6];
+		communication_data[0]=to_send.type;
+		cpy(&communication_data[1], to_send.data, 4);
+		syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+		communication_data[5]=syncValues[threadId][target];
+		char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
+		cpy(remoteMemory, communication_data, 6);
+		syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+		while (communication_data[5] != syncValues[threadId][target]) {
+			cpy(communication_data, remoteMemory, 6);
+		}
+	//}
 }
 
 /**
- * Called when running in host standalone mode, the function for broadcasting data between cores, this is empty (dummy)
- * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
+ * Called when running on the host, the function for broadcasting data between processes
  */
-struct value_defn bcastData(struct value_defn to_send, int source) {
-	struct value_defn dummy;
-	return dummy;
+struct value_defn bcastData(struct value_defn to_send, int source, int threadId, int totalProcesses) {
+	if (threadId==source) {
+		int i;
+		for (i=0;i<totalProcesses;i++) {
+			if (i == threadId) continue;
+			sendData(to_send, i, threadId);
+		}
+		return to_send;
+	} else {
+		return recvData(source, threadId);
+	}
 }
 
 /**
- * Called when running in host standalone mode, the function for reducing data between cores, this is empty (dummy)
- * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
+ * Called when running on the host, the function for reducing data between processes
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned short operator) {
-	struct value_defn dummy;
-	return dummy;
+struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int threadId, int numberProcesses) {
+	struct value_defn returnValue, retrieved;
+	int i, intV, tempInt;
+	float floatV, tempFloat;
+	if (to_send.type==INT_TYPE) {
+		cpy(&intV, to_send.data, sizeof(int));
+	} else {
+		cpy(&floatV, to_send.data, sizeof(int));
+	}
+	for (i=0;i<numberProcesses;i++) {
+		if (i == threadId) continue;
+		retrieved=sendRecvData(to_send, i, threadId);
+		if (to_send.type==INT_TYPE) {
+			cpy(&tempInt, retrieved.data, sizeof(int));
+			if (operator==0) intV+=tempInt;
+			if (operator==1 && tempInt < intV) intV=tempInt;
+			if (operator==2 && tempInt > intV) intV=tempInt;
+			if (operator==3) intV*=tempInt;
+		} else {
+			cpy(&tempFloat, retrieved.data, sizeof(float));
+			if (operator==0) floatV+=tempFloat;
+			if (operator==1 && tempFloat < floatV) floatV=tempFloat;
+			if (operator==2 && tempFloat > floatV) floatV=tempFloat;
+			if (operator==3) floatV*=tempFloat;
+		}
+	}
+	returnValue.type=to_send.type;
+	if (to_send.type==INT_TYPE) {
+		cpy(returnValue.data, &intV, sizeof(int));
+	} else {
+		cpy(returnValue.data, &floatV, sizeof(float));
+	}
+	return returnValue;
 }
 
 /**
- * Called when running in host standalone mode, the function for synchronising cores, this is empty (dummy)
- * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
+ * Called when running on the host, the function for synchronising processes
  */
 void syncCores(void) {
-
+	pthread_mutex_lock(&barrier_mutex);
+	if (sync_counter == total_threads) {
+		sync_counter=1;
+	} else {
+		sync_counter++;
+	}
+	pthread_mutex_unlock(&barrier_mutex);
+	while (sync_counter < total_threads) { }
 }
 
 /**
- * Called when running in host standalone mode, this raises an error
+ * Called when running on the host, this raises an error
  */
 void raiseError(char * error) {
 	fprintf(stderr, "%s\n", error);
@@ -233,16 +332,30 @@ void raiseError(char * error) {
 }
 
 /**
- * Called when running in host standalone mode, the function for receiving data between cores, this is empty (dummy)
- * as in standalone mode it is on the host only (could be extended to use threading in future if so wished.)
+ * Called when running on the host, the function for receiving data between processes
  */
-struct value_defn recvData(int source) {
-	struct value_defn dummy;
-	return dummy;
+struct value_defn recvData(int source, int threadId) {
+	struct value_defn to_recv;
+	//if (!sharedData->core_ctrl[source].active) {
+	//	raiseError("Attempting to receive from inactive core");
+	//} else {
+	volatile unsigned char communication_data[6];
+	cpy(communication_data, sharedComm[threadId] + (source*6), 6);
+	syncValues[threadId][source]=syncValues[threadId][source]==255 ? 0 : syncValues[threadId][source]+1;
+	while (communication_data[5] != syncValues[threadId][source]) {
+		cpy(communication_data, sharedComm[threadId] + (source*6), 6);
+	}
+	syncValues[threadId][source]=syncValues[threadId][source]==255 ? 0 : syncValues[threadId][source]+1;
+	communication_data[5]=syncValues[threadId][source];
+	cpy(sharedComm[threadId] + (source*6), communication_data, 6);
+	to_recv.type=communication_data[0];
+	cpy(to_recv.data, &communication_data[1], 4);
+	//}
+	return to_recv;
 }
 
 /**
- * Called when running in host standalone mode, this performs some maths operation
+ * Called when running on the host, this performs some maths operation
  */
 struct value_defn performMathsOp(unsigned short operation, struct value_defn value) {
 	struct value_defn result;
@@ -277,14 +390,16 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 	return result;
 }
 
+/**
+ * Copies data from one location to another
+ */
 void cpy(volatile void* to, volatile void * from, unsigned int size) {
-	unsigned int i;
-	char *cto=(char*) to, *cfrom=(char*) from;
-	for (i=0;i<size;i++) {
-		cto[i]=cfrom[i];
-	}
+	memcpy(to, from, size);
 }
 
+/**
+ * String length, returns the length of the string provided
+ */
 int slength(char * v) {
 	return strlen(v);
 }
