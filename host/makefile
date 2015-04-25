@@ -1,16 +1,16 @@
 CFLAGS := -DHOST_INTERPRETER -Wall -Wextra -Wno-unused-parameter -Wmissing-prototypes -ansi -std=c99 -I ../interpreter
-OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o configuration.o
+OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o configuration.o ../interpreter/interpreter.o host-functions.o
+
+LIBS=-lm -lpthread
 
 ifeq ($(STANDALONE),1)
 CFLAGS+= -DHOST_STANDALONE
-OBJECTS+= ../interpreter/interpreter.o host-functions.o
-LIBS=-lm -lpthread
 else
 CFLAGS+= -I../ -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
 OBJECTS+=device-support.o
 CC=arm-linux-gnueabihf-gcc
 LDFLAGS=-L ${EPIPHANY_HOME}/tools/host/lib
-LIBS=-le-hal -lrt -lm
+LIBS+=-le-hal -lrt
 ifneq (,$(wildcard ${EPIPHANY_HOME}/tools/host/lib/libe-loader.so))
     LIBS+=-le-loader
 endif
