@@ -51,7 +51,7 @@ struct hostRunningThreadWrapper {
 
 extern int yyparse();
 extern int yy_scan_string(const char*);
-extern void initThreadedAspectsForInterpreter(int);
+extern void initThreadedAspectsForInterpreter(int, int);
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
@@ -127,7 +127,7 @@ static void runCodeOnHost(struct ebasicconfiguration* configuration) {
 	char * assembledCode=getAssembledCode();
 	unsigned int memoryFilledSize=getMemoryFilledSize();
 	unsigned short entriesInSymbolTable=getNumberEntriesInSymbolTable();
-	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs);
+	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs, configuration->coreProcs);
 	for (i=0;i<configuration->hostProcs;i++) {
 		threadWrappers[i].assembledCode=assembledCode;
 		threadWrappers[i].memoryFilledSize=memoryFilledSize;

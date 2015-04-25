@@ -56,6 +56,8 @@ static int localCoreId;
 static int numActiveCores;
 #endif
 
+static int hostCoresBasePid;
+
 #ifdef HOST_INTERPRETER
 static int handleInput(char*, int, int);
 static int handleInputWithString(char*, int, int);
@@ -106,13 +108,14 @@ static int getInt(void*);
 static float getFloat(void*);
 
 #ifdef HOST_INTERPRETER
-void initThreadedAspectsForInterpreter(int total_number_threads) {
+void initThreadedAspectsForInterpreter(int total_number_threads, int baseHostPid) {
 	stopInterpreter=(char*) malloc(total_number_threads);
 	symbolTable=(struct symbol_node**) malloc(sizeof(struct symbol_node*) * total_number_threads);
 	currentSymbolEntries=(int*) malloc(sizeof(int) * total_number_threads);
 	localCoreId=(int*) malloc(sizeof(int) * total_number_threads);
 	numActiveCores=(int*) malloc(sizeof(int) * total_number_threads);
 	initHostCommunicationData(total_number_threads);
+	hostCoresBasePid=baseHostPid;
 }
 #endif
 
@@ -159,12 +162,13 @@ void processAssembledCode(char * assembled, unsigned int length, unsigned short 
  * Entry function which will process the assembled code and perform the required actions
  */
 void processAssembledCode(char * assembled, unsigned int length, unsigned short numberSymbols,
-		int coreId, int numberActiveCores) {
+		int coreId, int numberActiveCores, int baseHostPid) {
 	stopInterpreter=0;
 	currentSymbolEntries=0;
 	localCoreId=coreId;
 	numActiveCores=numberActiveCores;
 	symbolTable=initialiseSymbolTable(numberSymbols);
+	hostCoresBasePid=baseHostPid;
 	unsigned int i;
 	for (i=0;i<length;) {
 		unsigned short command=getUShort(&assembled[i]);
