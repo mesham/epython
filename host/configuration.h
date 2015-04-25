@@ -34,7 +34,7 @@ struct ebasicconfiguration {
 	char * intentActive;
 	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared;
 	char * filename, *compiledByteFilename, *loadByteFilename;
-	int hostProcs;
+	int hostProcs, coreProcs;
 };
 
 struct ebasicconfiguration* readConfiguration(int, char *[]);

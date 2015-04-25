@@ -69,6 +69,7 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
 #else
 		configuration->hostProcs=0;
 #endif
+		configuration->coreProcs=0;
 		int i;
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
@@ -135,6 +136,9 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
 			fprintf(stderr, "You must supply a file to run as an argument, see -h for details\n");
 			exit(0);
 		}
+#ifndef HOST_STANDALONE
+		for (i=0;i<16;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
+#endif
 	}
 }
 

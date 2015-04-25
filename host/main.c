@@ -44,7 +44,7 @@ struct hostRunningThreadWrapper {
 	char * assembledCode;
 	unsigned int memoryFilledSize;
 	unsigned short entriesInSymbolTable;
-	int hostThreadId, numberProcesses;
+	int hostThreadId, numberProcesses, hostStartPoint;
 };
 
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
@@ -133,7 +133,8 @@ static void runCodeOnHost(struct ebasicconfiguration* configuration) {
 		threadWrappers[i].memoryFilledSize=memoryFilledSize;
 		threadWrappers[i].entriesInSymbolTable=entriesInSymbolTable;
 		threadWrappers[i].hostThreadId=i;
-		threadWrappers[i].numberProcesses=configuration->hostProcs;
+		threadWrappers[i].hostStartPoint=configuration->coreProcs;
+		threadWrappers[i].numberProcesses=configuration->hostProcs + configuration->coreProcs;
 		pthread_create(&threads[i], NULL, runSpecificHostProcess, (void*)&threadWrappers[i]);
 	}
 }
@@ -144,7 +145,7 @@ static void runCodeOnHost(struct ebasicconfiguration* configuration) {
 static void * runSpecificHostProcess(void * rawThreadContext) {
 	struct hostRunningThreadWrapper * threadContext= (struct hostRunningThreadWrapper*) rawThreadContext;
 	processAssembledCode(threadContext->assembledCode, threadContext->memoryFilledSize, threadContext->entriesInSymbolTable,
-			threadContext->hostThreadId, threadContext->numberProcesses, threadContext->hostThreadId);
+			threadContext->hostThreadId + threadContext->hostStartPoint, threadContext->numberProcesses, threadContext->hostThreadId);
 	return NULL;
 }
 
