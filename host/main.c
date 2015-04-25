@@ -108,7 +108,7 @@ static void doParse(char * contents) {
  * Runs the code on the Epiphany cores, acts as a monitor whilst it is running and then finalises the cores afterwards
  */
 static void* runCodeOnEpiphany(void * raw_configuration) {
-	struct ebasicconfiguration* configuration=(struct ebasicconfiguration*) raw_configuration
+	struct ebasicconfiguration* configuration=(struct ebasicconfiguration*) raw_configuration;
 	struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
 	monitorCores(deviceState, configuration);
 	finaliseCores();
