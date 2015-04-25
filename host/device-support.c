@@ -101,6 +101,7 @@ struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configura
 	basicCode->symbol_size=getNumberEntriesInSymbolTable();
 	basicCode->allInSharedMemory=configuration->forceDataOnShared;
 	basicCode->codeOnCores=codeOnCore==1;
+	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 
 	initialiseCores(basicCode, codeOnCore, configuration);
 	placeBasicCode(basicCode, codeOnCore, configuration->intentActive);

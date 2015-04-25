@@ -42,7 +42,7 @@ struct core_ctrl {
 
 struct shared_basic {
 	struct core_ctrl core_ctrl[16];
-	unsigned int length;
+	unsigned int length, num_procs;
 	unsigned short symbol_size;
 	char *edata, *data, *esdata, allInSharedMemory, codeOnCores;
 } __attribute__((aligned(8)));
