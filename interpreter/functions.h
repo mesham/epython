@@ -34,19 +34,22 @@
  * Epiphany mode, and also standalone host mode only which is useful for interpreter development/testing
  */
 
-struct value_defn getInputFromUser(void);
-struct value_defn getInputFromUserWithString(struct value_defn);
 int checkStringEquality(struct value_defn, struct value_defn);
-void displayToUser(struct value_defn);
 struct symbol_node* initialiseSymbolTable(int);
 int* getArrayAddress(int,char);
 #ifdef HOST_INTERPRETER
+struct value_defn getInputFromUser(int);
+struct value_defn getInputFromUserWithString(struct value_defn, int);
+void displayToUser(struct value_defn, int);
 void sendData(struct value_defn, int, int);
 struct value_defn recvData(int, int);
 struct value_defn sendRecvData(struct value_defn, int, int);
 struct value_defn bcastData(struct value_defn, int, int, int);
 struct value_defn reduceData(struct value_defn, unsigned short, int, int);
 #else
+struct value_defn getInputFromUser(void);
+struct value_defn getInputFromUserWithString(struct value_defn);
+void displayToUser(struct value_defn);
 void sendData(struct value_defn, int);
 struct value_defn recvData(int);
 struct value_defn sendRecvData(struct value_defn, int);

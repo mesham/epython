@@ -398,9 +398,9 @@ static void inputCoreMessage(int coreId, struct core_ctrl * core) {
 		unsigned int relativeLocation;
 		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
 		char * message=core->host_shared_data_start+relativeLocation;
-		printf("[%d] %s", coreId, message);
+		printf("[device %d] %s", coreId, message);
 	} else {
-		printf("%d> ", coreId);
+		printf("device %d> ", coreId);
 	}
 	scanf("%[^\n]", inputvalue);
 	int inputType=getTypeOfInput(inputvalue);
@@ -451,15 +451,15 @@ static int getTypeOfInput(char * input) {
 static void displayCoreMessage(int coreId, struct core_ctrl * core) {
 	if (core->data[0] == 0) {
 		int y=*((int*) &core->data[1]);
-		printf("[%d] %d\n", coreId, y);
+		printf("[device %d] %d\n", coreId, y);
 	} else if (core->data[0] == 1) {
 		float y=*((float*) &core->data[1]);
-		printf("[%d] %f\n", coreId, y);
+		printf("[device %d] %f\n", coreId, y);
 	} else if (core->data[0] == 2) {
 		unsigned int relativeLocation;
 		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
 		char * message=core->host_shared_data_start+relativeLocation;
-		printf("[%d] %s\n", coreId, message);
+		printf("[device %d] %s\n", coreId, message);
 	}
 }
 

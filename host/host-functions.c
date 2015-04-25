@@ -42,7 +42,7 @@ int total_threads, sync_counter;
 pthread_mutex_t barrier_mutex;
 
 static int getTypeOfInput(char*);
-static struct value_defn performGetInputFromUser(char*);
+static struct value_defn performGetInputFromUser(char*, int);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -68,15 +68,15 @@ void initHostCommunicationData(int total_number_threads) {
 /**
  * Called when running on the host, will display to the user
  */
-void displayToUser(struct value_defn value) {
+void displayToUser(struct value_defn value, int threadId) {
 	if (value.type == INT_TYPE) {
-		printf("%d\n", *((int*) value.data));
+		printf("[host %d] %d\n", threadId, *((int*) value.data));
 	} else if (value.type == REAL_TYPE) {
-		printf("%f\n", *((float*) value.data));
+		printf("[host %d] %f\n", threadId, *((float*) value.data));
 	} else if (value.type == STRING_TYPE) {
 		char *c;
 		cpy(&c, &value.data, sizeof(char*));
-		printf("%s\n", c);
+		printf("[host %d] %s\n", threadId, c);
 	}
 }
 
@@ -93,30 +93,30 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 /**
  * Called when running on the host, will get input from user displaying a message string
  */
-struct value_defn getInputFromUserWithString(struct value_defn toDisplay) {
+struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int threadId) {
 	if (toDisplay.type != STRING_TYPE) raiseError("Can only display strings with input statement");
 	char *c;
 	cpy(&c, &toDisplay.data, sizeof(char*));
-	return performGetInputFromUser(c);
+	return performGetInputFromUser(c, threadId);
 }
 
 /**
  * Called when running on the host, will get input from the user
  */
-struct value_defn getInputFromUser() {
-	return performGetInputFromUser(NULL);
+struct value_defn getInputFromUser(int threadId) {
+	return performGetInputFromUser(NULL, threadId);
 }
 
 /**
  * Actually gets the input from the user and puts this in the appropriate data area
  */
-static struct value_defn performGetInputFromUser(char * toDisplay) {
+static struct value_defn performGetInputFromUser(char * toDisplay, int threadId) {
 	struct value_defn v;
 	char inputvalue[1000];
 	if (toDisplay != NULL) {
-		printf("%s", toDisplay);
+		printf("[host %d] %s", threadId, toDisplay);
 	} else {
-		printf("> ");
+		printf("host %d> ", threadId);
 	}
 	scanf("%[^\n]", inputvalue);
 	int inputType=getTypeOfInput(inputvalue);

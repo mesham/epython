@@ -440,10 +440,11 @@ static int handleInput(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	variableSymbol->value=getInputFromUser(threadId);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
-#endif
 	variableSymbol->value=getInputFromUser();
+#endif
 	return currentPoint;
 }
 
@@ -460,11 +461,12 @@ static int handleInputWithString(char * assembled, int currentPoint) {
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, threadId);
+	variableSymbol->value=getInputFromUserWithString(string_display, threadId);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint);
-#endif
 	variableSymbol->value=getInputFromUserWithString(string_display);
+#endif
 	return currentPoint;
 }
 
@@ -474,11 +476,12 @@ static int handleInputWithString(char * assembled, int currentPoint) {
 #ifdef HOST_INTERPRETER
 static int handlePrint(char * assembled, int currentPoint, int threadId) {
 	struct value_defn result=getExpressionValue(assembled, &currentPoint, threadId);
+	displayToUser(result, threadId);
 #else
 static int handlePrint(char * assembled, int currentPoint) {
 	struct value_defn result=getExpressionValue(assembled, &currentPoint);
-#endif
 	displayToUser(result);
+#endif
 	return currentPoint;
 }
 
