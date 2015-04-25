@@ -105,6 +105,16 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
 				} else {
 					configuration->hostProcs=atoi(argv[++i]);
 				}
+			} else if (areStringsEqualIgnoreCase(argv[i], "-d")) {
+				if (i+1 ==argc) {
+					fprintf(stderr, "You must provide a number of device processes to use\n");
+					exit(0);
+				} else {
+					int j, device_procs=atoi(argv[++i]);
+					for (j=0;j<16;j++) {
+						configuration->intentActive[j]=j<device_procs ? 1 : 0;
+					}
+				}
 			} else if (areStringsEqualIgnoreCase(argv[i], "-c")) {
 				if (i+1 ==argc) {
 					fprintf(stderr, "When specifying core placement you must provide arguments\n");
@@ -179,6 +189,7 @@ static void displayHelp() {
 	printf("ebasic [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
 #ifndef HOST_STANDALONE
 	printf("-c placement   Specify core placement; can be a single id, all, a range (a:b) or a list (a,b,c,d)\n");
+	printf("-d processes   Specify number of process on the device\n");
 	printf("-h processes   Specify number of process on the host\n");
 	printf("-t             Display core run timing information\n");
 	printf("-codecore      Placement code on each core (default up to %d bytes length)\n", CORE_CODE_MAX_SIZE);
