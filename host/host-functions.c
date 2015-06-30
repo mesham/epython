@@ -426,9 +426,9 @@ static struct value_defn recvDataFromDeviceCore(int target, int threadId, int ho
 	int issuedProcess=threadId+hostCoresBasePid-1;
 	while (issuedProcess != threadId+hostCoresBasePid) {
 		while (basicState->core_ctrl[target].core_command != 5) { }
-		to_recv.type=basicState->core_ctrl[target].data[5];
 		memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
 		if (issuedProcess == threadId+hostCoresBasePid) {
+			to_recv.type=basicState->core_ctrl[target].data[5];
 			memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
 			basicState->core_ctrl[target].core_command=0;
 			basicState->core_ctrl[target].core_busy=++pb[target];

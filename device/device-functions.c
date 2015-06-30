@@ -224,7 +224,7 @@ void sendData(struct value_defn to_send, int target) {
 	if (target < sharedData->baseHostPid) {
 		sendDataToDeviceCore(to_send, target);
 	} else {
-		sendDataToHostProcess(to_send, target-sharedData->baseHostPid);
+		sendDataToHostProcess(to_send, target);
 	}
 }
 
