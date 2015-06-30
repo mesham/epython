@@ -350,14 +350,12 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
 /**
  * Synchronises all cores
  */
-void syncCores(void) {
-	if (sharedData->baseHostPid != sharedData->num_procs) {
-		if (myId == lowestCoreId) {
-			unsigned int pb=sharedData->core_ctrl[myId].core_busy;
-			sharedData->core_ctrl[myId].core_command=8;
-			sharedData->core_ctrl[myId].core_busy=0;
-			while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
-		}
+void syncCores(int global) {
+	if (global && myId == lowestCoreId && sharedData->baseHostPid != sharedData->num_procs) {
+		unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+		sharedData->core_ctrl[myId].core_command=8;
+		sharedData->core_ctrl[myId].core_busy=0;
+		while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	}
 	performBarrier(syncbarriers, sync_tgt_bars);
 }

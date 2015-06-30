@@ -55,6 +55,7 @@ static struct value_defn recvDataFromDeviceCore(int, int);
 static struct value_defn recvDataFromHostProcess(int, int);
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int);
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int, int);
+static void syncWithDevice();
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -370,6 +371,7 @@ static void syncWithDevice() {
 			while (basicState->core_ctrl[i].core_command != 8) { }
 			basicState->core_ctrl[i].core_command=0;
 			basicState->core_ctrl[i].core_busy=++pb[i];
+			return;
 		}
 	}
 }
@@ -377,8 +379,8 @@ static void syncWithDevice() {
 /**
  * Called when running on the host, the function for synchronising processes
  */
-void syncCores(int threadId) {
-	if (threadId==0 && basicState->baseHostPid > 0) {
+void syncCores(int global, int threadId) {
+	if (global && threadId==0 && basicState->baseHostPid > 0) {
 		// Some cores are active
 		syncWithDevice();
 	}
