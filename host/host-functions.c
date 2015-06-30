@@ -363,10 +363,25 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 	return returnValue;
 }
 
+static void syncWithDevice() {
+	int i;
+	for (i=0;i<TOTAL_CORES;i++) {
+		if (basicState->core_ctrl[i].active) {
+			while (basicState->core_ctrl[i].core_command != 8) { }
+			basicState->core_ctrl[i].core_command=0;
+			basicState->core_ctrl[i].core_busy=++pb[i];
+		}
+	}
+}
+
 /**
  * Called when running on the host, the function for synchronising processes
  */
-void syncCores(void) {
+void syncCores(int threadId) {
+	if (threadId==0 && basicState->baseHostPid > 0) {
+		// Some cores are active
+		syncWithDevice();
+	}
 	pthread_mutex_lock(&barrier_mutex);
 	if (sync_counter == total_threads) {
 		sync_counter=1;

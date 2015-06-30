@@ -203,10 +203,11 @@ void processAssembledCode(char * assembled, unsigned int length, unsigned short 
  */
 #ifdef HOST_INTERPRETER
 static int handleSync(char * assembled, int currentPoint, int threadId) {
+	syncCores(threadId);
 #else
 static int handleSync(char * assembled, int currentPoint) {
-#endif
 	syncCores();
+#endif
 	return currentPoint;
 }
 

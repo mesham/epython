@@ -46,6 +46,7 @@ struct value_defn recvData(int, int, int);
 struct value_defn sendRecvData(struct value_defn, int, int, int);
 struct value_defn bcastData(struct value_defn, int, int, int, int);
 struct value_defn reduceData(struct value_defn, unsigned short, int, int, int);
+void syncCores(int);
 #else
 struct value_defn getInputFromUser(void);
 struct value_defn getInputFromUserWithString(struct value_defn);
@@ -55,12 +56,12 @@ struct value_defn recvData(int);
 struct value_defn sendRecvData(struct value_defn, int);
 struct value_defn bcastData(struct value_defn, int, int);
 struct value_defn reduceData(struct value_defn, unsigned short, int);
+void syncCores(void);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);
 struct value_defn performMathsOp(unsigned short, struct value_defn);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn);
 void raiseError(char *);
-void syncCores(void);
 int slength(char*);
 
 #endif /* FUNCTIONS_H_ */
