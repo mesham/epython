@@ -384,11 +384,11 @@ static void performBarrier(volatile e_barrier_t barrier_array[], e_barrier_t  * 
 /**
  * Broadcasts data, if this is the source then send it, all cores return the data (even the source)
  */
-struct value_defn bcastData(struct value_defn to_send, int source) {
+struct value_defn bcastData(struct value_defn to_send, int source, int totalProcesses) {
 	if (myId==source) {
 		int i;
-		for (i=0;i<16;i++) {
-			if (i == myId || !sharedData->core_ctrl[i].active) continue;
+		for (i=0;i<totalProcesses;i++) {
+			if (i == myId) continue;
 			sendData(to_send, i);
 		}
 		return to_send;

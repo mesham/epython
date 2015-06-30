@@ -313,7 +313,7 @@ static void sendDataToHostProcess(struct value_defn to_send, int target, int thr
  * Called when running on the host, the function for broadcasting data between processes
  */
 struct value_defn bcastData(struct value_defn to_send, int source, int threadId, int totalProcesses, int hostCoresBasePid) {
-	if (threadId==source) {
+	if (threadId==source-hostCoresBasePid) {
 		int i;
 		for (i=0;i<totalProcesses;i++) {
 			if (i == threadId) continue;

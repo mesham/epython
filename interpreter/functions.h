@@ -53,7 +53,7 @@ void displayToUser(struct value_defn);
 void sendData(struct value_defn, int);
 struct value_defn recvData(int);
 struct value_defn sendRecvData(struct value_defn, int);
-struct value_defn bcastData(struct value_defn, int);
+struct value_defn bcastData(struct value_defn, int, int);
 struct value_defn reduceData(struct value_defn, unsigned short);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);

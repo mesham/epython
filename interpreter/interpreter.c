@@ -270,7 +270,7 @@ static int handleBcast(char * assembled, int currentPoint) {
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=bcastData(broadcast_expression, getInt(source_expression.data));
+	variableSymbol->value=bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores);
 #endif
 	return currentPoint;
 }
