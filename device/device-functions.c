@@ -228,7 +228,7 @@ void sendData(struct value_defn to_send, int target) {
 static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarget) {
 	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
 	sharedData->core_ctrl[myId].data[5]=to_send.type;
-	cpy(&communication_data[6], to_send.data, 4);
+	cpy(&sharedData->core_ctrl[myId].data[6], to_send.data, 4);
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_command=5;
 	sharedData->core_ctrl[myId].core_busy=0;

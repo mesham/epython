@@ -55,7 +55,7 @@ volatile unsigned int * pb;
 static void initialiseCores(struct shared_basic*, int, struct ebasicconfiguration*);
 static void loadBinaryInterpreterOntoCores(char, char*);
 static void placeBasicCode(struct shared_basic*, int, char*);
-static void checkStatusFlagsOfCore(struct shared_basic*, struct ebasicconfiguration*, int, unsigned int*);
+static void checkStatusFlagsOfCore(struct shared_basic*, struct ebasicconfiguration*, int);
 static void deactivateCore(struct ebasicconfiguration*, int);
 static void startApplicableCores(struct shared_basic*, struct ebasicconfiguration*);
 static void timeval_subtract(struct timeval*, struct timeval*,  struct timeval*);
@@ -109,7 +109,7 @@ struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configura
 	placeBasicCode(basicCode, codeOnCore, configuration->intentActive);
 	startApplicableCores(basicCode, configuration);
 
-	pb=(unsigned int*) sizeof(unsigned int * TOTAL_CORES);
+	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
 	for (i=0;i<TOTAL_CORES;i++) {
 		pb[i]=1;
 	}
@@ -141,7 +141,7 @@ void monitorCores(struct shared_basic * basicState, struct ebasicconfiguration* 
 	while (totalActive > 0) {
 		for (i=0;i<TOTAL_CORES;i++) {
 			if (active[i]) {
-				checkStatusFlagsOfCore(basicState, configuration, i, pb);
+				checkStatusFlagsOfCore(basicState, configuration, i);
 			}
 		}
 	}
@@ -150,7 +150,7 @@ void monitorCores(struct shared_basic * basicState, struct ebasicconfiguration* 
 /**
  * Checks whether the core has sent some command to the host and actions this command if so
  */
-static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct ebasicconfiguration* configuration, int coreId, unsigned int * pb) {
+static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct ebasicconfiguration* configuration, int coreId) {
 	char updateCoreWithComplete=0;
 	if (basicState->core_ctrl[coreId].core_busy == 0) {
 		if (basicState->core_ctrl[coreId].core_run == 0) {
