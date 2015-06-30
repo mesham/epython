@@ -239,18 +239,18 @@ struct value_defn sendRecvData(struct value_defn to_send, int target, int thread
 
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	struct value_defn receivedData;
-	int issuedProcess;
-	while (basicState->core_ctrl[target].core_command != 7) { }
-	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
-	if (issuedProcess == threadId+hostCoresBasePid) {
-		basicState->core_ctrl[target].data[11]=to_send.type;
-		memcpy((void*) &basicState->core_ctrl[target].data[12], to_send.data, 4);
-		basicState->core_ctrl[target].core_command=0;
-		basicState->core_ctrl[target].core_busy=++pb[target];
-		receivedData.type=basicState->core_ctrl[target].data[5];
-		memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
-	} else {
-		raiseError("SendRecv miss match on device and host ids");
+	int issuedProcess=threadId+hostCoresBasePid-1;
+	while (issuedProcess != threadId+hostCoresBasePid) {
+		while (basicState->core_ctrl[target].core_command != 7) { }
+		memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+		if (issuedProcess == threadId+hostCoresBasePid) {
+			basicState->core_ctrl[target].data[11]=to_send.type;
+			memcpy((void*) &basicState->core_ctrl[target].data[12], to_send.data, 4);
+			basicState->core_ctrl[target].core_command=0;
+			basicState->core_ctrl[target].core_busy=++pb[target];
+			receivedData.type=basicState->core_ctrl[target].data[5];
+			memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+		}
 	}
 	return receivedData;
 }
@@ -289,16 +289,16 @@ void sendData(struct value_defn to_send, int target, int threadId, int hostCores
 }
 
 static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
-	int issuedProcess;
-	while (basicState->core_ctrl[target].core_command != 6) { }
-	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
-	if (issuedProcess == threadId+hostCoresBasePid) {
-		basicState->core_ctrl[target].data[5]=to_send.type;
-		memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
-		basicState->core_ctrl[target].core_command=0;
-		basicState->core_ctrl[target].core_busy=++pb[target];
-	} else {
-		raiseError("Send miss match on device and host ids");
+	int issuedProcess=threadId+hostCoresBasePid-1;
+	while (issuedProcess != threadId+hostCoresBasePid) {
+		while (basicState->core_ctrl[target].core_command != 6) { }
+		memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+		if (issuedProcess == threadId+hostCoresBasePid) {
+			basicState->core_ctrl[target].data[5]=to_send.type;
+			memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
+			basicState->core_ctrl[target].core_command=0;
+			basicState->core_ctrl[target].core_busy=++pb[target];
+		}
 	}
 }
 
@@ -423,16 +423,16 @@ struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
 
 static struct value_defn recvDataFromDeviceCore(int target, int threadId, int hostCoresBasePid) {
 	struct value_defn to_recv;
-	int issuedProcess;
-	while (basicState->core_ctrl[target].core_command != 5) { }
-	to_recv.type=basicState->core_ctrl[target].data[5];
-	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
-	if (issuedProcess == threadId+hostCoresBasePid) {
-		memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
-		basicState->core_ctrl[target].core_command=0;
-		basicState->core_ctrl[target].core_busy=++pb[target];
-	} else {
-		raiseError("Receive miss match on device and host ids");
+	int issuedProcess=threadId+hostCoresBasePid-1;
+	while (issuedProcess != threadId+hostCoresBasePid) {
+		while (basicState->core_ctrl[target].core_command != 5) { }
+		to_recv.type=basicState->core_ctrl[target].data[5];
+		memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+		if (issuedProcess == threadId+hostCoresBasePid) {
+			memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+			basicState->core_ctrl[target].core_command=0;
+			basicState->core_ctrl[target].core_busy=++pb[target];
+		}
 	}
 	return to_recv;
 }
