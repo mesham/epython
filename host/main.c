@@ -47,18 +47,23 @@ struct hostRunningThreadWrapper {
 	int hostThreadId, numberProcesses, hostStartPoint;
 };
 
+struct epiphanyMonitorThreadWrapper {
+	struct ebasicconfiguration* configuration;
+	struct shared_basic * deviceState;
+};
+
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
 
 extern int yyparse();
 extern int yy_scan_string(const char*);
-extern void initThreadedAspectsForInterpreter(int, int);
+extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
 static void displayParsedBasicInfo(void);
 void writeOutByteCode(char*);
 void loadByteCode(char*);
-static void runCodeOnHost(struct ebasicconfiguration*);
+static void runCodeOnHost(struct ebasicconfiguration*, struct shared_basic*);
 static void * runSpecificHostProcess(void*);
 #ifndef HOST_STANDALONE
 static void* runCodeOnEpiphany(void*);
@@ -82,10 +87,14 @@ int main (int argc, char *argv[]) {
 	} else {
 #ifndef HOST_STANDALONE
 		pthread_t epiphany_management_thread;
-		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)configuration);
-		runCodeOnHost(configuration);
+		struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
+		struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
+		w->configuration=configuration;
+		w->deviceState=deviceState;
+		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)w);
+		runCodeOnHost(configuration, deviceState);
 #else
-		runCodeOnHost(configuration);
+		runCodeOnHost(configuration, NULL);
 #endif
 		pthread_exit(NULL);
 	}
@@ -107,10 +116,9 @@ static void doParse(char * contents) {
 /*
  * Runs the code on the Epiphany cores, acts as a monitor whilst it is running and then finalises the cores afterwards
  */
-static void* runCodeOnEpiphany(void * raw_configuration) {
-	struct ebasicconfiguration* configuration=(struct ebasicconfiguration*) raw_configuration;
-	struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
-	monitorCores(deviceState, configuration);
+static void* runCodeOnEpiphany(void * raw_wrapper) {
+	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
+	monitorCores(wrapper->deviceState, wrapper->configuration);
 	finaliseCores();
 	return NULL;
 }
@@ -119,7 +127,7 @@ static void* runCodeOnEpiphany(void * raw_configuration) {
 /**
  * Runs the code on the host if compiled in standalone mode (helpful for development)
  */
-static void runCodeOnHost(struct ebasicconfiguration* configuration) {
+static void runCodeOnHost(struct ebasicconfiguration* configuration, struct shared_basic * basicState) {
 	struct hostRunningThreadWrapper * threadWrappers=(struct hostRunningThreadWrapper *)
 			malloc(sizeof(struct hostRunningThreadWrapper) * configuration->hostProcs);
 	pthread_t threads[configuration->hostProcs];
@@ -127,7 +135,7 @@ static void runCodeOnHost(struct ebasicconfiguration* configuration) {
 	char * assembledCode=getAssembledCode();
 	unsigned int memoryFilledSize=getMemoryFilledSize();
 	unsigned short entriesInSymbolTable=getNumberEntriesInSymbolTable();
-	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs, configuration->coreProcs);
+	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs, configuration->coreProcs, basicState);
 	for (i=0;i<configuration->hostProcs;i++) {
 		threadWrappers[i].assembledCode=assembledCode;
 		threadWrappers[i].memoryFilledSize=memoryFilledSize;

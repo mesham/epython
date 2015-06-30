@@ -41,11 +41,11 @@ int* getArrayAddress(int,char);
 struct value_defn getInputFromUser(int);
 struct value_defn getInputFromUserWithString(struct value_defn, int);
 void displayToUser(struct value_defn, int);
-void sendData(struct value_defn, int, int);
-struct value_defn recvData(int, int);
-struct value_defn sendRecvData(struct value_defn, int, int);
-struct value_defn bcastData(struct value_defn, int, int, int);
-struct value_defn reduceData(struct value_defn, unsigned short, int, int);
+void sendData(struct value_defn, int, int, int);
+struct value_defn recvData(int, int, int);
+struct value_defn sendRecvData(struct value_defn, int, int, int);
+struct value_defn bcastData(struct value_defn, int, int, int, int);
+struct value_defn reduceData(struct value_defn, unsigned short, int, int, int);
 #else
 struct value_defn getInputFromUser(void);
 struct value_defn getInputFromUserWithString(struct value_defn);

@@ -27,6 +27,8 @@
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
 
+#include "../shared.h"
+
 #define INT_TYPE 0
 #define REAL_TYPE 1
 #define STRING_TYPE 2
@@ -51,7 +53,7 @@ struct symbol_node {
 #ifdef HOST_INTERPRETER
 extern char * stopInterpreter;
 void processAssembledCode(char*, unsigned int, unsigned short, int, int, int);
-void initThreadedAspectsForInterpreter(int, int);
+void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 #else
 extern char stopInterpreter;
 void processAssembledCode(char*, unsigned int, unsigned short, int, int, int);

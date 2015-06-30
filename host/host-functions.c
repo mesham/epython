@@ -38,18 +38,24 @@
 #include "host-functions.h"
 
 volatile unsigned char **sharedComm, **syncValues;
+volatile struct shared_basic * basicState;
 int total_threads, sync_counter;
 pthread_mutex_t barrier_mutex;
 
 static int getTypeOfInput(char*);
 static struct value_defn performGetInputFromUser(char*, int);
+static void sendDataToDeviceCore(struct value_defn, int, int);
+static void sendDataToHostProcess(struct value_defn, int, int);
+static struct value_defn recvDataFromDeviceCore(int, int);
+static struct value_defn recvDataFromHostProcess(int, int);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
  * set up the state & memory for each thread to use
  */
-void initHostCommunicationData(int total_number_threads) {
+void initHostCommunicationData(int total_number_threads, struct shared_basic * parallelBasicState) {
 	int i, j;
+	basicState=parallelBasicState;
 	sharedComm=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
 	syncValues=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
 	for (i=0;i<total_number_threads;i++) {
@@ -216,7 +222,7 @@ int* getArrayAddress(int size, char shared) {
 /**
  * Called when running on the host, the function for sending and receiving data between processes
  */
-struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId) {
+struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	struct value_defn receivedData;
 	//if (!sharedData->core_ctrl[target].active) {
 	//	raiseError("Attempting to send to inactive core");
@@ -228,7 +234,7 @@ struct value_defn sendRecvData(struct value_defn to_send, int target, int thread
 	communication_data[5]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
 	char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
 	cpy(remoteMemory, communication_data, 6);
-	receivedData=recvData(target, threadId);
+	receivedData=recvData(target, threadId, hostCoresBasePid);
 	communication_data[5]=syncValues[threadId][target]==0 ? 255 : syncValues[threadId][target]-1;
 	while (communication_data[5] != syncValues[threadId][target]) {
 		cpy(communication_data, remoteMemory, 6);
@@ -240,11 +246,27 @@ struct value_defn sendRecvData(struct value_defn to_send, int target, int thread
 /**
  * Called when running on the host, the function for sending data between processes
  */
-void sendData(struct value_defn to_send, int target, int threadId) {
+void sendData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
+	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target < hostCoresBasePid) {
+		sendDataToDeviceCore(to_send, target, threadId);
+	} else {
+		sendDataToHostProcess(to_send, target-hostCoresBasePid, threadId);
+	}
+}
+
+static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId) {
+	while (basicState->core_ctrl[target].core_command != 5) { }
+	basicState->core_ctrl[target].data[5]=to_send.type;
+	memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
+	basicState->core_ctrl[target].core_command=0;
+	basicState->core_ctrl[target].core_busy++;
+}
+
+static void sendDataToHostProcess(struct value_defn to_send, int target, int threadId) {
 	//if (!sharedData->core_ctrl[target].active) {
 	//	raiseError("Attempting to send to inactive core");
 	//} else {
-		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		volatile unsigned char communication_data[6];
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
@@ -262,23 +284,23 @@ void sendData(struct value_defn to_send, int target, int threadId) {
 /**
  * Called when running on the host, the function for broadcasting data between processes
  */
-struct value_defn bcastData(struct value_defn to_send, int source, int threadId, int totalProcesses) {
+struct value_defn bcastData(struct value_defn to_send, int source, int threadId, int totalProcesses, int hostCoresBasePid) {
 	if (threadId==source) {
 		int i;
 		for (i=0;i<totalProcesses;i++) {
 			if (i == threadId) continue;
-			sendData(to_send, i, threadId);
+			sendData(to_send, i, threadId, hostCoresBasePid);
 		}
 		return to_send;
 	} else {
-		return recvData(source, threadId);
+		return recvData(source, threadId, hostCoresBasePid);
 	}
 }
 
 /**
  * Called when running on the host, the function for reducing data between processes
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int threadId, int numberProcesses) {
+struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int threadId, int numberProcesses, int hostCoresBasePid) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt;
 	float floatV, tempFloat;
@@ -289,7 +311,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 	}
 	for (i=0;i<numberProcesses;i++) {
 		if (i == threadId) continue;
-		retrieved=sendRecvData(to_send, i, threadId);
+		retrieved=sendRecvData(to_send, i, threadId, hostCoresBasePid);
 		if (to_send.type==INT_TYPE) {
 			cpy(&tempInt, retrieved.data, sizeof(int));
 			if (operator==0) intV+=tempInt;
@@ -338,7 +360,25 @@ void raiseError(char * error) {
 /**
  * Called when running on the host, the function for receiving data between processes
  */
-struct value_defn recvData(int source, int threadId) {
+struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
+	if (source < hostCoresBasePid) {
+		return recvDataFromDeviceCore(source, threadId);
+	} else {
+		return recvDataFromHostProcess(source-hostCoresBasePid, threadId);
+	}
+}
+
+static struct value_defn recvDataFromDeviceCore(int target, int threadId) {
+	struct value_defn to_recv;
+	while (basicState->core_ctrl[target].core_command != 4) { }
+	to_recv.type=basicState->core_ctrl[target].data[5];
+	memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+	basicState->core_ctrl[target].core_command=0;
+	basicState->core_ctrl[target].core_busy++;
+	return to_recv;
+}
+
+static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 	struct value_defn to_recv;
 	//if (!sharedData->core_ctrl[source].active) {
 	//	raiseError("Attempting to receive from inactive core");
@@ -398,7 +438,7 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
  * Copies data from one location to another
  */
 void cpy(volatile void* to, volatile void * from, unsigned int size) {
-	memcpy(to, from, size);
+	memcpy((void*) to, (void*) from, size);
 }
 
 /**

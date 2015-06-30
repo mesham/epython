@@ -33,6 +33,9 @@
 volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
 volatile static unsigned char communication_data[6];
 
+static void sendDataToDeviceCore(struct value_defn, int);
+static void sendDataToHostProcess(struct value_defn, int);
+static struct value_defn recvDataFromDeviceCore(int);
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
 static struct value_defn doGetInputFromUser();
@@ -213,10 +216,28 @@ int* getArrayAddress(int size, char isShared) {
  * Sends data to some other core and blocks on this being received
  */
 void sendData(struct value_defn to_send, int target) {
+	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target < sharedData->baseHostPid) {
+		sendDataToDeviceCore(to_send, target);
+	} else {
+		sendDataToHostProcess(to_send, target-sharedData->baseHostPid);
+	}
+}
+
+static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarget) {
+	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
+	sharedData->core_ctrl[myId].data[5]=to_send.type;
+	cpy(&communication_data[6], to_send.data, 4);
+	sharedData->core_ctrl[myId].core_command=5;
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
+}
+
+static void sendDataToDeviceCore(struct value_defn to_send, int target) {
 	if (!sharedData->core_ctrl[target].active) {
 		raiseError("Attempting to send to inactive core");
 	} else {
-		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
 		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
@@ -232,10 +253,30 @@ void sendData(struct value_defn to_send, int target) {
 	}
 }
 
+struct value_defn recvData(int source) {
+	if (source < sharedData->baseHostPid) {
+		return recvDataFromDeviceCore(source);
+	} else {
+		return recvDataFromHostProcess(source-sharedData->baseHostPid);
+	}
+}
+
+static struct value_defn recvDataFromHostProcess(int hostSource) {
+	struct value_defn to_recv;
+	cpy(sharedData->core_ctrl[myId].data, &hostSource, 4);
+	sharedData->core_ctrl[myId].core_command=6;
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
+	to_recv.type=sharedData->core_ctrl[myId].data[5];
+	cpy(to_recv.data, &sharedData->core_ctrl[myId].data[6], 4);
+	return to_recv;
+}
+
 /**
  * Gets some data from another core (blocking operation)
  */
-struct value_defn recvData(int source) {
+static struct value_defn recvDataFromDeviceCore(int source) {
 	struct value_defn to_recv;
 	if (!sharedData->core_ctrl[source].active) {
 		raiseError("Attempting to receive from inactive core");
