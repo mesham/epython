@@ -338,7 +338,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
 	for (i=0;i<numberProcesses;i++) {
-		if (i == threadId) continue;
+		if (i == threadId+hostCoresBasePid) continue;
 		retrieved=sendRecvData(to_send, i, threadId, hostCoresBasePid);
 		if (to_send.type==INT_TYPE) {
 			cpy(&tempInt, retrieved.data, sizeof(int));
