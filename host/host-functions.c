@@ -49,11 +49,11 @@ volatile unsigned int * pb;
 
 static int getTypeOfInput(char*);
 static struct value_defn performGetInputFromUser(char*, int);
-static void sendDataToDeviceCore(struct value_defn, int, int);
+static void sendDataToDeviceCore(struct value_defn, int, int, int);
 static void sendDataToHostProcess(struct value_defn, int, int);
-static struct value_defn recvDataFromDeviceCore(int, int);
+static struct value_defn recvDataFromDeviceCore(int, int, int);
 static struct value_defn recvDataFromHostProcess(int, int);
-static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int);
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int, int);
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int, int);
 static void syncWithDevice();
 
@@ -170,7 +170,7 @@ static int getTypeOfInput(char * input) {
 }
 
 /**
- * Called when running on the host, contatenates two strings (or a string with integer/real)
+ * Called when running on the host, concatenates two strings (or a string with integer/real)
  */
 struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
 	struct value_defn result;
@@ -229,22 +229,29 @@ int* getArrayAddress(int size, char shared) {
 
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
-		if (target < hostCoresBasePid) {
-			return sendRecvDataWithDeviceCore(to_send, target, threadId);
-		} else {
-			return sendRecvDataWithHostProcess(to_send, target-hostCoresBasePid, threadId);
-		}
+	if (target >= (int) basicState->num_procs) raiseError("Attempting to sendrecv with non-existent process");
+	if (target < hostCoresBasePid) {
+		return sendRecvDataWithDeviceCore(to_send, target, threadId, hostCoresBasePid);
+	} else {
+		return sendRecvDataWithHostProcess(to_send, target-hostCoresBasePid, threadId);
+	}
 }
 
-static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target, int threadId) {
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	struct value_defn receivedData;
+	int issuedProcess;
 	while (basicState->core_ctrl[target].core_command != 7) { }
-	basicState->core_ctrl[target].data[11]=to_send.type;
-	memcpy((void*) &basicState->core_ctrl[target].data[12], to_send.data, 4);
-	basicState->core_ctrl[target].core_command=0;
-	basicState->core_ctrl[target].core_busy=++pb[target];
-	receivedData.type=basicState->core_ctrl[target].data[5];
-	memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+	if (issuedProcess == threadId+hostCoresBasePid) {
+		basicState->core_ctrl[target].data[11]=to_send.type;
+		memcpy((void*) &basicState->core_ctrl[target].data[12], to_send.data, 4);
+		basicState->core_ctrl[target].core_command=0;
+		basicState->core_ctrl[target].core_busy=++pb[target];
+		receivedData.type=basicState->core_ctrl[target].data[5];
+		memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+	} else {
+		raiseError("SendRecv miss match on device and host ids");
+	}
 	return receivedData;
 }
 
@@ -253,9 +260,6 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
  */
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int target, int threadId) {
 	struct value_defn receivedData;
-	//if (!sharedData->core_ctrl[target].active) {
-	//	raiseError("Attempting to send to inactive core");
-	//} else {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 	volatile unsigned char communication_data[6];
 	communication_data[0]=to_send.type;
@@ -268,7 +272,6 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 	while (communication_data[5] != syncValues[threadId][target]) {
 		cpy(communication_data, remoteMemory, 6);
 	}
-	//}
 	return receivedData;
 }
 
@@ -277,37 +280,40 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
  */
 void sendData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target >= (int) basicState->num_procs) raiseError("Attempting to send to non-existent process");
 	if (target < hostCoresBasePid) {
-		sendDataToDeviceCore(to_send, target, threadId);
+		sendDataToDeviceCore(to_send, target, threadId, hostCoresBasePid);
 	} else {
 		sendDataToHostProcess(to_send, target-hostCoresBasePid, threadId);
 	}
 }
 
-static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId) {
+static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
+	int issuedProcess;
 	while (basicState->core_ctrl[target].core_command != 6) { }
-	basicState->core_ctrl[target].data[5]=to_send.type;
-	memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
-	basicState->core_ctrl[target].core_command=0;
-	basicState->core_ctrl[target].core_busy=++pb[target];
+	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+	if (issuedProcess == threadId+hostCoresBasePid) {
+		basicState->core_ctrl[target].data[5]=to_send.type;
+		memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
+		basicState->core_ctrl[target].core_command=0;
+		basicState->core_ctrl[target].core_busy=++pb[target];
+	} else {
+		raiseError("Send miss match on device and host ids");
+	}
 }
 
 static void sendDataToHostProcess(struct value_defn to_send, int target, int threadId) {
-	//if (!sharedData->core_ctrl[target].active) {
-	//	raiseError("Attempting to send to inactive core");
-	//} else {
-		volatile unsigned char communication_data[6];
-		communication_data[0]=to_send.type;
-		cpy(&communication_data[1], to_send.data, 4);
-		syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
-		communication_data[5]=syncValues[threadId][target];
-		char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
-		cpy(remoteMemory, communication_data, 6);
-		syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
-		while (communication_data[5] != syncValues[threadId][target]) {
-			cpy(communication_data, remoteMemory, 6);
-		}
-	//}
+	volatile unsigned char communication_data[6];
+	communication_data[0]=to_send.type;
+	cpy(&communication_data[1], to_send.data, 4);
+	syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+	communication_data[5]=syncValues[threadId][target];
+	char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
+	cpy(remoteMemory, communication_data, 6);
+	syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+	while (communication_data[5] != syncValues[threadId][target]) {
+		cpy(communication_data, remoteMemory, 6);
+	}
 }
 
 /**
@@ -338,6 +344,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 	} else {
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
+	syncCores(1, threadId);
 	for (i=0;i<numberProcesses;i++) {
 		if (i == threadId+hostCoresBasePid) continue;
 		retrieved=sendRecvData(to_send, i, threadId, hostCoresBasePid);
@@ -406,28 +413,32 @@ void raiseError(char * error) {
  * Called when running on the host, the function for receiving data between processes
  */
 struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
+	if (source >= (int) basicState->num_procs) raiseError("Attempting to receive from non-existent process");
 	if (source < hostCoresBasePid) {
-		return recvDataFromDeviceCore(source, threadId);
+		return recvDataFromDeviceCore(source, threadId, hostCoresBasePid);
 	} else {
 		return recvDataFromHostProcess(source-hostCoresBasePid, threadId);
 	}
 }
 
-static struct value_defn recvDataFromDeviceCore(int target, int threadId) {
+static struct value_defn recvDataFromDeviceCore(int target, int threadId, int hostCoresBasePid) {
 	struct value_defn to_recv;
+	int issuedProcess;
 	while (basicState->core_ctrl[target].core_command != 5) { }
 	to_recv.type=basicState->core_ctrl[target].data[5];
-	memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
-	basicState->core_ctrl[target].core_command=0;
-	basicState->core_ctrl[target].core_busy=++pb[target];
+	memcpy(&issuedProcess, (void*) &basicState->core_ctrl[target].data, 4);
+	if (issuedProcess == threadId+hostCoresBasePid) {
+		memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+		basicState->core_ctrl[target].core_command=0;
+		basicState->core_ctrl[target].core_busy=++pb[target];
+	} else {
+		raiseError("Receive miss match on device and host ids");
+	}
 	return to_recv;
 }
 
 static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 	struct value_defn to_recv;
-	//if (!sharedData->core_ctrl[source].active) {
-	//	raiseError("Attempting to receive from inactive core");
-	//} else {
 	volatile unsigned char communication_data[6];
 	cpy(communication_data, sharedComm[threadId] + (source*6), 6);
 	syncValues[threadId][source]=syncValues[threadId][source]==255 ? 0 : syncValues[threadId][source]+1;
@@ -439,7 +450,6 @@ static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 	cpy(sharedComm[threadId] + (source*6), communication_data, 6);
 	to_recv.type=communication_data[0];
 	cpy(to_recv.data, &communication_data[1], 4);
-	//}
 	return to_recv;
 }
 

@@ -220,6 +220,7 @@ int* getArrayAddress(int size, char isShared) {
  */
 void sendData(struct value_defn to_send, int target) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target >= sharedData->num_procs) raiseError("Attempting to send to non-existent process");
 	if (target < sharedData->baseHostPid) {
 		sendDataToDeviceCore(to_send, target);
 	} else {
@@ -257,6 +258,7 @@ static void sendDataToDeviceCore(struct value_defn to_send, int target) {
 }
 
 struct value_defn recvData(int source) {
+	if (source >= sharedData->num_procs) raiseError("Attempting to receive from non-existent process");
 	if (source < sharedData->baseHostPid) {
 		return recvDataFromDeviceCore(source);
 	} else {
@@ -305,6 +307,7 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  */
 struct value_defn sendRecvData(struct value_defn to_send, int target) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target >= sharedData->num_procs) raiseError("Attempting to sendrecv with non-existent process");
 	if (target < sharedData->baseHostPid) {
 		return sendRecvDataWithDeviceCore(to_send, target);
 	} else {
@@ -415,7 +418,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 	} else {
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
-	performBarrier(collectivebarriers, collective_tgt_bars);
+	syncCores(1);
 	for (i=0;i<totalProcesses;i++) {
 		if (i == myId) continue;
 		retrieved=sendRecvData(to_send, i);
