@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "shared.h"
+#include "../shared.h"
 #include "configuration.h"
 
 #ifndef DEVICE_SUPPORT_H_

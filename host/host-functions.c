@@ -43,12 +43,18 @@ volatile struct shared_basic * basicState;
 int total_threads, sync_counter;
 pthread_mutex_t barrier_mutex;
 
+#ifdef HOST_STANDALONE
+volatile unsigned int * pb;
+#endif
+
 static int getTypeOfInput(char*);
 static struct value_defn performGetInputFromUser(char*, int);
 static void sendDataToDeviceCore(struct value_defn, int, int);
 static void sendDataToHostProcess(struct value_defn, int, int);
 static struct value_defn recvDataFromDeviceCore(int, int);
 static struct value_defn recvDataFromHostProcess(int, int);
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int);
+static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int, int);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -220,10 +226,31 @@ int* getArrayAddress(int size, char shared) {
 	return (int*) malloc(sizeof(int) * size);
 }
 
+struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
+	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+		if (target < hostCoresBasePid) {
+			return sendRecvDataWithDeviceCore(to_send, target, threadId);
+		} else {
+			return sendRecvDataWithHostProcess(to_send, target-hostCoresBasePid, threadId);
+		}
+}
+
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target, int threadId) {
+	struct value_defn receivedData;
+	while (basicState->core_ctrl[target].core_command != 7) { }
+	basicState->core_ctrl[target].data[11]=to_send.type;
+	memcpy((void*) &basicState->core_ctrl[target].data[12], to_send.data, 4);
+	basicState->core_ctrl[target].core_command=0;
+	basicState->core_ctrl[target].core_busy=++pb[target];
+	receivedData.type=basicState->core_ctrl[target].data[5];
+	memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
+	return receivedData;
+}
+
 /**
  * Called when running on the host, the function for sending and receiving data between processes
  */
-struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
+static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int target, int threadId) {
 	struct value_defn receivedData;
 	//if (!sharedData->core_ctrl[target].active) {
 	//	raiseError("Attempting to send to inactive core");
@@ -235,7 +262,7 @@ struct value_defn sendRecvData(struct value_defn to_send, int target, int thread
 	communication_data[5]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
 	char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
 	cpy(remoteMemory, communication_data, 6);
-	receivedData=recvData(target, threadId, hostCoresBasePid);
+	receivedData=recvDataFromHostProcess(target, threadId);
 	communication_data[5]=syncValues[threadId][target]==0 ? 255 : syncValues[threadId][target]-1;
 	while (communication_data[5] != syncValues[threadId][target]) {
 		cpy(communication_data, remoteMemory, 6);

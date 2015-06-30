@@ -37,6 +37,8 @@ static void sendDataToDeviceCore(struct value_defn, int);
 static void sendDataToHostProcess(struct value_defn, int);
 static struct value_defn recvDataFromHostProcess(int);
 static struct value_defn recvDataFromDeviceCore(int);
+static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int);
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int);
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
 static struct value_defn doGetInputFromUser();
@@ -302,11 +304,33 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  * blocks on receive and then blocks on the initial send to form one overall block
  */
 struct value_defn sendRecvData(struct value_defn to_send, int target) {
+	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (target < sharedData->baseHostPid) {
+		return sendRecvDataWithDeviceCore(to_send, target);
+	} else {
+		return sendRecvDataWithHostProcess(to_send, target);
+	}
+}
+
+static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int hostProcessTarget) {
+	struct value_defn receivedData;
+	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
+	sharedData->core_ctrl[myId].data[5]=to_send.type;
+	cpy(&sharedData->core_ctrl[myId].data[6], to_send.data, 4);
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=7;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
+	receivedData.type=sharedData->core_ctrl[myId].data[11];
+	cpy(receivedData.data, &sharedData->core_ctrl[myId].data[12], 4);
+	return receivedData;
+}
+
+static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target) {
 	struct value_defn receivedData;
 	if (!sharedData->core_ctrl[target].active) {
 		raiseError("Attempting to send to inactive core");
 	} else {
-		if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
 		communication_data[5]=syncValues[target]==255 ? 0 : syncValues[target]+1;
