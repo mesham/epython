@@ -54,7 +54,7 @@ void sendData(struct value_defn, int);
 struct value_defn recvData(int);
 struct value_defn sendRecvData(struct value_defn, int);
 struct value_defn bcastData(struct value_defn, int, int);
-struct value_defn reduceData(struct value_defn, unsigned short);
+struct value_defn reduceData(struct value_defn, unsigned short, int);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);
 struct value_defn performMathsOp(unsigned short, struct value_defn);

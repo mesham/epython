@@ -400,7 +400,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int totalProc
 /**
  * Reduction of data amongst the cores with some operator
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned short operator) {
+struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int totalProcesses) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt;
 	float floatV, tempFloat;
@@ -410,8 +410,8 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator)
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
 	performBarrier(collectivebarriers, collective_tgt_bars);
-	for (i=0;i<16;i++) {
-		if (i == myId || !sharedData->core_ctrl[i].active) continue;
+	for (i=0;i<totalProcesses;i++) {
+		if (i == myId) continue;
 		retrieved=sendRecvData(to_send, i);
 		if (to_send.type==INT_TYPE) {
 			cpy(&tempInt, retrieved.data, sizeof(int));

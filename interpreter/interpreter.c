@@ -246,7 +246,7 @@ static int handleReduction(char * assembled, int currentPoint) {
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=reduceData(broadcast_expression, reductionOperator);
+	variableSymbol->value=reduceData(broadcast_expression, reductionOperator, numActiveCores);
 #endif
 	return currentPoint;
 }
