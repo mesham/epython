@@ -35,6 +35,8 @@
 #define SHARED_CODE_AREA_START 0x00100000
 #define SHARED_DATA_SIZE 0x01000000
 
+extern unsigned int * pb;
+
 #define EPIPHANY_BINARY_FILE "ebasic-device.srec"
 // Binary directory path for finding ebasic device binary, needs trailing slash
 #define BIN_PATH "/usr/bin/"

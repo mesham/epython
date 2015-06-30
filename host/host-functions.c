@@ -36,6 +36,7 @@
 #include "basictokens.h"
 #include "interpreter.h"
 #include "host-functions.h"
+#include "device-support.h"
 
 volatile unsigned char **sharedComm, **syncValues;
 volatile struct shared_basic * basicState;
@@ -256,11 +257,11 @@ void sendData(struct value_defn to_send, int target, int threadId, int hostCores
 }
 
 static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId) {
-	while (basicState->core_ctrl[target].core_command != 5) { }
+	while (basicState->core_ctrl[target].core_command != 6) { }
 	basicState->core_ctrl[target].data[5]=to_send.type;
 	memcpy((void*) &basicState->core_ctrl[target].data[6], to_send.data, 4);
 	basicState->core_ctrl[target].core_command=0;
-	basicState->core_ctrl[target].core_busy++;
+	basicState->core_ctrl[target].core_busy=++pb[target];
 }
 
 static void sendDataToHostProcess(struct value_defn to_send, int target, int threadId) {
@@ -370,11 +371,11 @@ struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
 
 static struct value_defn recvDataFromDeviceCore(int target, int threadId) {
 	struct value_defn to_recv;
-	while (basicState->core_ctrl[target].core_command != 4) { }
+	while (basicState->core_ctrl[target].core_command != 5) { }
 	to_recv.type=basicState->core_ctrl[target].data[5];
 	memcpy(to_recv.data, (void*) &basicState->core_ctrl[target].data[6], 4);
 	basicState->core_ctrl[target].core_command=0;
-	basicState->core_ctrl[target].core_busy++;
+	basicState->core_ctrl[target].core_busy=++pb[target];
 	return to_recv;
 }
 

@@ -50,6 +50,7 @@ e_mem_t management_DRAM;
 e_epiphany_t epiphany;
 static short active[TOTAL_CORES];
 int totalActive;
+volatile unsigned int * pb;
 
 static void initialiseCores(struct shared_basic*, int, struct ebasicconfiguration*);
 static void loadBinaryInterpreterOntoCores(char, char*);
@@ -73,7 +74,7 @@ static int doesFileExist(char*);
  */
 struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configuration) {
 	struct shared_basic * basicCode;
-	int result, codeOnCore=0;
+	int i, result, codeOnCore=0;
 	e_set_host_verbosity(H_D0);
 	result = e_init(NULL);
 	if (result == E_ERR) fprintf(stderr, "Error on initialisation\n");
@@ -108,6 +109,11 @@ struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configura
 	placeBasicCode(basicCode, codeOnCore, configuration->intentActive);
 	startApplicableCores(basicCode, configuration);
 
+	pb=(unsigned int*) sizeof(unsigned int * TOTAL_CORES);
+	for (i=0;i<TOTAL_CORES;i++) {
+		pb[i]=1;
+	}
+
 	return basicCode;
 }
 
@@ -132,10 +138,6 @@ void finaliseCores(void) {
  */
 void monitorCores(struct shared_basic * basicState, struct ebasicconfiguration* configuration) {
 	int i;
-	unsigned int pb[TOTAL_CORES];
-	for (i=0;i<TOTAL_CORES;i++) {
-		pb[i]=1;
-	}
 	while (totalActive > 0) {
 		for (i=0;i<TOTAL_CORES;i++) {
 			if (active[i]) {

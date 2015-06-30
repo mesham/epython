@@ -35,6 +35,7 @@ volatile static unsigned char communication_data[6];
 
 static void sendDataToDeviceCore(struct value_defn, int);
 static void sendDataToHostProcess(struct value_defn, int);
+static struct value_defn recvDataFromHostProcess(int);
 static struct value_defn recvDataFromDeviceCore(int);
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
@@ -228,8 +229,8 @@ static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarg
 	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
 	sharedData->core_ctrl[myId].data[5]=to_send.type;
 	cpy(&communication_data[6], to_send.data, 4);
-	sharedData->core_ctrl[myId].core_command=5;
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=5;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 }
@@ -264,8 +265,8 @@ struct value_defn recvData(int source) {
 static struct value_defn recvDataFromHostProcess(int hostSource) {
 	struct value_defn to_recv;
 	cpy(sharedData->core_ctrl[myId].data, &hostSource, 4);
-	sharedData->core_ctrl[myId].core_command=6;
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=6;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	to_recv.type=sharedData->core_ctrl[myId].data[5];
