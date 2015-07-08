@@ -37,8 +37,8 @@
 
 extern volatile unsigned int * pb;
 
-#define EPIPHANY_BINARY_FILE "ebasic-device.srec"
-// Binary directory path for finding ebasic device binary, needs trailing slash
+#define EPIPHANY_BINARY_FILE "epython-device.srec"
+// Binary directory path for finding epython device binary, needs trailing slash
 #define BIN_PATH "/usr/bin/"
 
 // Memory location for each core where we start the symbol table, bytecode, data area etc...
@@ -46,8 +46,8 @@ extern volatile unsigned int * pb;
 // If the length of BASIC byte code is greater than this then place in shared memory (unless overridden by command line)
 #define CORE_CODE_MAX_SIZE 2048
 
-struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration*);
-void monitorCores(struct shared_basic*, struct ebasicconfiguration*);
+struct shared_basic * loadCodeOntoEpiphany(struct interpreterconfiguration*);
+void monitorCores(struct shared_basic*, struct interpreterconfiguration*);
 void finaliseCores(void);
 
 #endif /* DEVICE_SUPPORT_H_ */

@@ -36,8 +36,8 @@
 #define TOTAL_CORES 1
 #endif
 
-static void parseCommandLineArguments(struct ebasicconfiguration*, int, char**);
-static void parseCoreActiveInfo(struct ebasicconfiguration*, char*);
+static void parseCommandLineArguments(struct interpreterconfiguration*, int, char**);
+static void parseCoreActiveInfo(struct interpreterconfiguration*, char*);
 static int areStringsEqualIgnoreCase(char*, char*);
 static void displayHelp(void);
 
@@ -45,9 +45,9 @@ static void displayHelp(void);
  * Given the command line arguments this will read the configuration and return the configuration structure
  * which has the appropriate flags set and contains strings etc
  */
-struct ebasicconfiguration* readConfiguration(int argc, char *argv[]) {
+struct interpreterconfiguration* readConfiguration(int argc, char *argv[]) {
 	int i;
-	struct ebasicconfiguration* configuration=(struct ebasicconfiguration*) malloc(sizeof(struct ebasicconfiguration));
+	struct interpreterconfiguration* configuration=(struct interpreterconfiguration*) malloc(sizeof(struct interpreterconfiguration));
 	configuration->intentActive=(char*) malloc(TOTAL_CORES);
 	for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=1;
 	configuration->displayStats=configuration->displayTiming=configuration->forceCodeOnCore=configuration->forceCodeOnShared=configuration->forceDataOnShared=0;
@@ -59,7 +59,7 @@ struct ebasicconfiguration* readConfiguration(int argc, char *argv[]) {
 /**
  * Parses command line arguments
  */
-static void parseCommandLineArguments(struct ebasicconfiguration* configuration, int argc, char *argv[]) {
+static void parseCommandLineArguments(struct interpreterconfiguration* configuration, int argc, char *argv[]) {
 	if (argc == 1) {
 		displayHelp();
 		exit(0);
@@ -146,7 +146,7 @@ static void parseCommandLineArguments(struct ebasicconfiguration* configuration,
  * Determines the active cores if the user supplied -c n, can be a single integer, a list, a range or
  * all to select all cores
  */
-static void parseCoreActiveInfo(struct ebasicconfiguration* configuration, char * info) {
+static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, char * info) {
 	int i;
 	if (areStringsEqualIgnoreCase(info, "all")) {
 		for (i=0;i<16;i++) configuration->intentActive[i]=1;
@@ -189,8 +189,8 @@ static void parseCoreActiveInfo(struct ebasicconfiguration* configuration, char 
  * Displays the help message with usage information
  */
 static void displayHelp() {
-	printf("Epiphany BASIC version %s\n", VERSION_IDENT);
-	printf("ebasic [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
+	printf("Epiphany Python version %s\n", VERSION_IDENT);
+	printf("epython [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
 #ifndef HOST_STANDALONE
 	printf("-c placement   Specify core placement; can be a single id, all, a range (a:b) or a list (a,b,c,d)\n");
 	printf("-d processes   Specify number of process on the device\n");

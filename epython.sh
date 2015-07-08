@@ -9,13 +9,13 @@ EHDF=/opt/adapteva/esdk/bsps/current/parallella_E16G3_1GB.hdf
 OS_MAJ="$(uname -a | cut -d' ' -f3 | cut -d'.' -f1)"
 OS_VER="$(uname -a | cut -d' ' -f3 | cut -d'.' -f2)"
 
-FILE=ebasic-host
+FILE=epython-host
 
 if [ -f $FILE ]
 then
-FILE=./ebasic-host
+FILE=./epython-host
 else
-FILE=/usr/bin/ebasic-host
+FILE=/usr/bin/epython-host
 fi
 
 if [[ "$OS_VER" -ge "14" || "$OS_MAJ" -gt "3" ]]

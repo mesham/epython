@@ -19,10 +19,10 @@ endif
 YFLAGS := -d
 LFLAGS :=
 
-ebasic: $(OBJECTS)
-	$(CC) $(LDFLAGS) -o ebasic-host $(OBJECTS) $(LIBS)
+epython: $(OBJECTS)
+	$(CC) $(LDFLAGS) -o epython-host $(OBJECTS) $(LIBS)
 
-full: lexer parser ebasic
+full: lexer parser epython
 
 .PHONE: check
 
@@ -30,10 +30,10 @@ full: lexer parser ebasic
 	$(CC) $(CFLAGS) -MMD -o $@ -c $<
 
 lexer:
-	$(LEX) $(LFLAGS) -o lexer.c ebasic.l
+	$(LEX) $(LFLAGS) -o lexer.c epython.l
 
 parser:
-	$(YACC) $(YFLAGS) -o parser.c ebasic.y
+	$(YACC) $(YFLAGS) -o parser.c epython.y
 
 clean:
 	$(RM) -f -v $(bins) *.yy.[ch] *.tab.[ch] *.o *.d *.output

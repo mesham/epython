@@ -30,13 +30,13 @@
 #define VERSION_IDENT "0.1"
 
 // Configuration structure which is filled based upon command line arguments
-struct ebasicconfiguration {
+struct interpreterconfiguration {
 	char * intentActive;
 	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared;
 	char * filename, *compiledByteFilename, *loadByteFilename;
 	int hostProcs, coreProcs;
 };
 
-struct ebasicconfiguration* readConfiguration(int, char *[]);
+struct interpreterconfiguration* readConfiguration(int, char *[]);
 
 #endif /* CONFIGURATION_H_ */

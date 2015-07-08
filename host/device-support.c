@@ -52,12 +52,12 @@ static short active[TOTAL_CORES];
 int totalActive;
 volatile unsigned int * pb;
 
-static void initialiseCores(struct shared_basic*, int, struct ebasicconfiguration*);
+static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
 static void loadBinaryInterpreterOntoCores(char, char*);
-static void placeBasicCode(struct shared_basic*, int, char*);
-static void checkStatusFlagsOfCore(struct shared_basic*, struct ebasicconfiguration*, int);
-static void deactivateCore(struct ebasicconfiguration*, int);
-static void startApplicableCores(struct shared_basic*, struct ebasicconfiguration*);
+static void placeByteCode(struct shared_basic*, int, char*);
+static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
+static void deactivateCore(struct interpreterconfiguration*, int);
+static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
 static void timeval_subtract(struct timeval*, struct timeval*,  struct timeval*);
 static void displayCoreMessage(int, struct core_ctrl*);
 static void raiseError(int, struct core_ctrl*);
@@ -72,7 +72,7 @@ static int doesFileExist(char*);
  * Loads up the code onto the appropriate Epiphany cores, sets up the state (BASIC bytecode, symbol table, data area etc)
  * and then starts the cores running
  */
-struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configuration) {
+struct shared_basic * loadCodeOntoEpiphany(struct interpreterconfiguration* configuration) {
 	struct shared_basic * basicCode;
 	int i, result, codeOnCore=0;
 	e_set_host_verbosity(H_D0);
@@ -106,7 +106,7 @@ struct shared_basic * loadCodeOntoEpiphany(struct ebasicconfiguration* configura
 	basicCode->baseHostPid=configuration->coreProcs;
 
 	initialiseCores(basicCode, codeOnCore, configuration);
-	placeBasicCode(basicCode, codeOnCore, configuration->intentActive);
+	placeByteCode(basicCode, codeOnCore, configuration->intentActive);
 	startApplicableCores(basicCode, configuration);
 
 	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
@@ -136,7 +136,7 @@ void finaliseCores(void) {
 /**
  * The host acts as a monitor, responding to core communications for host actions (such as IO, some maths etc..)
  */
-void monitorCores(struct shared_basic * basicState, struct ebasicconfiguration* configuration) {
+void monitorCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
 	int i;
 	while (totalActive > 0) {
 		for (i=0;i<TOTAL_CORES;i++) {
@@ -150,7 +150,7 @@ void monitorCores(struct shared_basic * basicState, struct ebasicconfiguration* 
 /**
  * Checks whether the core has sent some command to the host and actions this command if so
  */
-static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct ebasicconfiguration* configuration, int coreId) {
+static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct interpreterconfiguration* configuration, int coreId) {
 	char updateCoreWithComplete=0;
 	if (basicState->core_ctrl[coreId].core_busy == 0) {
 		if (basicState->core_ctrl[coreId].core_run == 0) {
@@ -181,7 +181,7 @@ static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct ebas
 /**
  * Called when a core informs the host it has finished, optionally displays timing information
  */
-static void deactivateCore(struct ebasicconfiguration* configuration, int coreId) {
+static void deactivateCore(struct interpreterconfiguration* configuration, int coreId) {
 	if (configuration->displayTiming) {
 		struct timeval tval_after, tval_result;
 		gettimeofday(&tval_after, NULL);
@@ -195,7 +195,7 @@ static void deactivateCore(struct ebasicconfiguration* configuration, int coreId
 /**
  * Initialises the cores by setting up their data structures and loading the interpreter onto the cores
  */
-static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct ebasicconfiguration* configuration) {
+static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct interpreterconfiguration* configuration) {
 	unsigned int i, j;
 	char allActive=1;
 	for (i=0;i<TOTAL_CORES;i++) {
@@ -263,7 +263,7 @@ static int doesFileExist(char * filename) {
 /**
  * Places the bytecode representation of the users BASIC code onto the cores
  */
-static void placeBasicCode(struct shared_basic * basicState, int codeOnCore, char * intentActive) {
+static void placeByteCode(struct shared_basic * basicState, int codeOnCore, char * intentActive) {
 	basicState->data=(void*) (SHARED_CODE_AREA_START+management_DRAM.base);
 	basicState->esdata=(void*) (SHARED_CODE_AREA_START+(void*)management_DRAM.ephy_base);
 	memcpy(basicState->data, getAssembledCode(), basicState->length);
@@ -279,7 +279,7 @@ static void placeBasicCode(struct shared_basic * basicState, int codeOnCore, cha
 /**
  * Starts up applicable cores and tracks which were initially active
  */
-static void startApplicableCores(struct shared_basic * basicState, struct ebasicconfiguration* configuration) {
+static void startApplicableCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
 	unsigned int i;
 	for (i=0;i<TOTAL_CORES;i++) {
 		if (configuration->intentActive[i]) {

@@ -48,7 +48,7 @@ struct hostRunningThreadWrapper {
 };
 
 struct epiphanyMonitorThreadWrapper {
-	struct ebasicconfiguration* configuration;
+	struct interpreterconfiguration* configuration;
 	struct shared_basic * deviceState;
 };
 
@@ -63,7 +63,7 @@ static char * getSourceFileContents(char*);
 static void displayParsedBasicInfo(void);
 void writeOutByteCode(char*);
 void loadByteCode(char*);
-static void runCodeOnHost(struct ebasicconfiguration*, struct shared_basic*);
+static void runCodeOnHost(struct interpreterconfiguration*, struct shared_basic*);
 static void * runSpecificHostProcess(void*);
 #ifndef HOST_STANDALONE
 static void* runCodeOnEpiphany(void*);
@@ -74,7 +74,7 @@ static void* runCodeOnEpiphany(void*);
  */
 int main (int argc, char *argv[]) {
 	srand(time(NULL));
-	struct ebasicconfiguration* configuration=readConfiguration(argc, argv);
+	struct interpreterconfiguration* configuration=readConfiguration(argc, argv);
 	if (configuration->filename != NULL) {
 		char * contents = getSourceFileContents(configuration->filename);
 		doParse(contents);
@@ -127,7 +127,7 @@ static void* runCodeOnEpiphany(void * raw_wrapper) {
 /**
  * Runs the code on the host if compiled in standalone mode (helpful for development)
  */
-static void runCodeOnHost(struct ebasicconfiguration* configuration, struct shared_basic * basicState) {
+static void runCodeOnHost(struct interpreterconfiguration* configuration, struct shared_basic * basicState) {
 	struct hostRunningThreadWrapper * threadWrappers=(struct hostRunningThreadWrapper *)
 			malloc(sizeof(struct hostRunningThreadWrapper) * configuration->hostProcs);
 	pthread_t threads[configuration->hostProcs];
