@@ -29,7 +29,7 @@ void yyerror (char const *msg) {
 
 %token NEWLINE INDENT OUTDENT
 %token REM
-%token DIM SDIM LET STOP ENDIF ENDDO ELSE COMMA DO WHILE
+%token DIM SDIM LET STOP ELSE COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
@@ -82,7 +82,7 @@ statement
 	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	
 	| SDIM ident SLBRACE expression SRBRACE { $$=appendDeclareSharedArray($2, $4); }
 	| FOR declareident EQ expression TO expression lines NEXT { $$=appendForStatement($2, $4, $6, $7); leaveScope(); }
-	| DO openwhileblock expression lines closedoblock { $$=appendDoWhileStatement($3, $4); } 
+	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); } 
 	| GOTO INTEGER { $$=appendGotoStatement($2); }
 	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
 	| IF expression COLON codeblock elseifblock codeblock { $$=appendIfElseStatement($2, $4, $6); }
@@ -121,13 +121,6 @@ declareident
 elseifblock
 	: ELSE COLON { leaveScope(); enterScope(); }
 ;
-
-openwhileblock
-	: WHILE { enterScope(); }
-;
-
-closedoblock
-	: ENDDO { leaveScope(); }
 
 expression
 	: logical_or_expression { $$=$1; }

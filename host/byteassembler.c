@@ -336,7 +336,7 @@ struct memorycontainer* appendForStatement(char * identifier, struct memoryconta
  * Appends in a do while statement, which assembles down to an if statement with jump at the end of the block
  * to retest the condition and either do another iteration or not
  */
-struct memorycontainer* appendDoWhileStatement(struct memorycontainer* expression, struct memorycontainer* block) {
+struct memorycontainer* appendWhileStatement(struct memorycontainer* expression, struct memorycontainer* block) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned short) * 4 + expression->length + (block != NULL ? block->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);

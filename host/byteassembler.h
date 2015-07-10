@@ -59,7 +59,7 @@ struct memorycontainer* appendDeclareSharedArray(char*, struct memorycontainer*)
 struct memorycontainer* appendInputStatement(char*);
 struct memorycontainer* appendInputStringStatement(struct memorycontainer*, char*);
 struct memorycontainer* appendGotoStatement(int);
-struct memorycontainer* appendDoWhileStatement(struct memorycontainer*, struct memorycontainer*);
+struct memorycontainer* appendWhileStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendIfStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendIfElseStatement(struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);

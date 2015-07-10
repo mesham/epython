@@ -57,73 +57,70 @@ extern int yydebug;
     SDIM = 267,
     LET = 268,
     STOP = 269,
-    ENDIF = 270,
-    ENDDO = 271,
-    ELSE = 272,
-    COMMA = 273,
-    DO = 274,
-    WHILE = 275,
-    FOR = 276,
-    TO = 277,
-    FROM = 278,
-    NEXT = 279,
-    INTO = 280,
-    GOTO = 281,
-    PRINT = 282,
-    INPUT = 283,
-    IF = 284,
-    THEN = 285,
-    COREID = 286,
-    NUMCORES = 287,
-    SEND = 288,
-    RECV = 289,
-    RANDOM = 290,
-    SYNC = 291,
-    BCAST = 292,
-    REDUCE = 293,
-    SUM = 294,
-    MIN = 295,
-    MAX = 296,
-    PROD = 297,
-    SENDRECV = 298,
-    TOFROM = 299,
-    ADD = 300,
-    SUB = 301,
-    ISHOST = 302,
-    ISDEVICE = 303,
-    COLON = 304,
-    MULT = 305,
-    DIV = 306,
-    MOD = 307,
-    AND = 308,
-    OR = 309,
-    NEQ = 310,
-    LEQ = 311,
-    GEQ = 312,
-    LT = 313,
-    GT = 314,
-    EQ = 315,
-    NOT = 316,
-    SQRT = 317,
-    SIN = 318,
-    COS = 319,
-    TAN = 320,
-    ASIN = 321,
-    ACOS = 322,
-    ATAN = 323,
-    SINH = 324,
-    COSH = 325,
-    TANH = 326,
-    FLOOR = 327,
-    CEIL = 328,
-    LOG = 329,
-    LOG10 = 330,
-    LPAREN = 331,
-    RPAREN = 332,
-    SLBRACE = 333,
-    SRBRACE = 334,
-    ASSGN = 335,
-    POW = 336
+    ELSE = 270,
+    COMMA = 271,
+    WHILE = 272,
+    FOR = 273,
+    TO = 274,
+    FROM = 275,
+    NEXT = 276,
+    INTO = 277,
+    GOTO = 278,
+    PRINT = 279,
+    INPUT = 280,
+    IF = 281,
+    THEN = 282,
+    COREID = 283,
+    NUMCORES = 284,
+    SEND = 285,
+    RECV = 286,
+    RANDOM = 287,
+    SYNC = 288,
+    BCAST = 289,
+    REDUCE = 290,
+    SUM = 291,
+    MIN = 292,
+    MAX = 293,
+    PROD = 294,
+    SENDRECV = 295,
+    TOFROM = 296,
+    ADD = 297,
+    SUB = 298,
+    ISHOST = 299,
+    ISDEVICE = 300,
+    COLON = 301,
+    MULT = 302,
+    DIV = 303,
+    MOD = 304,
+    AND = 305,
+    OR = 306,
+    NEQ = 307,
+    LEQ = 308,
+    GEQ = 309,
+    LT = 310,
+    GT = 311,
+    EQ = 312,
+    NOT = 313,
+    SQRT = 314,
+    SIN = 315,
+    COS = 316,
+    TAN = 317,
+    ASIN = 318,
+    ACOS = 319,
+    ATAN = 320,
+    SINH = 321,
+    COSH = 322,
+    TANH = 323,
+    FLOOR = 324,
+    CEIL = 325,
+    LOG = 326,
+    LOG10 = 327,
+    LPAREN = 328,
+    RPAREN = 329,
+    SLBRACE = 330,
+    SRBRACE = 331,
+    ASSGN = 332,
+    POW = 333
   };
 #endif
 /* Tokens.  */
@@ -139,73 +136,70 @@ extern int yydebug;
 #define SDIM 267
 #define LET 268
 #define STOP 269
-#define ENDIF 270
-#define ENDDO 271
-#define ELSE 272
-#define COMMA 273
-#define DO 274
-#define WHILE 275
-#define FOR 276
-#define TO 277
-#define FROM 278
-#define NEXT 279
-#define INTO 280
-#define GOTO 281
-#define PRINT 282
-#define INPUT 283
-#define IF 284
-#define THEN 285
-#define COREID 286
-#define NUMCORES 287
-#define SEND 288
-#define RECV 289
-#define RANDOM 290
-#define SYNC 291
-#define BCAST 292
-#define REDUCE 293
-#define SUM 294
-#define MIN 295
-#define MAX 296
-#define PROD 297
-#define SENDRECV 298
-#define TOFROM 299
-#define ADD 300
-#define SUB 301
-#define ISHOST 302
-#define ISDEVICE 303
-#define COLON 304
-#define MULT 305
-#define DIV 306
-#define MOD 307
-#define AND 308
-#define OR 309
-#define NEQ 310
-#define LEQ 311
-#define GEQ 312
-#define LT 313
-#define GT 314
-#define EQ 315
-#define NOT 316
-#define SQRT 317
-#define SIN 318
-#define COS 319
-#define TAN 320
-#define ASIN 321
-#define ACOS 322
-#define ATAN 323
-#define SINH 324
-#define COSH 325
-#define TANH 326
-#define FLOOR 327
-#define CEIL 328
-#define LOG 329
-#define LOG10 330
-#define LPAREN 331
-#define RPAREN 332
-#define SLBRACE 333
-#define SRBRACE 334
-#define ASSGN 335
-#define POW 336
+#define ELSE 270
+#define COMMA 271
+#define WHILE 272
+#define FOR 273
+#define TO 274
+#define FROM 275
+#define NEXT 276
+#define INTO 277
+#define GOTO 278
+#define PRINT 279
+#define INPUT 280
+#define IF 281
+#define THEN 282
+#define COREID 283
+#define NUMCORES 284
+#define SEND 285
+#define RECV 286
+#define RANDOM 287
+#define SYNC 288
+#define BCAST 289
+#define REDUCE 290
+#define SUM 291
+#define MIN 292
+#define MAX 293
+#define PROD 294
+#define SENDRECV 295
+#define TOFROM 296
+#define ADD 297
+#define SUB 298
+#define ISHOST 299
+#define ISDEVICE 300
+#define COLON 301
+#define MULT 302
+#define DIV 303
+#define MOD 304
+#define AND 305
+#define OR 306
+#define NEQ 307
+#define LEQ 308
+#define GEQ 309
+#define LT 310
+#define GT 311
+#define EQ 312
+#define NOT 313
+#define SQRT 314
+#define SIN 315
+#define COS 316
+#define TAN 317
+#define ASIN 318
+#define ACOS 319
+#define ATAN 320
+#define SINH 321
+#define COSH 322
+#define TANH 323
+#define FLOOR 324
+#define CEIL 325
+#define LOG 326
+#define LOG10 327
+#define LPAREN 328
+#define RPAREN 329
+#define SLBRACE 330
+#define SRBRACE 331
+#define ASSGN 332
+#define POW 333
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -219,7 +213,7 @@ union YYSTYPE
 	struct memorycontainer * data;
 	char *string;
 
-#line 223 "parser.h" /* yacc.c:1909  */
+#line 217 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
