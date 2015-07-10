@@ -1,19 +1,19 @@
-/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison interface for Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
-   
+
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -26,13 +26,13 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-   
+
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
 #ifndef YY_YY_PARSER_H_INCLUDED
 # define YY_YY_PARSER_H_INCLUDED
-/* Enabling traces.  */
+/* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
@@ -40,88 +40,90 @@
 extern int yydebug;
 #endif
 
-/* Tokens.  */
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     INTEGER = 258,
-     REAL = 259,
-     STRING = 260,
-     IDENTIFIER = 261,
-     NEWLINE = 262,
-     REM = 263,
-     DIM = 264,
-     SDIM = 265,
-     LET = 266,
-     STOP = 267,
-     ENDIF = 268,
-     ENDDO = 269,
-     ELSE = 270,
-     COMMA = 271,
-     DO = 272,
-     WHILE = 273,
-     FOR = 274,
-     TO = 275,
-     FROM = 276,
-     NEXT = 277,
-     INTO = 278,
-     GOTO = 279,
-     PRINT = 280,
-     INPUT = 281,
-     IF = 282,
-     THEN = 283,
-     COREID = 284,
-     NUMCORES = 285,
-     SEND = 286,
-     RECV = 287,
-     RANDOM = 288,
-     SYNC = 289,
-     BCAST = 290,
-     REDUCE = 291,
-     SUM = 292,
-     MIN = 293,
-     MAX = 294,
-     PROD = 295,
-     SENDRECV = 296,
-     TOFROM = 297,
-     ADD = 298,
-     SUB = 299,
-     ISHOST = 300,
-     ISDEVICE = 301,
-     MULT = 302,
-     DIV = 303,
-     MOD = 304,
-     AND = 305,
-     OR = 306,
-     NEQ = 307,
-     LEQ = 308,
-     GEQ = 309,
-     LT = 310,
-     GT = 311,
-     EQ = 312,
-     NOT = 313,
-     SQRT = 314,
-     SIN = 315,
-     COS = 316,
-     TAN = 317,
-     ASIN = 318,
-     ACOS = 319,
-     ATAN = 320,
-     SINH = 321,
-     COSH = 322,
-     TANH = 323,
-     FLOOR = 324,
-     CEIL = 325,
-     LOG = 326,
-     LOG10 = 327,
-     LPAREN = 328,
-     RPAREN = 329,
-     SLBRACE = 330,
-     SRBRACE = 331,
-     POW = 332
-   };
+  enum yytokentype
+  {
+    INTEGER = 258,
+    REAL = 259,
+    STRING = 260,
+    IDENTIFIER = 261,
+    NEWLINE = 262,
+    INDENT = 263,
+    OUTDENT = 264,
+    REM = 265,
+    DIM = 266,
+    SDIM = 267,
+    LET = 268,
+    STOP = 269,
+    ENDIF = 270,
+    ENDDO = 271,
+    ELSE = 272,
+    COMMA = 273,
+    DO = 274,
+    WHILE = 275,
+    FOR = 276,
+    TO = 277,
+    FROM = 278,
+    NEXT = 279,
+    INTO = 280,
+    GOTO = 281,
+    PRINT = 282,
+    INPUT = 283,
+    IF = 284,
+    THEN = 285,
+    COREID = 286,
+    NUMCORES = 287,
+    SEND = 288,
+    RECV = 289,
+    RANDOM = 290,
+    SYNC = 291,
+    BCAST = 292,
+    REDUCE = 293,
+    SUM = 294,
+    MIN = 295,
+    MAX = 296,
+    PROD = 297,
+    SENDRECV = 298,
+    TOFROM = 299,
+    ADD = 300,
+    SUB = 301,
+    ISHOST = 302,
+    ISDEVICE = 303,
+    COLON = 304,
+    MULT = 305,
+    DIV = 306,
+    MOD = 307,
+    AND = 308,
+    OR = 309,
+    NEQ = 310,
+    LEQ = 311,
+    GEQ = 312,
+    LT = 313,
+    GT = 314,
+    EQ = 315,
+    NOT = 316,
+    SQRT = 317,
+    SIN = 318,
+    COS = 319,
+    TAN = 320,
+    ASIN = 321,
+    ACOS = 322,
+    ATAN = 323,
+    SINH = 324,
+    COSH = 325,
+    TANH = 326,
+    FLOOR = 327,
+    CEIL = 328,
+    LOG = 329,
+    LOG10 = 330,
+    LPAREN = 331,
+    RPAREN = 332,
+    SLBRACE = 333,
+    SRBRACE = 334,
+    POW = 335
+  };
 #endif
 /* Tokens.  */
 #define INTEGER 258
@@ -129,113 +131,101 @@ extern int yydebug;
 #define STRING 260
 #define IDENTIFIER 261
 #define NEWLINE 262
-#define REM 263
-#define DIM 264
-#define SDIM 265
-#define LET 266
-#define STOP 267
-#define ENDIF 268
-#define ENDDO 269
-#define ELSE 270
-#define COMMA 271
-#define DO 272
-#define WHILE 273
-#define FOR 274
-#define TO 275
-#define FROM 276
-#define NEXT 277
-#define INTO 278
-#define GOTO 279
-#define PRINT 280
-#define INPUT 281
-#define IF 282
-#define THEN 283
-#define COREID 284
-#define NUMCORES 285
-#define SEND 286
-#define RECV 287
-#define RANDOM 288
-#define SYNC 289
-#define BCAST 290
-#define REDUCE 291
-#define SUM 292
-#define MIN 293
-#define MAX 294
-#define PROD 295
-#define SENDRECV 296
-#define TOFROM 297
-#define ADD 298
-#define SUB 299
-#define ISHOST 300
-#define ISDEVICE 301
-#define MULT 302
-#define DIV 303
-#define MOD 304
-#define AND 305
-#define OR 306
-#define NEQ 307
-#define LEQ 308
-#define GEQ 309
-#define LT 310
-#define GT 311
-#define EQ 312
-#define NOT 313
-#define SQRT 314
-#define SIN 315
-#define COS 316
-#define TAN 317
-#define ASIN 318
-#define ACOS 319
-#define ATAN 320
-#define SINH 321
-#define COSH 322
-#define TANH 323
-#define FLOOR 324
-#define CEIL 325
-#define LOG 326
-#define LOG10 327
-#define LPAREN 328
-#define RPAREN 329
-#define SLBRACE 330
-#define SRBRACE 331
-#define POW 332
+#define INDENT 263
+#define OUTDENT 264
+#define REM 265
+#define DIM 266
+#define SDIM 267
+#define LET 268
+#define STOP 269
+#define ENDIF 270
+#define ENDDO 271
+#define ELSE 272
+#define COMMA 273
+#define DO 274
+#define WHILE 275
+#define FOR 276
+#define TO 277
+#define FROM 278
+#define NEXT 279
+#define INTO 280
+#define GOTO 281
+#define PRINT 282
+#define INPUT 283
+#define IF 284
+#define THEN 285
+#define COREID 286
+#define NUMCORES 287
+#define SEND 288
+#define RECV 289
+#define RANDOM 290
+#define SYNC 291
+#define BCAST 292
+#define REDUCE 293
+#define SUM 294
+#define MIN 295
+#define MAX 296
+#define PROD 297
+#define SENDRECV 298
+#define TOFROM 299
+#define ADD 300
+#define SUB 301
+#define ISHOST 302
+#define ISDEVICE 303
+#define COLON 304
+#define MULT 305
+#define DIV 306
+#define MOD 307
+#define AND 308
+#define OR 309
+#define NEQ 310
+#define LEQ 311
+#define GEQ 312
+#define LT 313
+#define GT 314
+#define EQ 315
+#define NOT 316
+#define SQRT 317
+#define SIN 318
+#define COS 319
+#define TAN 320
+#define ASIN 321
+#define ACOS 322
+#define ATAN 323
+#define SINH 324
+#define COSH 325
+#define TANH 326
+#define FLOOR 327
+#define CEIL 328
+#define LOG 329
+#define LOG10 330
+#define LPAREN 331
+#define RPAREN 332
+#define SLBRACE 333
+#define SRBRACE 334
+#define POW 335
 
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
 {
-/* Line 2053 of yacc.c  */
-#line 19 "ebasic.y"
+#line 19 "epython.y" /* yacc.c:1909  */
 
 	int integer;
 	float real;	
 	struct memorycontainer * data;
 	char *string;
 
-
-/* Line 2053 of yacc.c  */
-#line 219 "parser.h"
-} YYSTYPE;
+#line 221 "parser.h" /* yacc.c:1909  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+
 extern YYSTYPE yylval;
 
-#ifdef YYPARSE_PARAM
-#if defined __STDC__ || defined __cplusplus
-int yyparse (void *YYPARSE_PARAM);
-#else
-int yyparse ();
-#endif
-#else /* ! YYPARSE_PARAM */
-#if defined __STDC__ || defined __cplusplus
 int yyparse (void);
-#else
-int yyparse ();
-#endif
-#endif /* ! YYPARSE_PARAM */
 
 #endif /* !YY_YY_PARSER_H_INCLUDED  */

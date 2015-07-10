@@ -27,13 +27,13 @@ void yyerror (char const *msg) {
 %token <real>    REAL
 %token <string>  STRING IDENTIFIER
 
-%token NEWLINE
+%token NEWLINE INDENT OUTDENT
 %token REM
 %token DIM SDIM LET STOP ENDIF ENDDO ELSE COMMA DO WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
-%token ADD SUB ISHOST ISDEVICE
+%token ADD SUB ISHOST ISDEVICE COLON
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE
 
@@ -46,7 +46,7 @@ void yyerror (char const *msg) {
 
 %type <string> ident declareident
 %type <integer> unary_operator reductionop
-%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines
+%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock
 
 %start program 
 
@@ -61,12 +61,13 @@ lines
 
 line
         : statements NEWLINE { $$ = $1; }
+        | statements { $$ = $1; }
         | INTEGER statements NEWLINE { $$ = $2; setLineNumber($$, $1); }
 	    | NEWLINE { $$ = NULL; }
 ;
 
 statements
-	: statement ':' statements
+	: statement statements { $$=concatenateMemory($1, $2); }
 	| statement
 ;
 
@@ -83,9 +84,9 @@ statement
 	| FOR declareident EQ expression TO expression lines NEXT { $$=appendForStatement($2, $4, $6, $7); leaveScope(); }
 	| DO openwhileblock expression lines closedoblock { $$=appendDoWhileStatement($3, $4); } 
 	| GOTO INTEGER { $$=appendGotoStatement($2); }
-	| IF expression openifblock lines closeifblock { $$=appendIfStatement($2, $4); }
-	| IF expression openifblock lines elseifblock lines closeifblock { $$=appendIfElseStatement($2, $4, $6); }
-	| IF expression THEN statements { $$=appendIfStatement($2, $4); }
+	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
+	| IF expression COLON codeblock elseifblock codeblock { $$=appendIfElseStatement($2, $4, $6); }
+	| IF expression COLON statements { $$=appendIfStatement($2, $4); }
 	| INPUT ident { $$=appendInputStatement($2); }
 	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
 	| LET ident EQ expression { $$=appendLetStatement($2, $4); }
@@ -97,6 +98,15 @@ statement
 	| SYNC { $$=appendSyncStatement(); }
 ;
 
+codeblock
+	: NEWLINE indent_rule lines outdent_rule { $$=$3; }
+	
+indent_rule
+	: INDENT { enterScope(); }
+	
+outdent_rule
+	: OUTDENT { leaveScope(); }
+	
 reductionop
 	: SUM { $$=0; }
 	| MIN { $$=1; }
@@ -108,12 +118,8 @@ declareident
 	 : ident { $$=$1; enterScope(); addVariableIfNeeded($1); }
 ;
 
-openifblock
-	: THEN { enterScope(); }
-;
-
 elseifblock
-	: ELSE { leaveScope(); enterScope(); }
+	: ELSE COLON { leaveScope(); enterScope(); }
 ;
 
 openwhileblock
@@ -122,10 +128,6 @@ openwhileblock
 
 closedoblock
 	: ENDDO { leaveScope(); }
-
-closeifblock
-	: ENDIF { leaveScope(); }
-;
 
 expression
 	: logical_or_expression { $$=$1; }

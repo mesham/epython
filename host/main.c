@@ -30,6 +30,8 @@
 #include <time.h>
 #include <pthread.h>
 
+#include "stack.h"
+
 #include "configuration.h"
 #include "interpreter.h"
 #include "memorymanager.h"
@@ -57,6 +59,8 @@ struct epiphanyMonitorThreadWrapper {
 extern int yyparse();
 extern int yy_scan_string(const char*);
 extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
+
+struct stack_t indent_stack;
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
@@ -108,6 +112,7 @@ int main (int argc, char *argv[]) {
  */
 static void doParse(char * contents) {
 	enterScope();
+	initStack(&indent_stack);
 	yy_scan_string(contents);
 	yyparse();
 }

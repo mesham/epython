@@ -1,6 +1,13 @@
 %{
 #include "parser.h"
-int line_num = 1;
+#include "stack.h"
+
+static const unsigned int TAB_WIDTH = 4;
+
+int line_num = 0, indent_caller;
+int line_indent=0, fake_outdent_symbol=0;
+
+extern struct stack_t indent_stack;
 
 void yyget_INTEGER(YYSTYPE*, char*, size_t);
 void yyget_REAL (YYSTYPE*, char*, size_t);
@@ -26,6 +33,9 @@ void yyget_STRING(YYSTYPE *outval, char *text, size_t len) {
 }
 %}
 
+/* Python indentation handling based upon code at https://github.com/lucasb-eyer/flex-bison-indentation and 
+http://www.benbarbour.com/implementing-python-style-indention-syntax-using-flex-bison-or-lexyacc */
+
 O   [0-7]
 D   [0-9]
 NZ  [1-9]
@@ -47,6 +57,7 @@ STRING_CHARS [[:print:]]{-}[\"]
 %option noyywrap case-insensitive
 %x COMMENTS
 %x SINGLELINECOMMENT
+%x INDENT_MODE
 %%
 
 \/\*					{BEGIN(COMMENTS);}
@@ -55,7 +66,50 @@ STRING_CHARS [[:print:]]{-}[\"]
 <SINGLELINECOMMENT>\n	{ ++line_num;BEGIN(INITIAL); return NEWLINE; }
 <COMMENTS,SINGLELINECOMMENT>.		;
 
-\r\n|\n                                 { ++line_num; return NEWLINE; }
+<INDENT_MODE>" "     { line_indent++; }
+<INDENT_MODE>\t      { line_indent+=TAB_WIDTH; }
+<INDENT_MODE>\n      { line_indent=0; }
+<INDENT_MODE><<EOF>> { 	if (peek(&indent_stack) > 0) {
+						pop(&indent_stack);
+						if (line_indent < peek(&indent_stack)) {
+							int i;
+                            unput('\n');
+                            for (i=0;i<peek(&indent_stack);i++) unput(' ');                            
+                        } else {											
+							BEGIN(indent_caller);
+						}
+						return OUTDENT;						
+					} else {
+						yyterminate();
+					}					 
+				}
+<INDENT_MODE>.		{
+					if (!fake_outdent_symbol) unput(*yytext);					
+					fake_outdent_symbol=0;
+					if (line_indent > 0 && line_indent > peek(&indent_stack)) {
+						push(&indent_stack, line_indent);						
+						BEGIN(indent_caller);						
+						return INDENT;
+					} else if (line_indent < peek(&indent_stack)) {
+						pop(&indent_stack);
+						if (line_indent != peek(&indent_stack)) {
+							int i;
+							for(i=0;i<line_indent;i++) unput(' ');
+                            unput('\n');                            
+                            unput('.');                          
+                            fake_outdent_symbol=1;
+                            for(i=0;i<peek(&indent_stack);i++) unput(' ');
+                            unput('\n');
+						} else {
+							BEGIN(indent_caller);
+						}
+						return OUTDENT;
+					} else {
+						BEGIN(indent_caller);
+					}
+				}									
+
+\r\n|\n                                 { ++line_num; line_indent=0; indent_caller = YY_START; BEGIN(INDENT_MODE); return NEWLINE; }
 [ \t\n]                 				;
 REM{WS}*[[:print:]]*                    return REM;
 \"{STRING_CHARS}*\"                     SAVE_VALUE(STRING);
@@ -83,6 +137,7 @@ NOT|"!"                                 return NOT;
 "="|"=="                                return EQ;
 "^"|"**"                                return POW;
 ","										return COMMA;
+":"										return COLON;
 "+"                                     return ADD;
 "-"                                     return SUB;
 "*"                                     return MULT;
