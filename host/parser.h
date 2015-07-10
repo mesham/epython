@@ -122,7 +122,8 @@ extern int yydebug;
     RPAREN = 332,
     SLBRACE = 333,
     SRBRACE = 334,
-    POW = 335
+    ASSGN = 335,
+    POW = 336
   };
 #endif
 /* Tokens.  */
@@ -203,7 +204,8 @@ extern int yydebug;
 #define RPAREN 332
 #define SLBRACE 333
 #define SRBRACE 334
-#define POW 335
+#define ASSGN 335
+#define POW 336
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -217,7 +219,7 @@ union YYSTYPE
 	struct memorycontainer * data;
 	char *string;
 
-#line 221 "parser.h" /* yacc.c:1909  */
+#line 223 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

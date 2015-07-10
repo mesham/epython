@@ -1,5 +1,5 @@
 CFLAGS := -DHOST_INTERPRETER -Wall -Wextra -Wno-unused-parameter -Wmissing-prototypes -ansi -std=c99 -I ../interpreter
-OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o configuration.o ../interpreter/interpreter.o host-functions.o
+OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o stack.o configuration.o ../interpreter/interpreter.o host-functions.o
 
 LIBS=-lm -lpthread
 

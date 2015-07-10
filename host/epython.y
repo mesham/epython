@@ -40,7 +40,7 @@ void yyerror (char const *msg) {
 %left ADD SUB
 %left MULT DIV MOD
 %left AND OR
-%left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE
+%left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE ASSGN
 %right NOT
 %right POW
 
@@ -90,8 +90,8 @@ statement
 	| INPUT ident { $$=appendInputStatement($2); }
 	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
 	| LET ident EQ expression { $$=appendLetStatement($2, $4); }
-    | ident EQ expression { $$=appendLetStatement($1, $3); }
-    | ident SLBRACE expression SRBRACE EQ expression { $$=appendArraySetStatement($1, $3, $6); }
+    | ident ASSGN expression { $$=appendLetStatement($1, $3); }
+    | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
 	| PRINT expression { $$=appendPrintStatement($2); }	
 	| STOP { $$=appendStopStatement(); }
 	| REM { $$ = NULL; }

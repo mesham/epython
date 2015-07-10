@@ -372,8 +372,8 @@ static void yy_fatal_error (yyconst char msg[]  );
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
 
-#define YY_NUM_RULES 97
-#define YY_END_OF_BUFFER 98
+#define YY_NUM_RULES 98
+#define YY_END_OF_BUFFER 99
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -383,38 +383,38 @@ struct yy_trans_info
 	};
 static yyconst flex_int16_t yy_accept[297] =
     {   0,
-        0,    0,    0,    0,    0,    0,    0,    0,   98,   97,
-       11,   10,   97,   26,   97,   40,   97,   43,   44,   38,
-       36,   34,   37,   95,   39,   16,   15,   35,   95,   30,
-       32,   31,   96,   96,   96,   96,   96,   96,   96,   96,
-       96,   96,   96,   96,   96,   96,   96,   96,   96,   96,
-       96,   41,   42,   33,    5,    3,    5,    4,    9,    7,
-        8,    6,   10,   27,    0,   13,    0,    0,   33,   19,
-        1,   94,   20,   16,    0,    0,   16,   16,    0,   15,
-       15,   15,   28,   32,   29,   96,   96,   96,   96,   96,
-       96,   96,   96,   96,   64,   96,   96,   96,   96,   96,
+        0,    0,    0,    0,    0,    0,    0,    0,   99,   98,
+       11,   10,   98,   26,   98,   41,   98,   44,   45,   39,
+       37,   35,   38,   96,   40,   16,   15,   36,   96,   30,
+       32,   31,   97,   97,   97,   97,   97,   97,   97,   97,
+       97,   97,   97,   97,   97,   97,   97,   97,   97,   97,
+       97,   42,   43,   34,    5,    3,    5,    4,    9,    7,
+        8,    6,   10,   27,    0,   13,    0,    0,   34,   19,
+        1,   95,   20,   16,    0,    0,   16,   16,    0,   15,
+       15,   15,   28,   33,   29,   97,   97,   97,   97,   97,
+       97,   97,   97,   97,   65,   97,   97,   97,   97,   97,
 
-       96,   73,   96,   96,    0,   96,   96,   96,   96,   96,
-       96,   96,   25,   96,   96,   96,   96,   96,   96,   96,
-       96,   96,   96,   96,   96,   69,   96,    2,   17,    0,
+       97,   74,   97,   97,    0,   97,   97,   97,   97,   97,
+       97,   97,   25,   97,   97,   97,   97,   97,   97,   97,
+       97,   97,   97,   97,   97,   70,   97,    2,   17,    0,
         0,    0,   19,   19,    0,   20,   20,    0,   18,   16,
-       16,   16,    0,   14,   15,   15,   15,   96,   24,   96,
-       96,   96,   96,   96,   82,   60,   96,   96,   96,   68,
-       96,   96,   96,   96,   96,   96,   66,   92,   58,   57,
-       96,   26,   96,   96,   96,   96,   96,   96,   12,   96,
-       96,   81,   96,   96,   56,   96,   83,   96,   96,   96,
+       16,   16,    0,   14,   15,   15,   15,   97,   24,   97,
+       97,   97,   97,   97,   83,   61,   97,   97,   97,   69,
+       97,   97,   97,   97,   97,   97,   67,   93,   59,   58,
+       97,   26,   97,   97,   97,   97,   97,   97,   12,   97,
+       97,   82,   97,   97,   57,   97,   84,   97,   97,   97,
         0,    0,    0,   19,    0,   20,   18,   18,   16,    0,
 
-        0,   14,    0,   14,   15,   85,   84,   86,   96,   91,
-       96,   88,   47,    0,   96,   70,   72,   96,   55,   96,
-       96,   96,   71,   96,   96,   59,   96,   49,   96,   12,
-       12,   12,   12,   61,   48,   87,   80,   67,   52,   89,
-       74,   96,   96,    0,    0,    0,    0,   14,   14,    0,
-       21,   14,   53,   96,    0,    0,   90,   76,   96,   96,
-       93,   96,   75,   96,   96,   96,   96,   65,    0,   22,
-        0,   23,   21,   21,   14,   77,   63,   62,   96,   45,
-       96,   79,   54,   96,   51,   22,   22,   23,   23,   96,
-       96,   96,   46,   78,   50,    0
+        0,   14,    0,   14,   15,   86,   85,   87,   97,   92,
+       97,   89,   48,    0,   97,   71,   73,   97,   56,   97,
+       97,   97,   72,   97,   97,   60,   97,   50,   97,   12,
+       12,   12,   12,   62,   49,   88,   81,   68,   53,   90,
+       75,   97,   97,    0,    0,    0,    0,   14,   14,    0,
+       21,   14,   54,   97,    0,    0,   91,   77,   97,   97,
+       94,   97,   76,   97,   97,   97,   97,   66,    0,   22,
+        0,   23,   21,   21,   14,   78,   64,   63,   97,   46,
+       97,   80,   55,   97,   52,   22,   22,   23,   23,   97,
+       97,   97,   47,   79,   51,    0
 
     } ;
 
@@ -1294,336 +1294,341 @@ return GT;
 case 32:
 YY_RULE_SETUP
 #line 137 "epython.l"
-return EQ;
+return ASSGN;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
 #line 138 "epython.l"
-return POW;
+return EQ;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
 #line 139 "epython.l"
-return COMMA;
+return POW;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
 #line 140 "epython.l"
-return COLON;
+return COMMA;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
 #line 141 "epython.l"
-return ADD;
+return COLON;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
 #line 142 "epython.l"
-return SUB;
+return ADD;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
 #line 143 "epython.l"
-return MULT;
+return SUB;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
 #line 144 "epython.l"
-return DIV;
+return MULT;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 145 "epython.l"
-return MOD;
+return DIV;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 146 "epython.l"
-return SLBRACE;
+return MOD;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 147 "epython.l"
-return SRBRACE;
+return SLBRACE;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 148 "epython.l"
-return LPAREN;
+return SRBRACE;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 149 "epython.l"
-return RPAREN;
+return LPAREN;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 150 "epython.l"
-return ISHOST;
+return RPAREN;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 151 "epython.l"
-return ISDEVICE;
+return ISHOST;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
 #line 152 "epython.l"
-return ELSE;
+return ISDEVICE;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
 #line 153 "epython.l"
-return SEND;
+return ELSE;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
 #line 154 "epython.l"
-return RECV;
+return SEND;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 155 "epython.l"
-return SENDRECV;
+return RECV;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 156 "epython.l"
-return TOFROM;
+return SENDRECV;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
 #line 157 "epython.l"
-return SYNC;
+return TOFROM;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
 #line 158 "epython.l"
-return BCAST;
+return SYNC;
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
 #line 159 "epython.l"
-return REDUCE;
+return BCAST;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
 #line 160 "epython.l"
-return INTO;
+return REDUCE;
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
 #line 161 "epython.l"
-return SUM;
+return INTO;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
 #line 162 "epython.l"
-return MIN;
+return SUM;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
 #line 163 "epython.l"
-return MAX;
+return MIN;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
 #line 164 "epython.l"
-return PROD;
+return MAX;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
 #line 165 "epython.l"
-return DIM;
+return PROD;
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
 #line 166 "epython.l"
-return SDIM;
+return DIM;
 	YY_BREAK
 case 62:
-/* rule 62 can match eol */
 YY_RULE_SETUP
 #line 167 "epython.l"
-return ENDIF;
+return SDIM;
 	YY_BREAK
 case 63:
 /* rule 63 can match eol */
 YY_RULE_SETUP
 #line 168 "epython.l"
-return ENDDO;
+return ENDIF;
 	YY_BREAK
 case 64:
+/* rule 64 can match eol */
 YY_RULE_SETUP
 #line 169 "epython.l"
-return DO;
+return ENDDO;
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
 #line 170 "epython.l"
-return WHILE;
+return DO;
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
 #line 171 "epython.l"
-return LET;
+return WHILE;
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
 #line 172 "epython.l"
-return STOP;
+return LET;
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
 #line 173 "epython.l"
-return FOR;
+return STOP;
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
 #line 174 "epython.l"
-return TO;
+return FOR;
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
 #line 175 "epython.l"
-return FROM;
+return TO;
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
 #line 176 "epython.l"
-return NEXT;
+return FROM;
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
 #line 177 "epython.l"
-return GOTO;
+return NEXT;
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
 #line 178 "epython.l"
-return IF;
+return GOTO;
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
 #line 179 "epython.l"
-return THEN;
+return IF;
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
 #line 180 "epython.l"
-return PRINT;
+return THEN;
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
 #line 181 "epython.l"
-return INPUT;
+return PRINT;
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
 #line 182 "epython.l"
-return COREID;
+return INPUT;
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
 #line 183 "epython.l"
-return NUMCORES;
+return COREID;
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
 #line 184 "epython.l"
-return RANDOM;
+return NUMCORES;
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
 #line 185 "epython.l"
-return SQRT;
+return RANDOM;
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
 #line 186 "epython.l"
-return SIN;
+return SQRT;
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
 #line 187 "epython.l"
-return COS;
+return SIN;
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
 #line 188 "epython.l"
-return TAN;
+return COS;
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
 #line 189 "epython.l"
-return ASIN;
+return TAN;
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
 #line 190 "epython.l"
-return ACOS;
+return ASIN;
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
 #line 191 "epython.l"
-return ATAN;
+return ACOS;
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
 #line 192 "epython.l"
-return SINH;
+return ATAN;
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
 #line 193 "epython.l"
-return COSH;
+return SINH;
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
 #line 194 "epython.l"
-return TANH;
+return COSH;
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
 #line 195 "epython.l"
-return FLOOR;
+return TANH;
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
 #line 196 "epython.l"
-return CEIL;
+return FLOOR;
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
 #line 197 "epython.l"
-return LOG;
+return CEIL;
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
 #line 198 "epython.l"
-return LOG10;
+return LOG;
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
 #line 199 "epython.l"
-BEGIN(SINGLELINECOMMENT);
+return LOG10;
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 201 "epython.l"
-return yytext[0];
+#line 200 "epython.l"
+BEGIN(SINGLELINECOMMENT);
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 203 "epython.l"
-SAVE_VALUE(IDENTIFIER);
+#line 202 "epython.l"
+return yytext[0];
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
 #line 204 "epython.l"
+SAVE_VALUE(IDENTIFIER);
+	YY_BREAK
+case 98:
+YY_RULE_SETUP
+#line 205 "epython.l"
 ECHO;
 	YY_BREAK
-#line 1627 "lexer.c"
+#line 1632 "lexer.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENTS):
 case YY_STATE_EOF(SINGLELINECOMMENT):
@@ -2623,7 +2628,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 204 "epython.l"
+#line 205 "epython.l"
 
 
 
