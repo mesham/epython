@@ -33,7 +33,7 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
-%token ADD SUB ISHOST ISDEVICE COLON
+%token ADD SUB ISHOST ISDEVICE COLON DEF RET
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE
 
@@ -96,6 +96,9 @@ statement
 	| STOP { $$=appendStopStatement(); }
 	| REM { $$ = NULL; }
 	| SYNC { $$=appendSyncStatement(); }
+	| DEF ident LPAREN RPAREN COLON codeblock { appendNewFunctionStatement($2, $6); $$ = NULL; }
+	| RET { $$ = appendReturnStatement(); }
+	| ident LPAREN RPAREN { $$=appendCallFunctionStatement($1); }
 ;
 
 codeblock

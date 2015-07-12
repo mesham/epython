@@ -34,6 +34,7 @@ extern int line_num;
 // Used for tracking gotos and line numberings (which are resolved once the byte code is assembled)
 struct lineDefinition {
 	char type;
+	char * name;
 	int linenumber, currentpoint;
 	struct lineDefinition * next;
 };
@@ -45,8 +46,15 @@ struct memorycontainer {
 	struct lineDefinition * lineDefns;
 };
 
+// A function definition, containing the function memory and the name of the function
+struct functionDefinition {
+	char * name;
+	struct memorycontainer * contents;
+};
+
 unsigned short getNumberEntriesInSymbolTable(void);
 void setNumberEntriesInSymbolTable(unsigned short);
+void appendNewFunctionStatement(char*, struct memorycontainer*);
 struct memorycontainer* appendReductionStatement(int, struct memorycontainer*, char*);
 struct memorycontainer* appendBcastStatement(struct memorycontainer*, struct memorycontainer*, char*);
 struct memorycontainer* appendRecvStatement(char*, struct memorycontainer*);
@@ -58,6 +66,7 @@ struct memorycontainer* appendDeclareArray(char*, struct memorycontainer*);
 struct memorycontainer* appendDeclareSharedArray(char*, struct memorycontainer*);
 struct memorycontainer* appendInputStatement(char*);
 struct memorycontainer* appendInputStringStatement(struct memorycontainer*, char*);
+struct memorycontainer* appendCallFunctionStatement(char*);
 struct memorycontainer* appendGotoStatement(int);
 struct memorycontainer* appendWhileStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
@@ -65,6 +74,7 @@ struct memorycontainer* appendIfStatement(struct memorycontainer*, struct memory
 struct memorycontainer* appendIfElseStatement(struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendArraySetStatement(char*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendLetStatement(char*, struct memorycontainer*);
+struct memorycontainer* appendReturnStatement(void);
 struct memorycontainer* appendPrintStatement(struct memorycontainer*);
 struct memorycontainer* appendStopStatement(void);
 struct memorycontainer* appendSyncStatement(void);

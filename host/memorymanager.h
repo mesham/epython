@@ -29,6 +29,13 @@
 
 #include "byteassembler.h"
 
+// Used to maintain a linked list of functions
+struct functionListNode {
+	struct functionDefinition * fn;
+	struct functionListNode * next;
+};
+
+void addFunction(struct functionDefinition*);
 void compileMemory(struct memorycontainer*);
 void setLineNumber(struct memorycontainer*, int);
 struct memorycontainer* concatenateMemory(struct memorycontainer*, struct memorycontainer*);

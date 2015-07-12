@@ -148,6 +148,8 @@ NOT|"!"                                 return NOT;
 "]"										return SRBRACE;
 "("                                     return LPAREN;
 ")"                                     return RPAREN;
+DEF										return DEF;
+RETURN									return RET;
 ISHOST									return ISHOST;
 ISDEVICE								return ISDEVICE;
 ELSE                                    return ELSE;

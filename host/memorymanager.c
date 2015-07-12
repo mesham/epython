@@ -32,8 +32,11 @@
 
 // This is set at the end of parsing to be the entire byte code representation of the users BASIC program
 struct memorycontainer* assembledMemory=NULL;
+// This is the function list
+struct functionListNode* functionListHead=NULL;
 
 static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
+static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*);
 
 /**
  * Compiles the memory by going through and resolving relative links (i.e. gotos) and adds a stop at the end
@@ -42,10 +45,18 @@ void compileMemory(struct memorycontainer* memory) {
 	struct memorycontainer* stopStatement=appendStopStatement();
 	if (memory != NULL) {
 		struct memorycontainer* compiledMem=concatenateMemory(memory, stopStatement);
+		struct functionListNode * fnHead=functionListHead;
+		while (fnHead != NULL) {
+			compiledMem=concatenateMemory(compiledMem, fnHead->fn->contents);
+			fnHead=fnHead->next;
+		}
 		struct lineDefinition * root=compiledMem->lineDefns, *r2;
 		while (root != NULL) {
 			if (root->type==1) {
 				unsigned short lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
+				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
+			} else if (root->type==3){
+				unsigned short lineLocation=findLocationOfFunctionName(compiledMem->lineDefns, root->name);
 				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
 			}
 			root=root->next;
@@ -64,6 +75,16 @@ void compileMemory(struct memorycontainer* memory) {
 }
 
 /**
+ * Adds a function to the function list which are all combined in the compile memory function
+ */
+void addFunction(struct functionDefinition* functionDefintion) {
+	struct functionListNode * node=(struct functionListNode*) malloc(sizeof(struct functionListNode));
+	node->fn=functionDefintion;
+	node->next=functionListHead;
+	functionListHead=node;
+}
+
+/**
  * Given a line number will return the byte location of this in the memory
  */
 static unsigned short findLocationOfLineNumber(struct lineDefinition * root, int lineNumber) {
@@ -72,6 +93,18 @@ static unsigned short findLocationOfLineNumber(struct lineDefinition * root, int
 		root=root->next;
 	}
 	fprintf(stderr, "Can not find line %d in goto\n", lineNumber);
+	exit(0);
+}
+
+/**
+ * Finds the location of a function name and returns this or raises an error if the function is not found
+ */
+static unsigned short findLocationOfFunctionName(struct lineDefinition * root, char * functionName) {
+	while (root != NULL) {
+		if (root->type==2 && strcmp(root->name, functionName) == 0) return (unsigned short) root->currentpoint;
+		root=root->next;
+	}
+	fprintf(stderr, "Can not find function name %s\n", functionName);
 	exit(0);
 }
 

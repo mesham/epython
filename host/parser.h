@@ -89,38 +89,40 @@ extern int yydebug;
     ISHOST = 299,
     ISDEVICE = 300,
     COLON = 301,
-    MULT = 302,
-    DIV = 303,
-    MOD = 304,
-    AND = 305,
-    OR = 306,
-    NEQ = 307,
-    LEQ = 308,
-    GEQ = 309,
-    LT = 310,
-    GT = 311,
-    EQ = 312,
-    NOT = 313,
-    SQRT = 314,
-    SIN = 315,
-    COS = 316,
-    TAN = 317,
-    ASIN = 318,
-    ACOS = 319,
-    ATAN = 320,
-    SINH = 321,
-    COSH = 322,
-    TANH = 323,
-    FLOOR = 324,
-    CEIL = 325,
-    LOG = 326,
-    LOG10 = 327,
-    LPAREN = 328,
-    RPAREN = 329,
-    SLBRACE = 330,
-    SRBRACE = 331,
-    ASSGN = 332,
-    POW = 333
+    DEF = 302,
+    RET = 303,
+    MULT = 304,
+    DIV = 305,
+    MOD = 306,
+    AND = 307,
+    OR = 308,
+    NEQ = 309,
+    LEQ = 310,
+    GEQ = 311,
+    LT = 312,
+    GT = 313,
+    EQ = 314,
+    NOT = 315,
+    SQRT = 316,
+    SIN = 317,
+    COS = 318,
+    TAN = 319,
+    ASIN = 320,
+    ACOS = 321,
+    ATAN = 322,
+    SINH = 323,
+    COSH = 324,
+    TANH = 325,
+    FLOOR = 326,
+    CEIL = 327,
+    LOG = 328,
+    LOG10 = 329,
+    LPAREN = 330,
+    RPAREN = 331,
+    SLBRACE = 332,
+    SRBRACE = 333,
+    ASSGN = 334,
+    POW = 335
   };
 #endif
 /* Tokens.  */
@@ -168,38 +170,40 @@ extern int yydebug;
 #define ISHOST 299
 #define ISDEVICE 300
 #define COLON 301
-#define MULT 302
-#define DIV 303
-#define MOD 304
-#define AND 305
-#define OR 306
-#define NEQ 307
-#define LEQ 308
-#define GEQ 309
-#define LT 310
-#define GT 311
-#define EQ 312
-#define NOT 313
-#define SQRT 314
-#define SIN 315
-#define COS 316
-#define TAN 317
-#define ASIN 318
-#define ACOS 319
-#define ATAN 320
-#define SINH 321
-#define COSH 322
-#define TANH 323
-#define FLOOR 324
-#define CEIL 325
-#define LOG 326
-#define LOG10 327
-#define LPAREN 328
-#define RPAREN 329
-#define SLBRACE 330
-#define SRBRACE 331
-#define ASSGN 332
-#define POW 333
+#define DEF 302
+#define RET 303
+#define MULT 304
+#define DIV 305
+#define MOD 306
+#define AND 307
+#define OR 308
+#define NEQ 309
+#define LEQ 310
+#define GEQ 311
+#define LT 312
+#define GT 313
+#define EQ 314
+#define NOT 315
+#define SQRT 316
+#define SIN 317
+#define COS 318
+#define TAN 319
+#define ASIN 320
+#define ACOS 321
+#define ATAN 322
+#define SINH 323
+#define COSH 324
+#define TANH 325
+#define FLOOR 326
+#define CEIL 327
+#define LOG 328
+#define LOG10 329
+#define LPAREN 330
+#define RPAREN 331
+#define SLBRACE 332
+#define SRBRACE 333
+#define ASSGN 334
+#define POW 335
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -213,7 +217,7 @@ union YYSTYPE
 	struct memorycontainer * data;
 	char *string;
 
-#line 217 "parser.h" /* yacc.c:1909  */
+#line 221 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

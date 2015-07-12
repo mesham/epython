@@ -32,6 +32,8 @@
 #include "../host/host-functions.h"
 #endif
 
+#define MAX_CALL_STACK_DEPTH 10
+
 #ifdef HOST_INTERPRETER
 // Whether we should stop the interpreter or not (due to error raised)
 char * stopInterpreter;
@@ -57,11 +59,14 @@ static int numActiveCores;
 #endif
 
 static int hostCoresBasePid;
+static int functionCallStack[MAX_CALL_STACK_DEPTH], functionCallStackCurrentPoint=0;
 
 #ifdef HOST_INTERPRETER
 static int handleInput(char*, int, int);
 static int handleInputWithString(char*, int, int);
 static int handleGoto(char*, int, int);
+static int handleFnCall(char*, int, int);
+static int handleReturnCall(char*, int, int);
 static int handlePrint(char*, int, int);
 static int handleDimArray(char*, int, char, int);
 static int handleLet(char*, int, int);
@@ -84,6 +89,8 @@ static struct value_defn computeExpressionResult(unsigned short, char*, int*, in
 static int handleInput(char*, int);
 static int handleInputWithString(char*, int);
 static int handleGoto(char*, int);
+static int handleFnCall(char*, int);
+static int handleReturnCall(char*, int);
 static int handlePrint(char*, int);
 static int handleDimArray(char*, int, char);
 static int handleLet(char*, int);
@@ -145,6 +152,8 @@ void processAssembledCode(char * assembled, unsigned int length, unsigned short 
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, threadId);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, threadId);
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i, threadId);
+		if (command == FNCALL_TOKEN) i=handleFnCall(assembled, i, threadId);
+		if (command == RETURN_TOKEN) i=handleReturnCall(assembled, i, threadId);
 		if (command == INPUT_TOKEN) i=handleInput(assembled, i, threadId);
 		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i, threadId);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i, threadId);
@@ -184,6 +193,8 @@ void processAssembledCode(char * assembled, unsigned int length, unsigned short 
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i);
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i);
+		if (command == FNCALL_TOKEN) i=handleFnCall(assembled, i);
+		if (command == RETURN_TOKEN) i=handleReturnCall(assembled, i);
 		if (command == INPUT_TOKEN) i=handleInput(assembled, i);
 		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i);
@@ -391,6 +402,31 @@ static int handleGoto(char * assembled, int currentPoint, int threadId) {
 static int handleGoto(char * assembled, int currentPoint) {
 #endif
 	return getUShort(&assembled[currentPoint]);
+}
+
+/**
+ * Calls some function and stores the call point in the function call stack for returning from this function
+ */
+#ifdef HOST_INTERPRETER
+static int handleFnCall(char * assembled, int currentPoint, int threadId) {
+#else
+static int handleFnCall(char * assembled, int currentPoint) {
+#endif
+	if (functionCallStackCurrentPoint >= MAX_CALL_STACK_DEPTH) raiseError("Max function call depth is 10");
+	functionCallStack[functionCallStackCurrentPoint++]=currentPoint+sizeof(unsigned short);
+	return getUShort(&assembled[currentPoint]);
+}
+
+/**
+ * Returns from a function via the location at the top of the call stack
+ */
+#ifdef HOST_INTERPRETER
+static int handleReturnCall(char * assembled, int currentPoint, int threadId) {
+#else
+static int handleReturnCall(char * assembled, int currentPoint) {
+#endif
+	if (functionCallStackCurrentPoint <= 0) raiseError("Return issued outside a function");
+	return getUShort(&functionCallStack[--functionCallStackCurrentPoint]);
 }
 
 /**

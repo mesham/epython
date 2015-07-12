@@ -61,7 +61,7 @@ int currentForLine=-1;
 static unsigned short current_var_id=0; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
 
-static int addVariable( char*);
+static int addVariable(char*);
 static int findVariable(struct variable_node*,  char*);
 static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId( char*, int);
@@ -269,6 +269,27 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
 }
 
 /**
+ * Appends and returns a call function, this is added as a placeholder and then resolved at the end to point to the absolute byte code location
+ * which is needed as the function might appear at any point
+ */
+struct memorycontainer* appendCallFunctionStatement(char* functionName) {
+	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short)*2;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+
+	defn->next=NULL;
+	defn->type=3;
+	defn->name=(char*) malloc(sizeof(functionName)+1);
+	strcpy(defn->name, functionName);
+	defn->currentpoint=sizeof(unsigned short);
+
+	memoryContainer->lineDefns=defn;
+	appendStatement(memoryContainer, FNCALL_TOKEN, 0);
+	return memoryContainer;
+}
+
+/**
  * Appends and returns a goto, this is added as a placeholder and then resolved at the end to point to the absolute byte code location
  * which is needed as we might be jumping forward and have not yet encountered the line label
  */
@@ -445,6 +466,29 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
 }
 
 /**
+ * Appends a new function statement to the function list which is held by the memory manager.
+ * This also appends a return statement to the end of the function body and registers
+ * the current goto point as the function name
+ */
+void appendNewFunctionStatement(char* functionName, struct memorycontainer* functionContents) {
+	struct memorycontainer* completedFunction=concatenateMemory(functionContents, appendReturnStatement());
+
+	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+	defn->next=completedFunction->lineDefns;
+	defn->type=2;
+	defn->currentpoint=0;
+	defn->name=(char*) malloc(strlen(functionName) + 1);
+	strcpy(defn->name, functionName);
+	completedFunction->lineDefns=defn;
+
+	struct functionDefinition * fn=(struct functionDefinition*) malloc(sizeof(struct functionDefinition));
+	fn->name=(char*) malloc(strlen(functionName) + 1);
+	strcpy(fn->name, functionName);
+	fn->contents=completedFunction;
+	addFunction(fn);
+}
+
+/**
  * Appends and returns the setting of an array element (assignment) statement
  */
 struct memorycontainer* appendArraySetStatement( char* identifier, struct memorycontainer* indexContainer,
@@ -492,6 +536,19 @@ struct memorycontainer* appendPrintStatement(struct memorycontainer* expressionC
 	unsigned int position=0;
 	position=appendStatement(memoryContainer, PRINT_TOKEN, position);
 	appendMemory(memoryContainer, expressionContainer, position);
+	return memoryContainer;
+}
+
+/**
+ * Appends a return statement
+ */
+struct memorycontainer* appendReturnStatement(void) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	appendStatement(memoryContainer, RETURN_TOKEN, 0);
 	return memoryContainer;
 }
 
