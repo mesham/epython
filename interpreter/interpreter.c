@@ -110,6 +110,8 @@ static struct value_defn getExpressionValue(char*, int*);
 static int determine_logical_expression(char*, int*);
 static struct value_defn computeExpressionResult(unsigned short, char*, int*);
 #endif
+void setVariableValue(struct symbol_node*, struct value_defn, int);
+struct value_defn getVariableValue(struct symbol_node*, int);
 static unsigned short getUShort(void*);
 static int getInt(void*);
 static float getFloat(void*);
@@ -254,11 +256,12 @@ static int handleReduction(char * assembled, int currentPoint) {
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, threadId);
-	variableSymbol->value=reduceData(broadcast_expression, reductionOperator, threadId, numActiveCores[threadId], hostCoresBasePid);
+	setVariableValue(variableSymbol, reduceData(broadcast_expression,
+			reductionOperator, threadId, numActiveCores[threadId], hostCoresBasePid), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=reduceData(broadcast_expression, reductionOperator, numActiveCores);
+	setVariableValue(variableSymbol, reduceData(broadcast_expression, reductionOperator, numActiveCores), 0);
 #endif
 	return currentPoint;
 }
@@ -277,12 +280,13 @@ static int handleBcast(char * assembled, int currentPoint) {
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, threadId);
-	variableSymbol->value=bcastData(broadcast_expression, getInt(source_expression.data), threadId, numActiveCores[threadId], hostCoresBasePid);
+	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data),
+			threadId, numActiveCores[threadId], hostCoresBasePid), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores);
+	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), 0);
 #endif
 	return currentPoint;
 }
@@ -300,11 +304,11 @@ static int handleRecv(char * assembled, int currentPoint) {
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, threadId);
-	variableSymbol->value=recvData(getInt(source_expression.data), threadId, hostCoresBasePid);
+	setVariableValue(variableSymbol, recvData(getInt(source_expression.data), threadId, hostCoresBasePid), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=recvData(getInt(source_expression.data));
+	setVariableValue(variableSymbol, recvData(getInt(source_expression.data)), 0);
 #endif
 	return currentPoint;
 }
@@ -330,11 +334,7 @@ static int handleRecvToArray(char * assembled, int currentPoint) {
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn retrievedData=recvData(getInt(source_expression.data));
 #endif
-
-	variableSymbol->value.type=retrievedData.type;
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-	cpy(ptr+(getInt(index.data) *4), retrievedData.data, 4);
+	setVariableValue(variableSymbol, retrievedData, getInt(index.data));
 	return currentPoint;
 }
 
@@ -352,12 +352,12 @@ static int handleSendRecv(char * assembled, int currentPoint) {
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, threadId);
-	variableSymbol->value=sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid);
+	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=sendRecvData(tosend_expression, getInt(target_expression.data));
+	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data)), 0);
 #endif
 	return currentPoint;
 }
@@ -385,11 +385,7 @@ static int handleSendRecvArray(char * assembled, int currentPoint) {
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data));
 #endif
-
-	variableSymbol->value.type=retrievedData.type;
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-	cpy(ptr+(getInt(index.data) *4), retrievedData.data, 4);
+	setVariableValue(variableSymbol, retrievedData, getInt(index.data));
 	return currentPoint;
 }
 
@@ -449,7 +445,7 @@ static int handleFor(char * assembled, int currentPoint) {
 	unsigned short blockLen=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 
-	if (getInt(variableSymbol->value.data) <= getInt(to_expression.data)) return currentPoint;
+	if (getInt(getVariableValue(variableSymbol, 0).data) <= getInt(to_expression.data)) return currentPoint;
 	currentPoint+=blockLen+sizeof(unsigned short)*2;
 	return currentPoint;
 }
@@ -481,10 +477,10 @@ static int handleInput(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
-	variableSymbol->value=getInputFromUser(threadId);
+	setVariableValue(variableSymbol, getInputFromUser(threadId), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
-	variableSymbol->value=getInputFromUser();
+	setVariableValue(variableSymbol, getInputFromUser(), 0);
 #endif
 	return currentPoint;
 }
@@ -502,11 +498,11 @@ static int handleInputWithString(char * assembled, int currentPoint) {
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, threadId);
-	variableSymbol->value=getInputFromUserWithString(string_display, threadId);
+	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, threadId), 0);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint);
-	variableSymbol->value=getInputFromUserWithString(string_display);
+	setVariableValue(variableSymbol, getInputFromUserWithString(string_display), 0);
 #endif
 	return currentPoint;
 }
@@ -568,10 +564,7 @@ static int handleArraySet(char * assembled, int currentPoint) {
 	struct value_defn index=getExpressionValue(assembled, &currentPoint);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint);
 #endif
-	variableSymbol->value.type=value.type;
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-	cpy(ptr+(getInt(index.data) *4), value.data, 4);
+	setVariableValue(variableSymbol, value, getInt(index.data));
 	return currentPoint;
 }
 
@@ -587,11 +580,21 @@ static int handleLet(char * assembled, int currentPoint) {
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
-	variableSymbol->value=getExpressionValue(assembled, &currentPoint, threadId);
+	struct value_defn value=getExpressionValue(assembled, &currentPoint, threadId);
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId);
-	variableSymbol->value=getExpressionValue(assembled, &currentPoint);
+	struct value_defn value=getExpressionValue(assembled, &currentPoint);
 #endif
+	int currentAddress=getInt(variableSymbol->value.data);
+	if (currentAddress == 0) {
+		int * address=getArrayAddress(sizeof(int), 0);
+		cpy(variableSymbol->value.data, &address, sizeof(int*));
+		variableSymbol->value.type=value.type;
+
+		cpy(address, value.data, sizeof(int*));
+	} else {
+		setVariableValue(variableSymbol, value, 0);
+	}
 	return currentPoint;
 }
 
@@ -725,16 +728,14 @@ static struct value_defn getExpressionValue(char * assembled, int * currentPoint
 #else
 		struct symbol_node* variableSymbol=getVariableSymbol(variable_id);
 #endif
-		value=variableSymbol->value;
+		value=getVariableValue(variableSymbol, 0);
 		if (expressionId == ARRAYACCESS_TOKEN) {
 #ifdef HOST_INTERPRETER
 			struct value_defn index=getExpressionValue(assembled, currentPoint, threadId);
 #else
 			struct value_defn index=getExpressionValue(assembled, currentPoint);
 #endif
-			char * ptr;
-			cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-			cpy(&value.data, ptr+(getInt(index.data) *4), sizeof(int));
+			value=getVariableValue(variableSymbol, getInt(index.data));
 		}
 	} else if (expressionId == ADD_TOKEN || expressionId == SUB_TOKEN || expressionId == MUL_TOKEN ||
 			expressionId == DIV_TOKEN || expressionId == MOD_TOKEN || expressionId == POW_TOKEN) {
@@ -854,6 +855,28 @@ static float getFloat(void* data) {
 	float v;
 	cpy(&v, data, sizeof(float));
 	return v;
+}
+
+/**
+ * Sets a variables value in memory as pointed to by symbol table
+ */
+void setVariableValue(struct symbol_node* variableSymbol, struct value_defn value, int index) {
+	variableSymbol->value.type=value.type;
+	char * ptr;
+	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+	cpy(ptr+(index *4), value.data, sizeof(int*));
+}
+
+/**
+ * Retrieves a variable value from memory, which the symbol table points to
+ */
+struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index) {
+	struct value_defn val;
+	char * ptr;
+	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+	cpy(&val.data, ptr+(index *4), sizeof(int*));
+	val.type=variableSymbol->value.type;
+	return val;
 }
 
 /**
