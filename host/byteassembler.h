@@ -28,6 +28,7 @@
 #define BYTEASSEMBLER_H_
 
 #include <stddef.h>
+#include "stack.h"
 
 extern int line_num;
 
@@ -54,7 +55,7 @@ struct functionDefinition {
 
 unsigned short getNumberEntriesInSymbolTable(void);
 void setNumberEntriesInSymbolTable(unsigned short);
-void appendNewFunctionStatement(char*, struct memorycontainer*);
+void appendNewFunctionStatement(char*, struct stack_t*, struct memorycontainer*);
 struct memorycontainer* appendReductionStatement(int, struct memorycontainer*, char*);
 struct memorycontainer* appendBcastStatement(struct memorycontainer*, struct memorycontainer*, char*);
 struct memorycontainer* appendRecvStatement(char*, struct memorycontainer*);
@@ -66,7 +67,7 @@ struct memorycontainer* appendDeclareArray(char*, struct memorycontainer*);
 struct memorycontainer* appendDeclareSharedArray(char*, struct memorycontainer*);
 struct memorycontainer* appendInputStatement(char*);
 struct memorycontainer* appendInputStringStatement(struct memorycontainer*, char*);
-struct memorycontainer* appendCallFunctionStatement(char*);
+struct memorycontainer* appendCallFunctionStatement(char*, struct stack_t*);
 struct memorycontainer* appendGotoStatement(int);
 struct memorycontainer* appendWhileStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);

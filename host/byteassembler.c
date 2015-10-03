@@ -61,10 +61,10 @@ int currentForLine=-1;
 static unsigned short current_var_id=0; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
 
-static int addVariable(char*);
-static int findVariable(struct variable_node*,  char*);
+static unsigned short addVariable(char*);
+static unsigned short findVariable(struct variable_node*,  char*);
 static int areStringsEqualIgnoreCase(char*, char*);
-static unsigned short getVariableId( char*, int);
+static unsigned short getVariableId(char*, int);
 static struct memorycontainer* createExpression(unsigned short, struct memorycontainer*, struct memorycontainer*);
 static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned short);
 
@@ -272,10 +272,11 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
  * Appends and returns a call function, this is added as a placeholder and then resolved at the end to point to the absolute byte code location
  * which is needed as the function might appear at any point
  */
-struct memorycontainer* appendCallFunctionStatement(char* functionName) {
+struct memorycontainer* appendCallFunctionStatement(char* functionName, struct stack_t* args) {
+	unsigned short numArgs=(unsigned short) getStackSize(args);
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2;
+	memoryContainer->length=sizeof(unsigned short)*(3+numArgs);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 
 	defn->next=NULL;
@@ -285,7 +286,18 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName) {
 	defn->currentpoint=sizeof(unsigned short);
 
 	memoryContainer->lineDefns=defn;
-	appendStatement(memoryContainer, FNCALL_TOKEN, 0);
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, FNCALL_TOKEN, position);
+	position+=sizeof(unsigned short);
+	position=appendVariable(memoryContainer, numArgs, position);
+
+	char * identifier;
+	while ((identifier=popIdentifier(args)) != NULL) {
+		position=appendVariable(memoryContainer, getVariableId(identifier, 0), position);
+	}
+
 	return memoryContainer;
 }
 
@@ -470,8 +482,26 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
  * This also appends a return statement to the end of the function body and registers
  * the current goto point as the function name
  */
-void appendNewFunctionStatement(char* functionName, struct memorycontainer* functionContents) {
-	struct memorycontainer* completedFunction=concatenateMemory(functionContents, appendReturnStatement());
+void appendNewFunctionStatement(char* functionName, struct stack_t * args, struct memorycontainer* functionContents) {
+	struct functionDefinition * fn=(struct functionDefinition*) malloc(sizeof(struct functionDefinition));
+	fn->name=(char*) malloc(strlen(functionName) + 1);
+	strcpy(fn->name, functionName);
+
+	unsigned short numberArgs=(unsigned short) getStackSize(args);
+	struct memorycontainer* numberArgsContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	numberArgsContainer->length=sizeof(unsigned short) * (numberArgs + 1);
+	numberArgsContainer->data=(char*) malloc(sizeof(unsigned short) * (numberArgs + 1));
+	numberArgsContainer->lineDefns=NULL;
+
+	((unsigned short *) numberArgsContainer->data)[0]=numberArgs;
+
+	int i;
+	for (i=0;i<numberArgs;i++) {
+		((unsigned short *) numberArgsContainer->data)[i+1]=getVariableId(popIdentifier(args), 1);
+	}
+
+	struct memorycontainer* completedFunction=concatenateMemory(concatenateMemory(numberArgsContainer, functionContents),
+			appendReturnStatement());
 
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	defn->next=completedFunction->lineDefns;
@@ -481,9 +511,6 @@ void appendNewFunctionStatement(char* functionName, struct memorycontainer* func
 	strcpy(defn->name, functionName);
 	completedFunction->lineDefns=defn;
 
-	struct functionDefinition * fn=(struct functionDefinition*) malloc(sizeof(struct functionDefinition));
-	fn->name=(char*) malloc(strlen(functionName) + 1);
-	strcpy(fn->name, functionName);
 	fn->contents=completedFunction;
 	addFunction(fn);
 }
@@ -927,7 +954,7 @@ static unsigned short getVariableId(char * name, int allowAdd) {
 /**
  * Finds a variable in a specific variable list or returns -1 for no variable found
  */
-static int findVariable(struct variable_node * root,  char * name) {
+static unsigned short findVariable(struct variable_node * root,  char * name) {
 	while (root != NULL) {
 		if (areStringsEqualIgnoreCase(root->name, name)) return root->id;
 		root=root->next;
@@ -950,7 +977,7 @@ static int areStringsEqualIgnoreCase(char * s1, char * s2) {
 /**
  * Adds a variable to the variable list at the top of the scope stack, allocates the ID to be the next free one
  */
-static int addVariable( char * name) {
+static unsigned short addVariable(char * name) {
 	struct variable_node * newNode=(struct variable_node*) malloc(sizeof(struct variable_node));
 	newNode->name=(char*) malloc(strlen(name) + 1);
 	strcpy(newNode->name, name);

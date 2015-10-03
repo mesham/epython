@@ -81,7 +81,7 @@ static int handleSendRecvArray(char*, int, int);
 static int handleBcast(char*, int, int);
 static int handleReduction(char*, int, int);
 static int handleSync(char*, int, int);
-static struct symbol_node* getVariableSymbol(unsigned short, int);
+static struct symbol_node* getVariableSymbol(unsigned short, int, int);
 static struct value_defn getExpressionValue(char*, int*, int);
 static int determine_logical_expression(char*, int*, int);
 static struct value_defn computeExpressionResult(unsigned short, char*, int*, int);
@@ -105,7 +105,7 @@ static int handleSendRecvArray(char*, int);
 static int handleBcast(char*, int);
 static int handleReduction(char*, int);
 static int handleSync(char*, int);
-static struct symbol_node* getVariableSymbol(unsigned short);
+static struct symbol_node* getVariableSymbol(unsigned short, int);
 static struct value_defn getExpressionValue(char*, int*);
 static int determine_logical_expression(char*, int*);
 static struct value_defn computeExpressionResult(unsigned short, char*, int*);
@@ -254,12 +254,12 @@ static int handleReduction(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	setVariableValue(variableSymbol, reduceData(broadcast_expression,
 			reductionOperator, threadId, numActiveCores[threadId], hostCoresBasePid), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
 	setVariableValue(variableSymbol, reduceData(broadcast_expression, reductionOperator, numActiveCores), 0);
 #endif
@@ -277,13 +277,13 @@ static int handleBcast(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data),
 			threadId, numActiveCores[threadId], hostCoresBasePid), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), 0);
@@ -302,11 +302,11 @@ static int handleRecv(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	setVariableValue(variableSymbol, recvData(getInt(source_expression.data), threadId, hostCoresBasePid), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 	setVariableValue(variableSymbol, recvData(getInt(source_expression.data)), 0);
 #endif
@@ -324,12 +324,12 @@ static int handleRecvToArray(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn retrievedData=recvData(getInt(source_expression.data), threadId, hostCoresBasePid);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn retrievedData=recvData(getInt(source_expression.data));
@@ -349,12 +349,12 @@ static int handleSendRecv(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
 	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data)), 0);
@@ -373,13 +373,13 @@ static int handleSendRecvArray(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint);
@@ -409,8 +409,27 @@ static int handleFnCall(char * assembled, int currentPoint, int threadId) {
 static int handleFnCall(char * assembled, int currentPoint) {
 #endif
 	if (functionCallStackCurrentPoint >= MAX_CALL_STACK_DEPTH) raiseError("Max function call depth is 10");
-	functionCallStack[functionCallStackCurrentPoint++]=currentPoint+sizeof(unsigned short);
-	return getUShort(&assembled[currentPoint]);
+	unsigned short fnAddress=getUShort(&assembled[currentPoint])+sizeof(unsigned short); // skip past initial num args entry in fn
+	currentPoint+=sizeof(unsigned short);
+	unsigned short numArgs=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+	struct symbol_node* srcSymbol, *targetSymbol;
+	int i;
+	for (i=0;i<numArgs;i++) {
+#ifdef HOST_INTERPRETER
+		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 0);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
+#else
+		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 0);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
+#endif
+		targetSymbol->isAlias=1;
+		targetSymbol->alias=srcSymbol->id;
+		currentPoint+=sizeof(unsigned short);
+		fnAddress+=sizeof(unsigned short);
+	}
+	functionCallStack[functionCallStackCurrentPoint++]=currentPoint;
+	return (int) fnAddress;
 }
 
 /**
@@ -436,10 +455,10 @@ static int handleFor(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn to_expression=getExpressionValue(assembled, &currentPoint, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn to_expression=getExpressionValue(assembled, &currentPoint);
 #endif
 	unsigned short blockLen=getUShort(&assembled[currentPoint]);
@@ -476,10 +495,10 @@ static int handleInput(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	setVariableValue(variableSymbol, getInputFromUser(threadId), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	setVariableValue(variableSymbol, getInputFromUser(), 0);
 #endif
 	return currentPoint;
@@ -496,11 +515,11 @@ static int handleInputWithString(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, threadId);
 	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, threadId), 0);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint);
 	setVariableValue(variableSymbol, getInputFromUserWithString(string_display), 0);
 #endif
@@ -533,10 +552,10 @@ static int handleDimArray(char * assembled, int currentPoint, char inSharedMemor
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn size=getExpressionValue(assembled, &currentPoint, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn size=getExpressionValue(assembled, &currentPoint);
 #endif
 	variableSymbol->value.type=INT_TYPE;
@@ -556,11 +575,11 @@ static int handleArraySet(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint, threadId);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint);
 #endif
@@ -579,10 +598,10 @@ static int handleLet(char * assembled, int currentPoint) {
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint);
 #endif
 	int currentAddress=getInt(variableSymbol->value.data);
@@ -724,9 +743,9 @@ static struct value_defn getExpressionValue(char * assembled, int * currentPoint
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, threadId);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, threadId, 1);
 #else
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, 1);
 #endif
 		value=getVariableValue(variableSymbol, 0);
 		if (expressionId == ARRAYACCESS_TOKEN) {
@@ -810,17 +829,29 @@ static struct value_defn computeExpressionResult(unsigned short operator, char *
  * Retrieves the symbol entry of a variable based upon its id
  */
 #ifdef HOST_INTERPRETER
-static struct symbol_node* getVariableSymbol(unsigned short id, int threadId) {
+static struct symbol_node* getVariableSymbol(unsigned short id, int threadId, int followAlias) {
 #else
-static struct symbol_node* getVariableSymbol(unsigned short id) {
+static struct symbol_node* getVariableSymbol(unsigned short id, int followAlias) {
 #endif
 	int i;
 #ifdef HOST_INTERPRETER
 	for (i=0;i<currentSymbolEntries[threadId];i++) {
-		if (symbolTable[threadId][i].id == id) return &(symbolTable[threadId])[i];
+		if (symbolTable[threadId][i].id == id) {
+			if (followAlias && symbolTable[threadId][i].isAlias) {
+				return getVariableSymbol(symbolTable[threadId][i].alias, threadId, 0);
+			} else {
+				return &(symbolTable[threadId])[i];
+			}
+		}
 #else
 	for (i=0;i<currentSymbolEntries;i++) {
-		if (symbolTable[i].id == id) return &symbolTable[i];
+		if (symbolTable[i].id == id) {
+			if (followAlias && symbolTable[i].isAlias) {
+				return getVariableSymbol(symbolTable[i].alias, 0);
+			} else {
+				return &symbolTable[i];
+			}
+		}
 #endif
 	}
 	int zero=0;
@@ -831,6 +862,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id) {
 	return &symbolTable[threadId][currentSymbolEntries[threadId]++];
 #else
 	symbolTable[currentSymbolEntries].id=id;
+	symbolTable[currentSymbolEntries].isAlias=0;
 	symbolTable[currentSymbolEntries].value.type=INT_TYPE;
 	cpy(symbolTable[currentSymbolEntries].value.data, &zero, sizeof(int));
 	return &symbolTable[currentSymbolEntries++];

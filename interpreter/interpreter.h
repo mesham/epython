@@ -46,7 +46,8 @@ struct value_defn {
 
 // A node in the symbol table - its id and value
 struct symbol_node {
-	unsigned short id;
+	unsigned short id, alias;
+	char isAlias;
 	struct value_defn value __attribute__((aligned(8)));
 };
 

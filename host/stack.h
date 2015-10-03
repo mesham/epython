@@ -11,12 +11,17 @@
 #define INITIAL_STACK_SIZE 10
 
 struct stack_t {
-    int size, width, *data;
+    int size, width;
+    void **data;
 };
 
+struct stack_t* getNewStack();
 void initStack(struct stack_t*);
+int getStackSize(struct stack_t*);
 int pop(struct stack_t*);
 void push(struct stack_t*, int);
+char* popIdentifier(struct stack_t*);
+void pushIdentifier(struct stack_t*, char*);
 int peek(struct stack_t*);
 
 #endif /* HOST_STACK_H_ */

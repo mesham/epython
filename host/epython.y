@@ -1,6 +1,7 @@
 %{
 #include "byteassembler.h"
 #include "memorymanager.h"
+#include "stack.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -21,6 +22,7 @@ void yyerror (char const *msg) {
 	float real;	
 	struct memorycontainer * data;
 	char *string;
+	struct stack_t * stack;
 }
 
 %token <integer> INTEGER
@@ -47,6 +49,7 @@ void yyerror (char const *msg) {
 %type <string> ident declareident
 %type <integer> unary_operator reductionop
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock
+%type <stack> fndeclarationargs fncallargs
 
 %start program 
 
@@ -96,10 +99,22 @@ statement
 	| STOP { $$=appendStopStatement(); }
 	| REM { $$ = NULL; }
 	| SYNC { $$=appendSyncStatement(); }
-	| DEF ident LPAREN RPAREN COLON codeblock { appendNewFunctionStatement($2, $6); $$ = NULL; }
+	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }
-	| ident LPAREN RPAREN { $$=appendCallFunctionStatement($1); }
+	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
+
+fncallargs
+	: /*blank*/ { $$=getNewStack(); }
+	| ident { $$=getNewStack(); pushIdentifier($$, $1); }
+	| fncallargs COMMA ident { pushIdentifier($1, $3); $$=$1; }
+	;
+
+fndeclarationargs
+	: /*blank*/ { $$=getNewStack(); }
+	| ident { $$=getNewStack(); pushIdentifier($$, $1); }
+	| fndeclarationargs COMMA ident { pushIdentifier($1, $3); $$=$1; }	
+	;
 
 codeblock
 	: NEWLINE indent_rule lines outdent_rule { $$=$3; }

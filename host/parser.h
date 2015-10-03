@@ -210,14 +210,15 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 19 "epython.y" /* yacc.c:1909  */
+#line 20 "epython.y" /* yacc.c:1909  */
 
 	int integer;
 	float real;	
 	struct memorycontainer * data;
 	char *string;
+	struct stack_t * stack;
 
-#line 221 "parser.h" /* yacc.c:1909  */
+#line 222 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
