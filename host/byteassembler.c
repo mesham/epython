@@ -58,7 +58,7 @@ struct variable_node {
 // The current for line, this is is used in conjunction with GOTO to code for repetition
 int currentForLine=-1;
 
-static unsigned short current_var_id=0; // Current variable id (unique for each unique variable)
+static unsigned short current_var_id=1; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
 
 static unsigned short addVariable(char*);
@@ -477,6 +477,10 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
 	return memoryContainer;
 }
 
+void appendArgument(char* argName) {
+	getVariableId(argName, 1);
+}
+
 /**
  * Appends a new function statement to the function list which is held by the memory manager.
  * This also appends a return statement to the end of the function body and registers
@@ -537,7 +541,7 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct memory
 /**
  * Appends and returns a let statement which sets and declares scalars
  */
-struct memorycontainer* appendLetStatement( char * identifier, struct memorycontainer* expressionContainer) {
+struct memorycontainer* appendLetStatement(char * identifier, struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned short) * 2 + expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
@@ -938,8 +942,8 @@ void addVariableIfNeeded( char * name) {
 static unsigned short getVariableId(char * name, int allowAdd) {
 	struct scope_info * scopeNode=scope;
 	while (scopeNode != NULL) {
-		int id=findVariable(scopeNode->variables, name);
-		if (id >= 0) return id;
+		unsigned short id=findVariable(scopeNode->variables, name);
+		if (id >= 1) return id;
 		scopeNode=scopeNode->next;
 	}
 
@@ -959,7 +963,7 @@ static unsigned short findVariable(struct variable_node * root,  char * name) {
 		if (areStringsEqualIgnoreCase(root->name, name)) return root->id;
 		root=root->next;
 	}
-	return -1;
+	return 0;
 }
 
 /**

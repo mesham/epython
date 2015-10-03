@@ -1778,7 +1778,7 @@ yyreduce:
 
   case 35:
 #line 102 "epython.y" /* yacc.c:1646  */
-    { appendNewFunctionStatement((yyvsp[-5].string), (yyvsp[-3].stack), (yyvsp[0].data)); (yyval.data) = NULL; }
+    { appendNewFunctionStatement((yyvsp[-5].string), (yyvsp[-3].stack), (yyvsp[0].data)); leaveScope(); (yyval.data) = NULL; }
 #line 1783 "parser.c" /* yacc.c:1646  */
     break;
 
@@ -1814,19 +1814,19 @@ yyreduce:
 
   case 41:
 #line 114 "epython.y" /* yacc.c:1646  */
-    { (yyval.stack)=getNewStack(); }
+    { enterScope(); (yyval.stack)=getNewStack(); }
 #line 1819 "parser.c" /* yacc.c:1646  */
     break;
 
   case 42:
 #line 115 "epython.y" /* yacc.c:1646  */
-    { (yyval.stack)=getNewStack(); pushIdentifier((yyval.stack), (yyvsp[0].string)); }
+    { (yyval.stack)=getNewStack(); enterScope(); pushIdentifier((yyval.stack), (yyvsp[0].string)); appendArgument((yyvsp[0].string)); }
 #line 1825 "parser.c" /* yacc.c:1646  */
     break;
 
   case 43:
 #line 116 "epython.y" /* yacc.c:1646  */
-    { pushIdentifier((yyvsp[-2].stack), (yyvsp[0].string)); (yyval.stack)=(yyvsp[-2].stack); }
+    { pushIdentifier((yyvsp[-2].stack), (yyvsp[0].string)); (yyval.stack)=(yyvsp[-2].stack); appendArgument((yyvsp[0].string)); }
 #line 1831 "parser.c" /* yacc.c:1646  */
     break;
 

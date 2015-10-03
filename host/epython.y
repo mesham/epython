@@ -99,7 +99,7 @@ statement
 	| STOP { $$=appendStopStatement(); }
 	| REM { $$ = NULL; }
 	| SYNC { $$=appendSyncStatement(); }
-	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); $$ = NULL; }
+	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
@@ -111,9 +111,9 @@ fncallargs
 	;
 
 fndeclarationargs
-	: /*blank*/ { $$=getNewStack(); }
-	| ident { $$=getNewStack(); pushIdentifier($$, $1); }
-	| fndeclarationargs COMMA ident { pushIdentifier($1, $3); $$=$1; }	
+	: /*blank*/ { enterScope(); $$=getNewStack(); }
+	| ident { $$=getNewStack(); enterScope(); pushIdentifier($$, $1); appendArgument($1); }
+	| fndeclarationargs COMMA ident { pushIdentifier($1, $3); $$=$1; appendArgument($3); }	
 	;
 
 codeblock

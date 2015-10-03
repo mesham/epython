@@ -56,6 +56,7 @@ struct functionDefinition {
 unsigned short getNumberEntriesInSymbolTable(void);
 void setNumberEntriesInSymbolTable(unsigned short);
 void appendNewFunctionStatement(char*, struct stack_t*, struct memorycontainer*);
+void appendArgument(char*);
 struct memorycontainer* appendReductionStatement(int, struct memorycontainer*, char*);
 struct memorycontainer* appendBcastStatement(struct memorycontainer*, struct memorycontainer*, char*);
 struct memorycontainer* appendRecvStatement(char*, struct memorycontainer*);
