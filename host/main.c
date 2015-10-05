@@ -31,6 +31,7 @@
 #include <pthread.h>
 
 #include "stack.h"
+#include "ctype.h"
 
 #include "configuration.h"
 #include "interpreter.h"
@@ -60,7 +61,7 @@ extern int yyparse();
 extern int yy_scan_string(const char*);
 extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 
-struct stack_t indent_stack;
+struct stack_t indent_stack, filenameStack, lineNumberStack;
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
@@ -81,6 +82,7 @@ int main (int argc, char *argv[]) {
 	struct interpreterconfiguration* configuration=readConfiguration(argc, argv);
 	if (configuration->filename != NULL) {
 		char * contents = getSourceFileContents(configuration->filename);
+		if (configuration->displayPPCode) printf("%s\n", contents);
 		doParse(contents);
 	} else if (configuration->loadByteFilename != NULL) {
 		loadByteCode(configuration->loadByteFilename);
@@ -113,6 +115,8 @@ int main (int argc, char *argv[]) {
 static void doParse(char * contents) {
 	enterScope();
 	initStack(&indent_stack);
+	initStack(&filenameStack);
+	initStack(&lineNumberStack);
 	yy_scan_string(contents);
 	yyparse();
 }
@@ -163,29 +167,55 @@ static void * runSpecificHostProcess(void * rawThreadContext) {
 }
 
 /**
- * Given the name of a BASIC file will read it and return the char array containing the contents, an error
+ * Given the name of a file will read it and return the char array containing the contents, an error
  * is reported along with program exit if the file cannot be read for whatever reason
  */
 static char * getSourceFileContents(char * filename) {
-	int singleLineLength=0, contentsSize=TEXTUAL_BASIC_SIZE_STRIDE;
+	unsigned int contentsSize=TEXTUAL_BASIC_SIZE_STRIDE;
 	char * contents=(char*) malloc(contentsSize);
 	char buffer[1024];
-	contents[0]='\0';
 	FILE * sourceCode=fopen(filename, "r");
 	if (sourceCode != NULL) {
+		sprintf(contents, "<<<%s\n", filename);
 		while (fgets(buffer, 1024, sourceCode) != NULL) {
-			singleLineLength+=strlen(buffer);
-			if (singleLineLength >= contentsSize) {
-				contentsSize+=TEXTUAL_BASIC_SIZE_STRIDE;
-				contents=realloc(contents, contentsSize);
+			if (strstr(buffer, "import") != NULL) {
+				char * importPoint=strstr(buffer, "import");
+				int startIdx, idx=0, foundSpace=0;
+				while (importPoint[idx] != '\0') {
+					if (isspace(importPoint[idx])) foundSpace=1;
+					if (!isspace(importPoint[idx]) && foundSpace==1) {
+						startIdx=idx;
+						foundSpace=2;
+					}
+					if (isspace(importPoint[idx]) && foundSpace==2) break;
+					idx++;
+				}
+				importPoint[idx-1]='\0';
+				char * newFilename=(char*) malloc(strlen(&importPoint[startIdx])+4);
+				sprintf(newFilename, "%s.py", &importPoint[startIdx]);
+				char * importedContents=getSourceFileContents(newFilename);
+				free(newFilename);
+				if (strlen(importedContents)+strlen(contents)+1 >= contentsSize) {
+					contentsSize=strlen(importedContents)+strlen(contents)+TEXTUAL_BASIC_SIZE_STRIDE;
+					contents=realloc(contents, contentsSize);
+				}
+				sprintf(contents, "%s%s", contents, importedContents);
+			} else {
+				if (strlen(buffer)+strlen(contents)+1 >= contentsSize) {
+					contentsSize+=TEXTUAL_BASIC_SIZE_STRIDE;
+					contents=realloc(contents, contentsSize);
+				}
+				sprintf(contents, "%s%s", contents, buffer);
 			}
-			sprintf(contents, "%s%s", contents, buffer);
 		}
-		sprintf(contents, "%s\n", contents);
+		if (strlen(contents)+7 >=contentsSize) {
+			contents=realloc(contents, contentsSize+7);
+		}
+		sprintf(contents, "%s\n>>>\n", contents);
 		fclose(sourceCode);
 		return contents;
 	} else {
-		fprintf(stderr, "Opening of BASIC file '%s' failed, are you sure this file exists?\n", filename);
+		fprintf(stderr, "Opening of Python file '%s' failed, are you sure this file exists?\n", filename);
 		exit(0);
 	}
 }

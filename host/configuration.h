@@ -32,7 +32,7 @@
 // Configuration structure which is filled based upon command line arguments
 struct interpreterconfiguration {
 	char * intentActive;
-	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared;
+	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared, displayPPCode;
 	char * filename, *compiledByteFilename, *loadByteFilename;
 	int hostProcs, coreProcs;
 };

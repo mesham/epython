@@ -50,7 +50,8 @@ struct interpreterconfiguration* readConfiguration(int argc, char *argv[]) {
 	struct interpreterconfiguration* configuration=(struct interpreterconfiguration*) malloc(sizeof(struct interpreterconfiguration));
 	configuration->intentActive=(char*) malloc(TOTAL_CORES);
 	for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=1;
-	configuration->displayStats=configuration->displayTiming=configuration->forceCodeOnCore=configuration->forceCodeOnShared=configuration->forceDataOnShared=0;
+	configuration->displayStats=configuration->displayTiming=configuration->forceCodeOnCore=
+			configuration->forceCodeOnShared=configuration->forceDataOnShared=configuration->displayPPCode=0;
 	configuration->filename=configuration->compiledByteFilename=configuration->loadByteFilename=NULL;
 	parseCommandLineArguments(configuration, argc, argv);
 	return configuration;
@@ -74,6 +75,8 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
 				configuration->displayStats=1;
+			} else if (areStringsEqualIgnoreCase(argv[i], "-pp")) {
+				configuration->displayPPCode=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-t")) {
 				configuration->displayTiming=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-datashared")) {
@@ -201,6 +204,7 @@ static void displayHelp() {
 	printf("-datashared    Data (arrays and strings) stored in shared memory, storage on core is default\n");
 #endif
 	printf("-s             Display parse statistics\n");
+	printf("-pp            Display preprocessed code\n");
 	printf("-o filename    Write out the compiled byte representation of processed BASIC code and exits (does not run code)\n");
 	printf("-l filename    Loads from compiled byte representation of code and runs this\n");
 	printf("-help          Display this help and quit\n");

@@ -109,18 +109,6 @@ static unsigned short findLocationOfFunctionName(struct lineDefinition * root, c
 }
 
 /**
- * Sets a line number in the memory to be the current (highest level) point
- */
-void setLineNumber(struct memorycontainer* memory, int lineNumber) {
-	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
-	defn->linenumber=lineNumber;
-	defn->currentpoint=0;
-	defn->type=0;
-	defn->next=memory->lineDefns;
-	memory->lineDefns=defn;
-}
-
-/**
  * Concatenates two memory structures together and returns the result of this
  */
 struct memorycontainer* concatenateMemory(struct memorycontainer* m1, struct memorycontainer* m2) {

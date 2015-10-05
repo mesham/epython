@@ -5,9 +5,10 @@
 static const unsigned int TAB_WIDTH = 4;
 
 int line_num = 0, indent_caller;
+char * parsing_filename=NULL;
 int line_indent=0, fake_outdent_symbol=0;
 
-extern struct stack_t indent_stack;
+extern struct stack_t indent_stack, filenameStack, lineNumberStack;
 
 void yyget_INTEGER(YYSTYPE*, char*, size_t);
 void yyget_REAL (YYSTYPE*, char*, size_t);
@@ -59,6 +60,24 @@ STRING_CHARS [[:print:]]{-}[\"]
 %x SINGLELINECOMMENT
 %x INDENT_MODE
 %%
+
+\<\<\<.*\n						{ 
+									if (parsing_filename != NULL) {
+										pushIdentifier(&filenameStack, parsing_filename); 
+										push(&lineNumberStack, line_num);
+										free(parsing_filename);
+									}
+									parsing_filename=(char*) malloc(yyleng-3);
+									strncpy(parsing_filename, &yytext[3], yyleng-4);
+									parsing_filename[yyleng-4]='\0';									
+									line_num=1; 
+								}
+\>\>\>.*\n						{
+									if (getStackSize(&filenameStack) > 0) {
+										parsing_filename=popIdentifier(&filenameStack);
+										line_num=pop(&lineNumberStack);
+									}									
+								}
 
 \/\*					{BEGIN(COMMENTS);}
 <COMMENTS>\*\/			{BEGIN(INITIAL);}

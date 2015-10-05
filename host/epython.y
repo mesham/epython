@@ -8,11 +8,12 @@
 #include <stdio.h>
 
 extern int line_num;
+extern char * parsing_filename;
 void yyerror(char const*);
 int yylex(void);
 
 void yyerror (char const *msg) {
-	fprintf(stderr, "%s at line %d\n", msg, line_num);
+	fprintf(stderr, "%s at line %d of file %s\n", msg, line_num, parsing_filename);
 	exit(0);
 }
 %}
@@ -35,7 +36,7 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
-%token ADD SUB ISHOST ISDEVICE COLON DEF RET NONE
+%token ADD SUB ISHOST ISDEVICE COLON DEF RET NONE FILESTART
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE
 
@@ -64,8 +65,7 @@ lines
 
 line
         : statements NEWLINE { $$ = $1; }
-        | statements { $$ = $1; }
-        | INTEGER statements NEWLINE { $$ = $2; setLineNumber($$, $1); }
+        | statements { $$ = $1; }        
 	    | NEWLINE { $$ = NULL; }
 ;
 

@@ -92,38 +92,39 @@ extern int yydebug;
     DEF = 302,
     RET = 303,
     NONE = 304,
-    MULT = 305,
-    DIV = 306,
-    MOD = 307,
-    AND = 308,
-    OR = 309,
-    NEQ = 310,
-    LEQ = 311,
-    GEQ = 312,
-    LT = 313,
-    GT = 314,
-    EQ = 315,
-    NOT = 316,
-    SQRT = 317,
-    SIN = 318,
-    COS = 319,
-    TAN = 320,
-    ASIN = 321,
-    ACOS = 322,
-    ATAN = 323,
-    SINH = 324,
-    COSH = 325,
-    TANH = 326,
-    FLOOR = 327,
-    CEIL = 328,
-    LOG = 329,
-    LOG10 = 330,
-    LPAREN = 331,
-    RPAREN = 332,
-    SLBRACE = 333,
-    SRBRACE = 334,
-    ASSGN = 335,
-    POW = 336
+    FILESTART = 305,
+    MULT = 306,
+    DIV = 307,
+    MOD = 308,
+    AND = 309,
+    OR = 310,
+    NEQ = 311,
+    LEQ = 312,
+    GEQ = 313,
+    LT = 314,
+    GT = 315,
+    EQ = 316,
+    NOT = 317,
+    SQRT = 318,
+    SIN = 319,
+    COS = 320,
+    TAN = 321,
+    ASIN = 322,
+    ACOS = 323,
+    ATAN = 324,
+    SINH = 325,
+    COSH = 326,
+    TANH = 327,
+    FLOOR = 328,
+    CEIL = 329,
+    LOG = 330,
+    LOG10 = 331,
+    LPAREN = 332,
+    RPAREN = 333,
+    SLBRACE = 334,
+    SRBRACE = 335,
+    ASSGN = 336,
+    POW = 337
   };
 #endif
 /* Tokens.  */
@@ -174,45 +175,46 @@ extern int yydebug;
 #define DEF 302
 #define RET 303
 #define NONE 304
-#define MULT 305
-#define DIV 306
-#define MOD 307
-#define AND 308
-#define OR 309
-#define NEQ 310
-#define LEQ 311
-#define GEQ 312
-#define LT 313
-#define GT 314
-#define EQ 315
-#define NOT 316
-#define SQRT 317
-#define SIN 318
-#define COS 319
-#define TAN 320
-#define ASIN 321
-#define ACOS 322
-#define ATAN 323
-#define SINH 324
-#define COSH 325
-#define TANH 326
-#define FLOOR 327
-#define CEIL 328
-#define LOG 329
-#define LOG10 330
-#define LPAREN 331
-#define RPAREN 332
-#define SLBRACE 333
-#define SRBRACE 334
-#define ASSGN 335
-#define POW 336
+#define FILESTART 305
+#define MULT 306
+#define DIV 307
+#define MOD 308
+#define AND 309
+#define OR 310
+#define NEQ 311
+#define LEQ 312
+#define GEQ 313
+#define LT 314
+#define GT 315
+#define EQ 316
+#define NOT 317
+#define SQRT 318
+#define SIN 319
+#define COS 320
+#define TAN 321
+#define ASIN 322
+#define ACOS 323
+#define ATAN 324
+#define SINH 325
+#define COSH 326
+#define TANH 327
+#define FLOOR 328
+#define CEIL 329
+#define LOG 330
+#define LOG10 331
+#define LPAREN 332
+#define RPAREN 333
+#define SLBRACE 334
+#define SRBRACE 335
+#define ASSGN 336
+#define POW 337
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 20 "epython.y" /* yacc.c:1909  */
+#line 21 "epython.y" /* yacc.c:1909  */
 
 	int integer;
 	float real;	
@@ -220,7 +222,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 224 "parser.h" /* yacc.c:1909  */
+#line 226 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

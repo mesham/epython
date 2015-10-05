@@ -37,7 +37,6 @@ struct functionListNode {
 
 void addFunction(struct functionDefinition*);
 void compileMemory(struct memorycontainer*);
-void setLineNumber(struct memorycontainer*, int);
 struct memorycontainer* concatenateMemory(struct memorycontainer*, struct memorycontainer*);
 unsigned int appendStatement(struct memorycontainer*, unsigned short, unsigned int);
 unsigned int appendMemory(struct memorycontainer*, struct memorycontainer*, unsigned int);
