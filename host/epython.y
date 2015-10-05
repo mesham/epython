@@ -35,7 +35,7 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
 
-%token ADD SUB ISHOST ISDEVICE COLON DEF RET
+%token ADD SUB ISHOST ISDEVICE COLON DEF RET NONE
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE
 
@@ -101,6 +101,8 @@ statement
 	| SYNC { $$=appendSyncStatement(); }
 	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }
+	| RET NONE { $$ = appendReturnStatement(); }
+	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
 
@@ -203,6 +205,7 @@ value
 	| LPAREN expression RPAREN { $$=$2; }
 	| ident { $$=createIdentifierExpression($1); }
 	| ident SLBRACE expression SRBRACE { $$=createIdentifierArrayAccessExpression($1, $3); }
+	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
 
 ident

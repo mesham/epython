@@ -66,7 +66,7 @@ int main() {
 	}
 
 	syncCores(0);
-	processAssembledCode(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
+	runIntepreter(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
 	sharedData->core_ctrl[myId].core_busy=0;
 	sharedData->core_ctrl[myId].core_run=0;
 	return 0;

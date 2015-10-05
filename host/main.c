@@ -157,7 +157,7 @@ static void runCodeOnHost(struct interpreterconfiguration* configuration, struct
  */
 static void * runSpecificHostProcess(void * rawThreadContext) {
 	struct hostRunningThreadWrapper * threadContext= (struct hostRunningThreadWrapper*) rawThreadContext;
-	processAssembledCode(threadContext->assembledCode, threadContext->memoryFilledSize, threadContext->entriesInSymbolTable,
+	runIntepreter(threadContext->assembledCode, threadContext->memoryFilledSize, threadContext->entriesInSymbolTable,
 			threadContext->hostThreadId + threadContext->hostStartPoint, threadContext->numberProcesses, threadContext->hostThreadId);
 	return NULL;
 }

@@ -53,10 +53,10 @@ struct symbol_node {
 
 #ifdef HOST_INTERPRETER
 extern char * stopInterpreter;
-void processAssembledCode(char*, unsigned int, unsigned short, int, int, int);
+void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 #else
 extern char stopInterpreter;
-void processAssembledCode(char*, unsigned int, unsigned short, int, int, int);
+void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 #endif
 #endif /* INTERPRETER_H_ */

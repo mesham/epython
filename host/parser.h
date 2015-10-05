@@ -91,38 +91,39 @@ extern int yydebug;
     COLON = 301,
     DEF = 302,
     RET = 303,
-    MULT = 304,
-    DIV = 305,
-    MOD = 306,
-    AND = 307,
-    OR = 308,
-    NEQ = 309,
-    LEQ = 310,
-    GEQ = 311,
-    LT = 312,
-    GT = 313,
-    EQ = 314,
-    NOT = 315,
-    SQRT = 316,
-    SIN = 317,
-    COS = 318,
-    TAN = 319,
-    ASIN = 320,
-    ACOS = 321,
-    ATAN = 322,
-    SINH = 323,
-    COSH = 324,
-    TANH = 325,
-    FLOOR = 326,
-    CEIL = 327,
-    LOG = 328,
-    LOG10 = 329,
-    LPAREN = 330,
-    RPAREN = 331,
-    SLBRACE = 332,
-    SRBRACE = 333,
-    ASSGN = 334,
-    POW = 335
+    NONE = 304,
+    MULT = 305,
+    DIV = 306,
+    MOD = 307,
+    AND = 308,
+    OR = 309,
+    NEQ = 310,
+    LEQ = 311,
+    GEQ = 312,
+    LT = 313,
+    GT = 314,
+    EQ = 315,
+    NOT = 316,
+    SQRT = 317,
+    SIN = 318,
+    COS = 319,
+    TAN = 320,
+    ASIN = 321,
+    ACOS = 322,
+    ATAN = 323,
+    SINH = 324,
+    COSH = 325,
+    TANH = 326,
+    FLOOR = 327,
+    CEIL = 328,
+    LOG = 329,
+    LOG10 = 330,
+    LPAREN = 331,
+    RPAREN = 332,
+    SLBRACE = 333,
+    SRBRACE = 334,
+    ASSGN = 335,
+    POW = 336
   };
 #endif
 /* Tokens.  */
@@ -172,38 +173,39 @@ extern int yydebug;
 #define COLON 301
 #define DEF 302
 #define RET 303
-#define MULT 304
-#define DIV 305
-#define MOD 306
-#define AND 307
-#define OR 308
-#define NEQ 309
-#define LEQ 310
-#define GEQ 311
-#define LT 312
-#define GT 313
-#define EQ 314
-#define NOT 315
-#define SQRT 316
-#define SIN 317
-#define COS 318
-#define TAN 319
-#define ASIN 320
-#define ACOS 321
-#define ATAN 322
-#define SINH 323
-#define COSH 324
-#define TANH 325
-#define FLOOR 326
-#define CEIL 327
-#define LOG 328
-#define LOG10 329
-#define LPAREN 330
-#define RPAREN 331
-#define SLBRACE 332
-#define SRBRACE 333
-#define ASSGN 334
-#define POW 335
+#define NONE 304
+#define MULT 305
+#define DIV 306
+#define MOD 307
+#define AND 308
+#define OR 309
+#define NEQ 310
+#define LEQ 311
+#define GEQ 312
+#define LT 313
+#define GT 314
+#define EQ 315
+#define NOT 316
+#define SQRT 317
+#define SIN 318
+#define COS 319
+#define TAN 320
+#define ASIN 321
+#define ACOS 322
+#define ATAN 323
+#define SINH 324
+#define COSH 325
+#define TANH 326
+#define FLOOR 327
+#define CEIL 328
+#define LOG 329
+#define LOG10 330
+#define LPAREN 331
+#define RPAREN 332
+#define SLBRACE 333
+#define SRBRACE 334
+#define ASSGN 335
+#define POW 336
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -218,7 +220,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 222 "parser.h" /* yacc.c:1909  */
+#line 224 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

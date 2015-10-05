@@ -596,6 +596,18 @@ struct memorycontainer* appendPrintStatement(struct memorycontainer* expressionC
 	return memoryContainer;
 }
 
+struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer* expressionContainer) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short)+expressionContainer->length;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+	position=appendStatement(memoryContainer, RETURN_EXP_TOKEN, position);
+	appendMemory(memoryContainer, expressionContainer, position);
+	return memoryContainer;
+}
+
 /**
  * Appends a return statement
  */
@@ -938,13 +950,27 @@ static struct memorycontainer* createExpression(unsigned short token, struct mem
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=expression1->length + expression2->length + sizeof(unsigned short);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
 
 	unsigned int location=0;
 	location=appendStatement(memoryContainer, token, location);
 	memcpy(&memoryContainer->data[location], expression1->data, expression1->length);
 	location+=expression1->length;
 	memcpy(&memoryContainer->data[location], expression2->data, expression2->length);
+
+	memoryContainer->lineDefns=expression1->lineDefns;
+	struct lineDefinition * root=memoryContainer->lineDefns, *r2;
+	while (root != NULL) {
+		root->currentpoint+=sizeof(unsigned short);
+		root=root->next;
+	}
+	root=expression2->lineDefns;
+	while (root != NULL) {
+		root->currentpoint+=expression1->length+sizeof(unsigned short);
+		r2=root->next;
+		root->next=memoryContainer->lineDefns;
+		memoryContainer->lineDefns=root;
+		root=r2;
+	}
 
 	// Free up the expression 1 and expression 2 memory
 	free(expression1->data);

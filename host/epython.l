@@ -150,6 +150,7 @@ NOT|"!"                                 return NOT;
 ")"                                     return RPAREN;
 DEF										return DEF;
 RETURN									return RET;
+NONE									return NONE;
 ISHOST									return ISHOST;
 ISDEVICE								return ISDEVICE;
 ELSE                                    return ELSE;

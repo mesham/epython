@@ -77,6 +77,7 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer*, struct me
 struct memorycontainer* appendArraySetStatement(char*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendLetStatement(char*, struct memorycontainer*);
 struct memorycontainer* appendReturnStatement(void);
+struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer*);
 struct memorycontainer* appendPrintStatement(struct memorycontainer*);
 struct memorycontainer* appendStopStatement(void);
 struct memorycontainer* appendSyncStatement(void);
