@@ -273,7 +273,22 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
  * which is needed as the function might appear at any point
  */
 struct memorycontainer* appendCallFunctionStatement(char* functionName, struct stack_t* args) {
+	struct memorycontainer* assignmentContainer=NULL;
 	unsigned short numArgs=(unsigned short) getStackSize(args);
+	char * varname=(char*) malloc(strlen(functionName)+5);
+	int i;
+	for (i=0;i<numArgs;i++) {
+		struct memorycontainer* expression=getExpressionAt(args, i);
+		short command=((short*) expression->data)[0];
+		if (command != IDENTIFIER_TOKEN) {
+			sprintf(varname,"%s#%d", functionName, i);
+			if (assignmentContainer == NULL) {
+				assignmentContainer=appendLetStatement(varname, getExpressionAt(args, i));
+			} else {
+				assignmentContainer=concatenateMemory(assignmentContainer, appendLetStatement(varname, getExpressionAt(args, i)));
+			}
+		}
+	}
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned short)*(3+numArgs);
@@ -293,12 +308,23 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	position+=sizeof(unsigned short);
 	position=appendVariable(memoryContainer, numArgs, position);
 
-	char * identifier;
-	while ((identifier=popIdentifier(args)) != NULL) {
-		position=appendVariable(memoryContainer, getVariableId(identifier, 0), position);
+	for (i=numArgs-1;i>=0;i--) {
+		struct memorycontainer* expression=getExpressionAt(args, i);
+		short command=((short*) expression->data)[0];
+		if (command == IDENTIFIER_TOKEN) {
+			unsigned short varId=((unsigned short*) expression->data)[1];
+			position=appendVariable(memoryContainer, varId, position);
+		} else {
+			sprintf(varname,"%s#%d", functionName, i);
+			position=appendVariable(memoryContainer, getVariableId(varname, 0), position);
+		}
 	}
-
-	return memoryContainer;
+	free(varname);
+	if (assignmentContainer != NULL) {
+		return concatenateMemory(assignmentContainer, memoryContainer);
+	} else {
+		return memoryContainer;
+	}
 }
 
 /**

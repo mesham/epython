@@ -105,9 +105,9 @@ statement
 ;
 
 fncallargs
-	: /*blank*/ { $$=getNewStack(); }
-	| ident { $$=getNewStack(); pushIdentifier($$, $1); }
-	| fncallargs COMMA ident { pushIdentifier($1, $3); $$=$1; }
+	: /*blank*/ { $$=getNewStack(); }	
+	| expression { $$=getNewStack(); pushExpression($$, $1); }
+	| fncallargs COMMA expression { pushExpression($1, $3); $$=$1; }
 	;
 
 fndeclarationargs

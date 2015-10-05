@@ -12,10 +12,13 @@
 
 struct stack_t {
     int size, width;
+    char * type;
     void **data;
 };
 
-struct stack_t* getNewStack();
+#include "byteassembler.h"
+
+struct stack_t* getNewStack(void);
 void initStack(struct stack_t*);
 int getStackSize(struct stack_t*);
 int pop(struct stack_t*);
@@ -23,5 +26,10 @@ void push(struct stack_t*, int);
 char* popIdentifier(struct stack_t*);
 void pushIdentifier(struct stack_t*, char*);
 int peek(struct stack_t*);
+int getTopType(struct stack_t*);
+struct memorycontainer* popExpression(struct stack_t*);
+void pushExpression(struct stack_t*, struct memorycontainer*);
+struct memorycontainer* getExpressionAt(struct stack_t*, int);
+int getTypeAt(struct stack_t*, int);
 
 #endif /* HOST_STACK_H_ */
