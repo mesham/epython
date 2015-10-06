@@ -70,19 +70,19 @@ extern int yydebug;
     INPUT = 280,
     IF = 281,
     THEN = 282,
-    COREID = 283,
-    NUMCORES = 284,
-    SEND = 285,
-    RECV = 286,
+    EPY_I_COREID = 283,
+    EPY_I_NUMCORES = 284,
+    EPY_I_SEND = 285,
+    EPY_I_RECV = 286,
     RANDOM = 287,
-    SYNC = 288,
-    BCAST = 289,
-    REDUCE = 290,
+    EPY_I_SYNC = 288,
+    EPY_I_BCAST = 289,
+    EPY_I_REDUCE = 290,
     SUM = 291,
     MIN = 292,
     MAX = 293,
     PROD = 294,
-    SENDRECV = 295,
+    EPY_I_SENDRECV = 295,
     TOFROM = 296,
     ADD = 297,
     SUB = 298,
@@ -153,19 +153,19 @@ extern int yydebug;
 #define INPUT 280
 #define IF 281
 #define THEN 282
-#define COREID 283
-#define NUMCORES 284
-#define SEND 285
-#define RECV 286
+#define EPY_I_COREID 283
+#define EPY_I_NUMCORES 284
+#define EPY_I_SEND 285
+#define EPY_I_RECV 286
 #define RANDOM 287
-#define SYNC 288
-#define BCAST 289
-#define REDUCE 290
+#define EPY_I_SYNC 288
+#define EPY_I_BCAST 289
+#define EPY_I_REDUCE 290
 #define SUM 291
 #define MIN 292
 #define MAX 293
 #define PROD 294
-#define SENDRECV 295
+#define EPY_I_SENDRECV 295
 #define TOFROM 296
 #define ADD 297
 #define SUB 298

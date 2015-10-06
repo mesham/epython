@@ -34,7 +34,7 @@ void yyerror (char const *msg) {
 %token REM
 %token DIM SDIM LET STOP ELSE COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN COREID NUMCORES SEND RECV RANDOM SYNC BCAST REDUCE SUM MIN MAX PROD SENDRECV TOFROM
+%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
 
 %token ADD SUB ISHOST ISDEVICE COLON DEF RET NONE FILESTART
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
@@ -75,13 +75,13 @@ statements
 ;
 
 statement	
-	: RECV ident FROM expression { $$=appendRecvStatement($2, $4); }
-	| RECV ident SLBRACE expression SRBRACE FROM expression { $$=appendRecvIntoArrayStatement($2, $4, $7); }
-	| SEND expression TO expression { $$=appendSendStatement($2, $4); }
-	| SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }
-	| SENDRECV expression TOFROM expression INTO ident SLBRACE expression SRBRACE { $$=appendSendRecvStatementIntoArray($2, $4, $6, $8); }
-	| BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
-	| REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
+	: EPY_I_RECV ident FROM expression { $$=appendRecvStatement($2, $4); }
+	| EPY_I_RECV ident SLBRACE expression SRBRACE FROM expression { $$=appendRecvIntoArrayStatement($2, $4, $7); }
+	| EPY_I_SEND expression TO expression { $$=appendSendStatement($2, $4); }
+	| EPY_I_SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }
+	| EPY_I_SENDRECV expression TOFROM expression INTO ident SLBRACE expression SRBRACE { $$=appendSendRecvStatementIntoArray($2, $4, $6, $8); }
+	| EPY_I_BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
+	| EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
 	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	
 	| SDIM ident SLBRACE expression SRBRACE { $$=appendDeclareSharedArray($2, $4); }
 	| FOR declareident EQ expression TO expression lines NEXT { $$=appendForStatement($2, $4, $6, $7); leaveScope(); }
@@ -98,7 +98,7 @@ statement
 	| PRINT expression { $$=appendPrintStatement($2); }	
 	| STOP { $$=appendStopStatement(); }
 	| REM { $$ = NULL; }
-	| SYNC { $$=appendSyncStatement(); }
+	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }
 	| RET NONE { $$ = appendReturnStatement(); }
@@ -215,8 +215,8 @@ ident
 constant
         : INTEGER { $$=createIntegerExpression($1); }
         | REAL { $$=createRealExpression($1); }
-        | COREID { $$=createCoreIdExpression(); }
-        | NUMCORES { $$=createNumCoresExpression(); }
+        | EPY_I_COREID { $$=createCoreIdExpression(); }
+        | EPY_I_NUMCORES { $$=createNumCoresExpression(); }
         | RANDOM { $$=createRandomExpression(); }
 		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 		| unary_operator REAL { $$=createRealExpression($1 * $2); }
