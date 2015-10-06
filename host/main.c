@@ -100,7 +100,11 @@ int main (int argc, char *argv[]) {
 		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)w);
 		runCodeOnHost(configuration, deviceState);
 #else
-		runCodeOnHost(configuration, NULL);
+		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
+		standAloneState->symbol_size=getNumberEntriesInSymbolTable();
+		standAloneState->num_procs=configuration->coreProcs+configuration->hostProcs;
+		standAloneState->baseHostPid=configuration->coreProcs;
+		runCodeOnHost(configuration, standAloneState);
 #endif
 		pthread_exit(NULL);
 	}
