@@ -1205,11 +1205,11 @@ YY_RULE_SETUP
 					fake_outdent_symbol=0;
 					if (line_indent > 0 && line_indent > peek(&indent_stack)) {
 						push(&indent_stack, line_indent);						
-						BEGIN(indent_caller);						
+						BEGIN(indent_caller);											
 						return INDENT;
 					} else if (line_indent < peek(&indent_stack)) {
-						pop(&indent_stack);
-						if (line_indent != peek(&indent_stack)) {
+						pop(&indent_stack);						
+						if (peek(&indent_stack) != -1 && line_indent != peek(&indent_stack)) {
 							int i;
 							for(i=0;i<line_indent;i++) unput(' ');
                             unput('\n');                            
@@ -1219,7 +1219,7 @@ YY_RULE_SETUP
                             unput('\n');
 						} else {
 							BEGIN(indent_caller);
-						}
+						}						
 						return OUTDENT;
 					} else {
 						BEGIN(indent_caller);
