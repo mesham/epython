@@ -31,8 +31,8 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token REM
-%token DIM SDIM LET STOP ELSE COMMA WHILE
+%token REM 
+%token DIM SDIM LET STOP ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
 
@@ -40,7 +40,7 @@ void yyerror (char const *msg) {
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
-%left ADD SUB
+%left ADD SUB 
 %left MULT DIV MOD
 %left AND OR
 %left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE ASSGN
@@ -49,7 +49,7 @@ void yyerror (char const *msg) {
 
 %type <string> ident declareident
 %type <integer> unary_operator reductionop
-%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock
+%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
 %type <stack> fndeclarationargs fncallargs
 
 %start program 
@@ -88,8 +88,10 @@ statement
 	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); } 
 	| GOTO INTEGER { $$=appendGotoStatement($2); }
 	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
-	| IF expression COLON codeblock elseifblock codeblock { $$=appendIfElseStatement($2, $4, $6); }
+	| IF expression COLON codeblock ELSE COLON codeblock { $$=appendIfElseStatement($2, $4, $7); }
+	| IF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }		
 	| IF expression COLON statements { $$=appendIfStatement($2, $4); }
+	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }	
 	| INPUT ident { $$=appendInputStatement($2); }
 	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
 	| LET ident EQ expression { $$=appendLetStatement($2, $4); }
@@ -138,8 +140,10 @@ declareident
 	 : ident { $$=$1; enterScope(); addVariableIfNeeded($1); }
 ;
 
-elseifblock
-	: ELSE COLON { leaveScope(); enterScope(); }
+elifblock
+	: ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }
+	| ELIF expression COLON codeblock ELSE COLON codeblock { $$=appendIfElseStatement($2, $4, $7); }
+	| ELIF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }
 ;
 
 expression

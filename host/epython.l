@@ -175,6 +175,7 @@ NONE									return NONE;
 EPY_I_ISHOST							return EPY_I_ISHOST;
 EPY_I_ISDEVICE							return EPY_I_ISDEVICE;
 ELSE                                    return ELSE;
+ELIF									return ELIF;
 EPY_I_SEND								return EPY_I_SEND;
 EPY_I_RECV								return EPY_I_RECV;
 EPY_I_SENDRECV							return EPY_I_SENDRECV;
