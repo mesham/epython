@@ -20,12 +20,14 @@ def reduce(data, operator):
 	retV=0
 	if operator=="sum":
 		epy_i_reduce sum data into retV
-	if operator=="min":
+	elif operator=="min":
 		epy_i_reduce min data into retV
-	if operator=="max":
+	elif operator=="max":
 		epy_i_reduce max data into retV
-	if operator=="prod":
+	elif operator=="prod":
 		epy_i_reduce prod data into retV
+	else:
+		print "Operator "+operator+" not found"
 	return retV
 
 def sync():
