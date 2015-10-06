@@ -36,3 +36,15 @@ def coreid():
 
 def numcores():
 	return epy_i_numcores
+
+def ishost():
+	if epy_i_ishost:
+		return true
+	else:
+		return false
+
+def isdevice():
+	if epy_i_isdevice:
+		return true
+	else:
+		return false

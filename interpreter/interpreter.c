@@ -687,6 +687,33 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 				raiseError("Can only test for equality with strings");
 			}
 		}
+	} else if (expressionId == BOOLEAN_TOKEN) {
+		struct value_defn value;
+		cpy(value.data, &assembled[*currentPoint], sizeof(int));
+		*currentPoint+=sizeof(int);
+		return getInt(value.data) > 0;
+	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
+		struct value_defn value;
+		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(unsigned short);
+#ifdef HOST_INTERPRETER
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, threadId, 1);
+#else
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, 1);
+#endif
+		value=getVariableValue(variableSymbol, 0);
+		if (expressionId == ARRAYACCESS_TOKEN) {
+#ifdef HOST_INTERPRETER
+			struct value_defn index=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+			struct value_defn index=getExpressionValue(assembled, currentPoint, length);
+#endif
+			value=getVariableValue(variableSymbol, getInt(index.data));
+		}
+		if (value.type == BOOLEAN_TYPE) {
+			return getInt(value.data) > 0;
+		}
+		return 0;
 	} else if (expressionId == ISHOST_TOKEN) {
 #ifdef HOST_INTERPRETER
 		return 1;
@@ -723,6 +750,10 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value.type=REAL_TYPE;
 		cpy(value.data, &assembled[*currentPoint], sizeof(float));
 		*currentPoint+=sizeof(float);
+	} else if (expressionId == BOOLEAN_TOKEN) {
+		value.type=BOOLEAN_TYPE;
+		cpy(value.data, &assembled[*currentPoint], sizeof(int));
+		*currentPoint+=sizeof(int);
 	} else if (expressionId == STRING_TOKEN) {
 		value.type=STRING_TYPE;
 		char * strPtr=assembled + *currentPoint;

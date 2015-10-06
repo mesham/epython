@@ -32,6 +32,7 @@
 #define INT_TYPE 0
 #define REAL_TYPE 1
 #define STRING_TYPE 2
+#define BOOLEAN_TYPE 3
 
 // The value in a symbol table; its type and data (which is integer/real or pointer to string
 // or array.) In host mode this is 8 bytes as often pointers are 64bit, but on Epiphany only 4 byte as 32 bit pointers

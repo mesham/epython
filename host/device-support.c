@@ -356,6 +356,9 @@ static void stringConcatenate(int coreId, struct core_ctrl * core) {
 		if (core->data[5]==INT_TYPE) {
 			int d=*((int*) &core->data[6]);
 			sprintf(newString,"%s%d", str1, d);
+		} else if (core->data[5]==BOOLEAN_TYPE) {
+			int d=*((int*) &core->data[6]);
+			sprintf(newString,"%s%s", str1, d > 0?"true":"false");
 		} else if (core->data[5]==REAL_TYPE) {
 			float f=*((float*) &core->data[6]);
 			sprintf(newString,"%s%f", str1, f);
@@ -370,6 +373,9 @@ static void stringConcatenate(int coreId, struct core_ctrl * core) {
 		if (core->data[0]==INT_TYPE) {
 			int d=*((int*) &core->data[1]);
 			sprintf(newString,"%d%s", d, str2);
+		} else if (core->data[0]==BOOLEAN_TYPE) {
+			int d=*((int*) &core->data[1]);
+			sprintf(newString,"%s%s", d > 0?"true":"false", str2);
 		} else if (core->data[0]==REAL_TYPE) {
 			float f=*((float*) &core->data[1]);
 			sprintf(newString,"%f%s", f, str2);
@@ -459,6 +465,9 @@ static void displayCoreMessage(int coreId, struct core_ctrl * core) {
 	} else if (core->data[0] == 1) {
 		float y=*((float*) &core->data[1]);
 		printf("[device %d] %f\n", coreId, y);
+	} else if (core->data[0] == 3) {
+		int y=*((int*) &core->data[1]);
+		printf("[device %d] %s\n", coreId, y> 0 ? "true" : "false");
 	} else if (core->data[0] == 2) {
 		unsigned int relativeLocation;
 		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));

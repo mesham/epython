@@ -87,6 +87,7 @@ struct memorycontainer* createCoreIdExpression(void);
 struct memorycontainer* createNumCoresExpression(void);
 struct memorycontainer* createRandomExpression(void);
 struct memorycontainer* createIntegerExpression(int);
+struct memorycontainer* createBooleanExpression(int);
 struct memorycontainer* createIdentifierExpression(char*);
 struct memorycontainer* createIdentifierArrayAccessExpression(char*, struct memorycontainer*);
 struct memorycontainer* createNumberExpression(float);

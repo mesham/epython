@@ -86,8 +86,8 @@ extern int yydebug;
     TOFROM = 296,
     ADD = 297,
     SUB = 298,
-    ISHOST = 299,
-    ISDEVICE = 300,
+    EPY_I_ISHOST = 299,
+    EPY_I_ISDEVICE = 300,
     COLON = 301,
     DEF = 302,
     RET = 303,
@@ -123,8 +123,12 @@ extern int yydebug;
     RPAREN = 333,
     SLBRACE = 334,
     SRBRACE = 335,
-    ASSGN = 336,
-    POW = 337
+    TRUE = 336,
+    FALSE = 337,
+    ISHOST = 338,
+    ISDEVICE = 339,
+    ASSGN = 340,
+    POW = 341
   };
 #endif
 /* Tokens.  */
@@ -169,8 +173,8 @@ extern int yydebug;
 #define TOFROM 296
 #define ADD 297
 #define SUB 298
-#define ISHOST 299
-#define ISDEVICE 300
+#define EPY_I_ISHOST 299
+#define EPY_I_ISDEVICE 300
 #define COLON 301
 #define DEF 302
 #define RET 303
@@ -206,8 +210,12 @@ extern int yydebug;
 #define RPAREN 333
 #define SLBRACE 334
 #define SRBRACE 335
-#define ASSGN 336
-#define POW 337
+#define TRUE 336
+#define FALSE 337
+#define ISHOST 338
+#define ISDEVICE 339
+#define ASSGN 340
+#define POW 341
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -222,7 +230,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 226 "parser.h" /* yacc.c:1909  */
+#line 234 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

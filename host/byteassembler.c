@@ -720,6 +720,17 @@ struct memorycontainer* createIntegerExpression(int number) {
 	return memoryContainer;
 }
 
+struct memorycontainer* createBooleanExpression(int booleanVal) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(int) + sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	int location=appendStatement(memoryContainer, BOOLEAN_TOKEN, 0);
+	memcpy(&memoryContainer->data[location], &booleanVal, sizeof(int));
+	return memoryContainer;
+}
+
 /**
  * Creates an expression wrapping a real number
  */

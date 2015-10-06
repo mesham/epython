@@ -36,9 +36,9 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
 
-%token ADD SUB ISHOST ISDEVICE COLON DEF RET NONE FILESTART
+%token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
-%token LPAREN RPAREN SLBRACE SRBRACE
+%token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
 %left ADD SUB
 %left MULT DIV MOD
@@ -160,8 +160,8 @@ equality_expression
 	: relational_expression { $$=$1; }
 	| equality_expression EQ relational_expression { $$=createEqExpression($1, $3); }
 	| equality_expression NEQ relational_expression { $$=createNeqExpression($1, $3); }
-	| ISHOST { $$=createIsHostExpression(); }
-	| ISDEVICE { $$=createIsDeviceExpression(); }
+	| EPY_I_ISHOST { $$=createIsHostExpression(); }
+	| EPY_I_ISDEVICE { $$=createIsDeviceExpression(); }
 ;
 
 relational_expression
@@ -221,6 +221,8 @@ constant
 		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 		| unary_operator REAL { $$=createRealExpression($1 * $2); }
 		| STRING { $$=createStringExpression($1); }	
+		| TRUE { $$=createBooleanExpression(1); }
+		| FALSE { $$=createBooleanExpression(0); }
 ;
 
 unary_operator
