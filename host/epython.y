@@ -31,7 +31,7 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token DIM SDIM LET STOP ELSE ELIF COMMA WHILE
+%token DIM SDIM STOP ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
 
@@ -92,7 +92,6 @@ statement
 	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }	
 	| INPUT ident { $$=appendInputStatement($2); }
 	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
-	| LET ident EQ expression { $$=appendLetStatement($2, $4); }
     | ident ASSGN expression { $$=appendLetStatement($1, $3); }
     | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
 	| PRINT expression { $$=appendPrintStatement($2); }	

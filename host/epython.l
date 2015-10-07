@@ -192,7 +192,6 @@ PROD									return PROD;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 WHILE									return WHILE;
-LET                                     return LET;
 STOP                                    return STOP;
 FOR                                     return FOR;
 TO                                      return TO;

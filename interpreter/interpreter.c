@@ -635,7 +635,6 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
 #endif
 	if (value.dtype == ARRAY) {
-		int currentAddress=getInt(variableSymbol->value.data);
 		cpy(variableSymbol->value.data, value.data, sizeof(int*));
 	} else {
 		int currentAddress=getInt(variableSymbol->value.data);
