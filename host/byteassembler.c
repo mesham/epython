@@ -319,6 +319,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 			position=appendVariable(memoryContainer, getVariableId(varname, 0), position);
 		}
 	}
+	clearStack(args);
 	free(varname);
 	if (assignmentContainer != NULL) {
 		return concatenateMemory(assignmentContainer, memoryContainer);

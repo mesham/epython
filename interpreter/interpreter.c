@@ -443,10 +443,10 @@ static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, un
 	for (i=0;i<numArgs;i++) {
 #ifdef HOST_INTERPRETER
 		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 1);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 1);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
 #else
 		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 1);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 1);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
 #endif
 		targetSymbol->isAlias=1;
 		targetSymbol->alias=srcSymbol->id;

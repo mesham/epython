@@ -35,6 +35,13 @@ int pop(struct stack_t* stack) {
    return -1;
 }
 
+void clearStack(struct stack_t* stack) {
+	stack->size=0;
+	free(stack->data);
+	free(stack->type);
+	stack->width=INITIAL_STACK_SIZE;
+}
+
 char* popIdentifier(struct stack_t* stack) {
    if (stack->size > 0) {
        return (char*) stack->data[--stack->size];

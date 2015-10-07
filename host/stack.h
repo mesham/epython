@@ -19,6 +19,7 @@ struct stack_t {
 #include "byteassembler.h"
 
 struct stack_t* getNewStack(void);
+void clearStack(struct stack_t*);
 void initStack(struct stack_t*);
 int getStackSize(struct stack_t*);
 int pop(struct stack_t*);

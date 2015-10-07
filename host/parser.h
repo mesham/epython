@@ -126,10 +126,8 @@ extern int yydebug;
     TRUE = 336,
     FALSE = 337,
     LEN = 338,
-    ISHOST = 339,
-    ISDEVICE = 340,
-    ASSGN = 341,
-    POW = 342
+    ASSGN = 339,
+    POW = 340
   };
 #endif
 /* Tokens.  */
@@ -214,10 +212,8 @@ extern int yydebug;
 #define TRUE 336
 #define FALSE 337
 #define LEN 338
-#define ISHOST 339
-#define ISDEVICE 340
-#define ASSGN 341
-#define POW 342
+#define ASSGN 339
+#define POW 340
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -232,7 +228,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 236 "parser.h" /* yacc.c:1909  */
+#line 232 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
