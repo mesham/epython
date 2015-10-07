@@ -77,10 +77,10 @@ extern int yydebug;
     EPY_I_SYNC = 287,
     EPY_I_BCAST = 288,
     EPY_I_REDUCE = 289,
-    SUM = 290,
-    MIN = 291,
-    MAX = 292,
-    PROD = 293,
+    EPY_I_SUM = 290,
+    EPY_I_MIN = 291,
+    EPY_I_MAX = 292,
+    EPY_I_PROD = 293,
     EPY_I_SENDRECV = 294,
     TOFROM = 295,
     ADD = 296,
@@ -165,10 +165,10 @@ extern int yydebug;
 #define EPY_I_SYNC 287
 #define EPY_I_BCAST 288
 #define EPY_I_REDUCE 289
-#define SUM 290
-#define MIN 291
-#define MAX 292
-#define PROD 293
+#define EPY_I_SUM 290
+#define EPY_I_MIN 291
+#define EPY_I_MAX 292
+#define EPY_I_PROD 293
 #define EPY_I_SENDRECV 294
 #define TOFROM 295
 #define ADD 296

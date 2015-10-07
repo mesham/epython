@@ -33,7 +33,7 @@ void yyerror (char const *msg) {
 %token NEWLINE INDENT OUTDENT
 %token DIM SDIM STOP ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
+%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM
 
 %token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
@@ -126,10 +126,10 @@ outdent_rule
 	: OUTDENT { leaveScope(); }
 	
 reductionop
-	: SUM { $$=0; }
-	| MIN { $$=1; }
-	| MAX { $$=2; }
-	| PROD { $$=3; }
+	: EPY_I_SUM { $$=0; }
+	| EPY_I_MIN { $$=1; }
+	| EPY_I_MAX { $$=2; }
+	| EPY_I_PROD { $$=3; }
 ;
 
 declareident
@@ -184,21 +184,21 @@ multiplicative_expression
 	| multiplicative_expression DIV value { $$=createDivExpression($1, $3); }
 	| multiplicative_expression MOD value { $$=createModExpression($1, $3); }
 	| multiplicative_expression POW value { $$=createPowExpression($1, $3); }
-	| SQRT value { $$=createSqrtExpression($2); }
-	| SIN value { $$=createSinExpression($2); }
-	| COS value { $$=createCosExpression($2); }
-	| TAN value { $$=createTanExpression($2); }
-	| ASIN value { $$=createASinExpression($2); }
-	| ACOS value { $$=createACosExpression($2); }
-	| ATAN value { $$=createATanExpression($2); }
-	| SINH value { $$=createSinHExpression($2); }
-	| COSH value { $$=createCosHExpression($2); }
-	| TANH value { $$=createTanHExpression($2); }
-	| FLOOR value { $$=createFloorExpression($2); }
-	| CEIL value { $$=createCeilExpression($2); }
-	| LOG value { $$=createLogExpression($2); }
-	| LOG10 value { $$=createLog10Expression($2); }
-	| LEN expression { $$=createLenExpression($2); }
+	| SQRT LPAREN value RPAREN { $$=createSqrtExpression($3); }
+	| SIN LPAREN value RPAREN { $$=createSinExpression($3); }
+	| COS LPAREN value RPAREN { $$=createCosExpression($3); }
+	| TAN LPAREN value RPAREN { $$=createTanExpression($3); }
+	| ASIN LPAREN value RPAREN { $$=createASinExpression($3); }
+	| ACOS LPAREN value RPAREN { $$=createACosExpression($3); }
+	| ATAN LPAREN value RPAREN { $$=createATanExpression($3); }
+	| SINH LPAREN value RPAREN { $$=createSinHExpression($3); }
+	| COSH LPAREN value RPAREN { $$=createCosHExpression($3); }
+	| TANH LPAREN value RPAREN { $$=createTanHExpression($3); }
+	| FLOOR LPAREN value RPAREN { $$=createFloorExpression($3); }
+	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
+	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
+	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
+	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
 ;
 
 value

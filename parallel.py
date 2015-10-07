@@ -19,13 +19,13 @@ def bcast(data, root):
 def reduce(data, operator):
 	retV=0
 	if operator=="sum":
-		epy_i_reduce sum data into retV
+		epy_i_reduce epy_i_sum data into retV
 	elif operator=="min":
-		epy_i_reduce min data into retV
+		epy_i_reduce epy_i_min data into retV
 	elif operator=="max":
-		epy_i_reduce max data into retV
+		epy_i_reduce epy_i_max data into retV
 	elif operator=="prod":
-		epy_i_reduce prod data into retV
+		epy_i_reduce epy_i_prod data into retV
 	else:
 		print "Operator "+operator+" not found"
 	return retV
