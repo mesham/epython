@@ -442,11 +442,11 @@ static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, un
 	int i;
 	for (i=0;i<numArgs;i++) {
 #ifdef HOST_INTERPRETER
-		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 0);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
+		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 1);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 1);
 #else
-		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 0);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
+		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 1);
+		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 1);
 #endif
 		targetSymbol->isAlias=1;
 		targetSymbol->alias=srcSymbol->id;
@@ -960,7 +960,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id, int followAlias)
 	for (i=0;i<currentSymbolEntries;i++) {
 		if (symbolTable[i].id == id) {
 			if (followAlias && symbolTable[i].isAlias) {
-				return getVariableSymbol(symbolTable[i].alias, 0);
+				return getVariableSymbol(symbolTable[i].alias, 1);
 			} else {
 				return &symbolTable[i];
 			}
