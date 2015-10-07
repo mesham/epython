@@ -634,15 +634,17 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
 #endif
+	variableSymbol->value.type=value.type;
+	variableSymbol->value.dtype=value.dtype;
 	if (value.dtype == ARRAY) {
 		cpy(variableSymbol->value.data, value.data, sizeof(int*));
+	} else if (value.type == STRING_TYPE) {
+		cpy(&variableSymbol->value.data, &value.data, sizeof(int*));
 	} else {
 		int currentAddress=getInt(variableSymbol->value.data);
 		if (currentAddress == 0) {
 			int * address=getArrayAddress(sizeof(int), 0);
 			cpy(variableSymbol->value.data, &address, sizeof(int*));
-			variableSymbol->value.type=value.type;
-
 			cpy(address, value.data, sizeof(int*));
 		} else {
 			setVariableValue(variableSymbol, value, -1);
@@ -1007,9 +1009,13 @@ static float getFloat(void* data) {
  */
 void setVariableValue(struct symbol_node* variableSymbol, struct value_defn value, int index) {
 	variableSymbol->value.type=value.type;
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-	cpy(ptr+((index+1) *4), value.data, sizeof(int));
+	if (value.type == STRING_TYPE) {
+		cpy(&variableSymbol->value.data, &value.data, sizeof(int*));
+	} else {
+		char * ptr;
+		cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+		cpy(ptr+((index+1) *4), value.data, sizeof(int));
+	}
 }
 
 /**
@@ -1017,12 +1023,16 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
  */
 struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index) {
 	struct value_defn val;
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-	ptr+=((index+1) *4);
-	cpy(&val.data, ptr, sizeof(int));
 	val.type=variableSymbol->value.type;
 	val.dtype=variableSymbol->value.dtype;
+	if (variableSymbol->value.type == STRING_TYPE) {
+		cpy(&val.data, &variableSymbol->value.data, sizeof(int*));
+	} else {
+		char * ptr;
+		cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+		ptr+=((index+1) *4);
+		cpy(&val.data, ptr, sizeof(int));
+	}
 	return val;
 }
 

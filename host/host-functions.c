@@ -128,6 +128,7 @@ struct value_defn getInputFromUser(int threadId) {
  */
 static struct value_defn performGetInputFromUser(char * toDisplay, int threadId) {
 	struct value_defn v;
+	v.dtype=SCALAR;
 	char inputvalue[1000];
 	if (toDisplay != NULL) {
 		printf("[host %d] %s", threadId, toDisplay);
@@ -177,6 +178,7 @@ static int getTypeOfInput(char * input) {
 struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
 	struct value_defn result;
 	result.type=STRING_TYPE;
+	result.dtype=SCALAR;
 	if (v1.type==STRING_TYPE && v2.type==STRING_TYPE) {
 		char *str1, *str2;
 		cpy(&str1, &v1.data, sizeof(char*));
@@ -260,6 +262,7 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
 			memcpy(receivedData.data, (void*) &basicState->core_ctrl[target].data[6], 4);
 		}
 	}
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
@@ -280,6 +283,7 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 	while (communication_data[5] != syncValues[threadId][target]) {
 		cpy(communication_data, remoteMemory, 6);
 	}
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
@@ -371,6 +375,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 		}
 	}
 	returnValue.type=to_send.type;
+	returnValue.dtype=SCALAR;
 	if (to_send.type==INT_TYPE) {
 		cpy(returnValue.data, &intV, sizeof(int));
 	} else {
@@ -442,6 +447,7 @@ static struct value_defn recvDataFromDeviceCore(int target, int threadId, int ho
 			basicState->core_ctrl[target].core_busy=++pb[target];
 		}
 	}
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -458,6 +464,7 @@ static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 	cpy(sharedComm[threadId] + (source*6), communication_data, 6);
 	to_recv.type=communication_data[0];
 	cpy(to_recv.data, &communication_data[1], 4);
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -466,6 +473,7 @@ static struct value_defn recvDataFromHostProcess(int source, int threadId) {
  */
 struct value_defn performMathsOp(unsigned short operation, struct value_defn value) {
 	struct value_defn result;
+	result.dtype=SCALAR;
 	if (operation== RANDOM_MATHS_OP) {
 		result.type=INT_TYPE;
 		int r=rand();

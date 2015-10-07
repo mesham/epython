@@ -102,6 +102,7 @@ struct value_defn getInputFromUser() {
  */
 static struct value_defn doGetInputFromUser() {
 	struct value_defn v;
+	v.dtype=SCALAR;
 	cpy(&sharedData->core_ctrl[myId].data[6], &sharedDataEntries, sizeof(unsigned int));
 	sharedData->core_ctrl[myId].core_command=2;
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
@@ -135,6 +136,7 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	v.type=sharedData->core_ctrl[myId].data[0];
 	cpy(v.data, &sharedData->core_ctrl[myId].data[1], 4);
+	v.dtype=SCALAR;
 	return v;
 }
 
@@ -144,6 +146,7 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
 	struct value_defn v;
 	v.type=STRING_TYPE;
+	v.dtype=SCALAR;
 
 	sharedData->core_ctrl[myId].data[0]=v1.type;
 	if (v1.type == STRING_TYPE) {
@@ -275,6 +278,7 @@ static struct value_defn recvDataFromHostProcess(int hostSource) {
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	to_recv.type=sharedData->core_ctrl[myId].data[5];
 	cpy(to_recv.data, &sharedData->core_ctrl[myId].data[6], 4);
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -297,6 +301,7 @@ static struct value_defn recvDataFromDeviceCore(int source) {
 		to_recv.type=communication_data[0];
 		cpy(to_recv.data, &communication_data[1], 4);
 	}
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -326,6 +331,7 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	receivedData.type=sharedData->core_ctrl[myId].data[11];
 	cpy(receivedData.data, &sharedData->core_ctrl[myId].data[12], 4);
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
@@ -347,6 +353,7 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
 			cpy(communication_data, remoteMemory, 6);
 		}
 	}
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
@@ -437,6 +444,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned short operator,
 		}
 	}
 	returnValue.type=to_send.type;
+	returnValue.dtype=SCALAR;
 	if (to_send.type==INT_TYPE) {
 		cpy(returnValue.data, &intV, sizeof(int));
 	} else {
