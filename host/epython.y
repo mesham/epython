@@ -42,7 +42,7 @@ void yyerror (char const *msg) {
 %left ADD SUB LEN 
 %left MULT DIV MOD
 %left AND OR
-%left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE ASSGN
+%left NEQ LEQ GEQ LT GT EQ EPY_I_ISHOST EPY_I_ISDEVICE ASSGN
 %right NOT
 %right POW
 
