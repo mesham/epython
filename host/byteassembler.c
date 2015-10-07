@@ -351,13 +351,14 @@ struct memorycontainer* appendGotoStatement(int lineNumber) {
  * Appends and returns a for iteration. This puts in the assignment of the initial value to the variable, the normal stuff and then
  * termination check at each iteration along with jumping to next iteration if applicable
  */
-struct memorycontainer* appendForStatement(char * identifier, struct memorycontainer* exp1, struct memorycontainer* exp2, struct memorycontainer* block) {
-	struct memorycontainer* initialLet=appendLetStatement(identifier, exp1);
-	struct memorycontainer* incrementLet=appendLetStatement(identifier, createAddExpression(createIdentifierExpression(identifier), createIntegerExpression(1)));
+struct memorycontainer* appendForStatement(char * identifier, struct memorycontainer* exp, struct memorycontainer* block) {
+	struct memorycontainer* initialLet=appendLetStatement("epy_i_ctr", createIntegerExpression(0));
+	struct memorycontainer* variantLet=appendLetStatement(identifier, createIntegerExpression(0));
+	struct memorycontainer* incrementLet=appendLetStatement("epy_i_ctr", createAddExpression(createIdentifierExpression("epy_i_ctr"), createIntegerExpression(1)));
 
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 5 + exp2->length + (block != NULL ? block->length : 0) +
-			initialLet->length + incrementLet->length;
+	memoryContainer->length=sizeof(unsigned short) * 6 + exp->length + (block != NULL ? block->length : 0) +
+			initialLet->length + variantLet->length + incrementLet->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -373,9 +374,11 @@ struct memorycontainer* appendForStatement(char * identifier, struct memoryconta
 	memoryContainer->lineDefns=defn;
 
 	position=appendMemory(memoryContainer, initialLet, position);
+	position=appendMemory(memoryContainer, variantLet, position);
 	position=appendStatement(memoryContainer, FOR_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId("epy_i_ctr", 0), position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 0), position);
-	position=appendMemory(memoryContainer, exp2, position);
+	position=appendMemory(memoryContainer, exp, position);
 	unsigned short length=(unsigned short) combinedBlock->length;
 	memcpy(&memoryContainer->data[position], &length, sizeof(unsigned short));
 	position+=sizeof(unsigned short);
@@ -677,6 +680,18 @@ struct memorycontainer* createRandomExpression() {
 	memoryContainer->lineDefns=NULL;
 
 	appendStatement(memoryContainer, RANDOM_TOKEN, 0);
+	return memoryContainer;
+}
+
+struct memorycontainer* createLenExpression(struct memorycontainer* expression) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned short) + expression->length;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position;
+	position=appendStatement(memoryContainer, LEN_TOKEN, 0);
+	appendMemory(memoryContainer, expression, position);
 	return memoryContainer;
 }
 

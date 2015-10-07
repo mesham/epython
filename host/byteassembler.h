@@ -71,7 +71,7 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer*, char
 struct memorycontainer* appendCallFunctionStatement(char*, struct stack_t*);
 struct memorycontainer* appendGotoStatement(int);
 struct memorycontainer* appendWhileStatement(struct memorycontainer*, struct memorycontainer*);
-struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
+struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendIfStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendIfElseStatement(struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendArraySetStatement(char*, struct memorycontainer*, struct memorycontainer*);
@@ -121,6 +121,7 @@ struct memorycontainer* createFloorExpression(struct memorycontainer*);
 struct memorycontainer* createCeilExpression(struct memorycontainer*);
 struct memorycontainer* createLogExpression(struct memorycontainer*);
 struct memorycontainer* createLog10Expression(struct memorycontainer*);
+struct memorycontainer* createLenExpression(struct memorycontainer*);
 void addVariableIfNeeded(char*);
 void enterScope(void);
 void leaveScope(void);

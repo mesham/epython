@@ -34,10 +34,13 @@
 #define STRING_TYPE 2
 #define BOOLEAN_TYPE 3
 
+#define SCALAR 0
+#define ARRAY 1
+
 // The value in a symbol table; its type and data (which is integer/real or pointer to string
 // or array.) In host mode this is 8 bytes as often pointers are 64bit, but on Epiphany only 4 byte as 32 bit pointers
 struct value_defn {
-	char type;
+	char type, dtype;
 #ifdef HOST_STANDALONE
 	char data[8];
 #else

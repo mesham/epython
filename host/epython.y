@@ -31,16 +31,15 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token REM 
 %token DIM SDIM LET STOP ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE SUM MIN MAX PROD EPY_I_SENDRECV TOFROM
 
-%token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART
+%token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
-%left ADD SUB 
+%left ADD SUB LEN 
 %left MULT DIV MOD
 %left AND OR
 %left NEQ LEQ GEQ LT GT EQ ISHOST ISDEVICE ASSGN
@@ -84,9 +83,8 @@ statement
 	| EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
 	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	
 	| SDIM ident SLBRACE expression SRBRACE { $$=appendDeclareSharedArray($2, $4); }
-	| FOR declareident EQ expression TO expression lines NEXT { $$=appendForStatement($2, $4, $6, $7); leaveScope(); }
-	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); } 
-	| GOTO INTEGER { $$=appendGotoStatement($2); }
+	| FOR declareident IN expression COLON codeblock { $$=appendForStatement($2, $4, $6); leaveScope(); }
+	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); }	
 	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
 	| IF expression COLON codeblock ELSE COLON codeblock { $$=appendIfElseStatement($2, $4, $7); }
 	| IF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }		
@@ -98,8 +96,7 @@ statement
     | ident ASSGN expression { $$=appendLetStatement($1, $3); }
     | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
 	| PRINT expression { $$=appendPrintStatement($2); }	
-	| STOP { $$=appendStopStatement(); }
-	| REM { $$ = NULL; }
+	| STOP { $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }
@@ -202,6 +199,7 @@ multiplicative_expression
 	| CEIL value { $$=createCeilExpression($2); }
 	| LOG value { $$=createLogExpression($2); }
 	| LOG10 value { $$=createLog10Expression($2); }
+	| LEN expression { $$=createLenExpression($2); }
 ;
 
 value
@@ -223,7 +221,7 @@ constant
         | EPY_I_NUMCORES { $$=createNumCoresExpression(); }
         | RANDOM { $$=createRandomExpression(); }
 		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
-		| unary_operator REAL { $$=createRealExpression($1 * $2); }
+		| unary_operator REAL { $$=createRealExpression($1 * $2); }		
 		| STRING { $$=createStringExpression($1); }	
 		| TRUE { $$=createBooleanExpression(1); }
 		| FALSE { $$=createBooleanExpression(0); }

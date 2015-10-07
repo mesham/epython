@@ -52,48 +52,48 @@ extern int yydebug;
     NEWLINE = 262,
     INDENT = 263,
     OUTDENT = 264,
-    REM = 265,
-    DIM = 266,
-    SDIM = 267,
-    LET = 268,
-    STOP = 269,
-    ELSE = 270,
-    ELIF = 271,
-    COMMA = 272,
-    WHILE = 273,
-    FOR = 274,
-    TO = 275,
-    FROM = 276,
-    NEXT = 277,
-    INTO = 278,
-    GOTO = 279,
-    PRINT = 280,
-    INPUT = 281,
-    IF = 282,
-    THEN = 283,
-    EPY_I_COREID = 284,
-    EPY_I_NUMCORES = 285,
-    EPY_I_SEND = 286,
-    EPY_I_RECV = 287,
-    RANDOM = 288,
-    EPY_I_SYNC = 289,
-    EPY_I_BCAST = 290,
-    EPY_I_REDUCE = 291,
-    SUM = 292,
-    MIN = 293,
-    MAX = 294,
-    PROD = 295,
-    EPY_I_SENDRECV = 296,
-    TOFROM = 297,
-    ADD = 298,
-    SUB = 299,
-    EPY_I_ISHOST = 300,
-    EPY_I_ISDEVICE = 301,
-    COLON = 302,
-    DEF = 303,
-    RET = 304,
-    NONE = 305,
-    FILESTART = 306,
+    DIM = 265,
+    SDIM = 266,
+    LET = 267,
+    STOP = 268,
+    ELSE = 269,
+    ELIF = 270,
+    COMMA = 271,
+    WHILE = 272,
+    FOR = 273,
+    TO = 274,
+    FROM = 275,
+    NEXT = 276,
+    INTO = 277,
+    GOTO = 278,
+    PRINT = 279,
+    INPUT = 280,
+    IF = 281,
+    THEN = 282,
+    EPY_I_COREID = 283,
+    EPY_I_NUMCORES = 284,
+    EPY_I_SEND = 285,
+    EPY_I_RECV = 286,
+    RANDOM = 287,
+    EPY_I_SYNC = 288,
+    EPY_I_BCAST = 289,
+    EPY_I_REDUCE = 290,
+    SUM = 291,
+    MIN = 292,
+    MAX = 293,
+    PROD = 294,
+    EPY_I_SENDRECV = 295,
+    TOFROM = 296,
+    ADD = 297,
+    SUB = 298,
+    EPY_I_ISHOST = 299,
+    EPY_I_ISDEVICE = 300,
+    COLON = 301,
+    DEF = 302,
+    RET = 303,
+    NONE = 304,
+    FILESTART = 305,
+    IN = 306,
     MULT = 307,
     DIV = 308,
     MOD = 309,
@@ -126,10 +126,11 @@ extern int yydebug;
     SRBRACE = 336,
     TRUE = 337,
     FALSE = 338,
-    ISHOST = 339,
-    ISDEVICE = 340,
-    ASSGN = 341,
-    POW = 342
+    LEN = 339,
+    ISHOST = 340,
+    ISDEVICE = 341,
+    ASSGN = 342,
+    POW = 343
   };
 #endif
 /* Tokens.  */
@@ -140,48 +141,48 @@ extern int yydebug;
 #define NEWLINE 262
 #define INDENT 263
 #define OUTDENT 264
-#define REM 265
-#define DIM 266
-#define SDIM 267
-#define LET 268
-#define STOP 269
-#define ELSE 270
-#define ELIF 271
-#define COMMA 272
-#define WHILE 273
-#define FOR 274
-#define TO 275
-#define FROM 276
-#define NEXT 277
-#define INTO 278
-#define GOTO 279
-#define PRINT 280
-#define INPUT 281
-#define IF 282
-#define THEN 283
-#define EPY_I_COREID 284
-#define EPY_I_NUMCORES 285
-#define EPY_I_SEND 286
-#define EPY_I_RECV 287
-#define RANDOM 288
-#define EPY_I_SYNC 289
-#define EPY_I_BCAST 290
-#define EPY_I_REDUCE 291
-#define SUM 292
-#define MIN 293
-#define MAX 294
-#define PROD 295
-#define EPY_I_SENDRECV 296
-#define TOFROM 297
-#define ADD 298
-#define SUB 299
-#define EPY_I_ISHOST 300
-#define EPY_I_ISDEVICE 301
-#define COLON 302
-#define DEF 303
-#define RET 304
-#define NONE 305
-#define FILESTART 306
+#define DIM 265
+#define SDIM 266
+#define LET 267
+#define STOP 268
+#define ELSE 269
+#define ELIF 270
+#define COMMA 271
+#define WHILE 272
+#define FOR 273
+#define TO 274
+#define FROM 275
+#define NEXT 276
+#define INTO 277
+#define GOTO 278
+#define PRINT 279
+#define INPUT 280
+#define IF 281
+#define THEN 282
+#define EPY_I_COREID 283
+#define EPY_I_NUMCORES 284
+#define EPY_I_SEND 285
+#define EPY_I_RECV 286
+#define RANDOM 287
+#define EPY_I_SYNC 288
+#define EPY_I_BCAST 289
+#define EPY_I_REDUCE 290
+#define SUM 291
+#define MIN 292
+#define MAX 293
+#define PROD 294
+#define EPY_I_SENDRECV 295
+#define TOFROM 296
+#define ADD 297
+#define SUB 298
+#define EPY_I_ISHOST 299
+#define EPY_I_ISDEVICE 300
+#define COLON 301
+#define DEF 302
+#define RET 303
+#define NONE 304
+#define FILESTART 305
+#define IN 306
 #define MULT 307
 #define DIV 308
 #define MOD 309
@@ -214,10 +215,11 @@ extern int yydebug;
 #define SRBRACE 336
 #define TRUE 337
 #define FALSE 338
-#define ISHOST 339
-#define ISDEVICE 340
-#define ASSGN 341
-#define POW 342
+#define LEN 339
+#define ISHOST 340
+#define ISDEVICE 341
+#define ASSGN 342
+#define POW 343
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -232,7 +234,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 236 "parser.h" /* yacc.c:1909  */
+#line 238 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

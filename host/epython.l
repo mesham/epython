@@ -130,7 +130,6 @@ STRING_CHARS [[:print:]]{-}[\"]
 
 \r\n|\n                                 { ++line_num; line_indent=0; indent_caller = YY_START; BEGIN(INDENT_MODE); return NEWLINE; }
 [ \t\n]                 				;
-REM{WS}*[[:print:]]*                    return REM;
 \"{STRING_CHARS}*\"                     SAVE_VALUE(STRING);
 
 {HP}{H}+{IS}?							SAVE_VALUE(INTEGER); 
@@ -183,6 +182,8 @@ TOFROM									return TOFROM;
 EPY_I_SYNC								return EPY_I_SYNC;
 EPY_I_BCAST								return EPY_I_BCAST;
 EPY_I_REDUCE							return EPY_I_REDUCE;
+IN										return IN;
+LEN										return LEN;
 INTO									return INTO;
 SUM										return SUM;
 MIN										return MIN;
