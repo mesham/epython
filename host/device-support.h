@@ -43,7 +43,7 @@ extern volatile unsigned int * pb;
 
 // Memory location for each core where we start the symbol table, bytecode, data area etc...
 #define CORE_DATA_START 0x6000
-// If the length of BASIC byte code is greater than this then place in shared memory (unless overridden by command line)
+// If the length of Python byte code is greater than this then place in shared memory (unless overridden by command line)
 #define CORE_CODE_MAX_SIZE 2048
 
 struct shared_basic * loadCodeOntoEpiphany(struct interpreterconfiguration*);

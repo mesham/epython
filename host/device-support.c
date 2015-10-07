@@ -69,7 +69,7 @@ static char* getEpiphanyExecutableFile(void);
 static int doesFileExist(char*);
 
 /**
- * Loads up the code onto the appropriate Epiphany cores, sets up the state (BASIC bytecode, symbol table, data area etc)
+ * Loads up the code onto the appropriate Epiphany cores, sets up the state (Python bytecode, symbol table, data area etc)
  * and then starts the cores running
  */
 struct shared_basic * loadCodeOntoEpiphany(struct interpreterconfiguration* configuration) {
@@ -261,7 +261,7 @@ static int doesFileExist(char * filename) {
 }
 
 /**
- * Places the bytecode representation of the users BASIC code onto the cores
+ * Places the bytecode representation of the users Python code onto the cores
  */
 static void placeByteCode(struct shared_basic * basicState, int codeOnCore, char * intentActive) {
 	basicState->data=(void*) (SHARED_CODE_AREA_START+management_DRAM.base);

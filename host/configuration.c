@@ -205,7 +205,7 @@ static void displayHelp() {
 #endif
 	printf("-s             Display parse statistics\n");
 	printf("-pp            Display preprocessed code\n");
-	printf("-o filename    Write out the compiled byte representation of processed BASIC code and exits (does not run code)\n");
+	printf("-o filename    Write out the compiled byte representation of processed Python code and exits (does not run code)\n");
 	printf("-l filename    Loads from compiled byte representation of code and runs this\n");
 	printf("-help          Display this help and quit\n");
 }

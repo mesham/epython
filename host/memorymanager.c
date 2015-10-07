@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include "memorymanager.h"
 
-// This is set at the end of parsing to be the entire byte code representation of the users BASIC program
+// This is set at the end of parsing to be the entire byte code representation of the users Python program
 struct memorycontainer* assembledMemory=NULL;
 // This is the function list
 struct functionListNode* functionListHead=NULL;
