@@ -903,6 +903,18 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
 		value=computeExpressionResult(expressionId, assembled, currentPoint, length);
 #endif
+	} else if (expressionId == EQ_TOKEN || expressionId == NEQ_TOKEN || expressionId == GT_TOKEN || expressionId == GEQ_TOKEN ||
+			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN || expressionId == IS_TOKEN || expressionId == ISHOST_TOKEN ||
+			expressionId == ISDEVICE_TOKEN) {
+		*currentPoint-=sizeof(unsigned char);
+#ifdef HOST_INTERPRETER
+		int retVal=determine_logical_expression(assembled, currentPoint, length, threadId);
+#else
+		int retVal=determine_logical_expression(assembled, currentPoint, length);
+#endif
+		value.type=BOOLEAN_TYPE;
+		value.dtype=SCALAR;
+		cpy(value.data, &retVal, sizeof(int));
 	}
 	return value;
 }
