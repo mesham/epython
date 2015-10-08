@@ -36,20 +36,20 @@ void yyerror (char const *msg) {
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM
 
-%token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN
+%token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
-%left ADD SUB LEN 
-%left MULT DIV MOD
+%left ADD SUB LEN ADDADD SUBSUB
+%left MULT DIV MOD MULMUL DIVDIV MODMOD
 %left AND OR
 %left NEQ LEQ GEQ LT GT EQ EPY_I_ISHOST EPY_I_ISDEVICE ASSGN
 %right NOT
-%right POW
+%right POW POWPOW FLOORDIVFLOORDIV FLOORDIV
 
 %type <string> ident declareident
 %type <integer> unary_operator 
-%type <uchar> reductionop
+%type <uchar> reductionop opassgn
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
 %type <stack> fndeclarationargs fncallargs
 
@@ -96,6 +96,7 @@ statement
 	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
     | ident ASSGN expression { $$=appendLetStatement($1, $3); }
     | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
+    | ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendPrintStatement($2); }	
 	| STOP { $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
@@ -133,6 +134,15 @@ reductionop
 	| EPY_I_MAX { $$=2; }
 	| EPY_I_PROD { $$=3; }
 ;
+
+opassgn
+	: ADDADD { $$=0; }
+	| SUBSUB { $$=1; }
+	| MULMUL { $$=2; }
+	| DIVDIV { $$=3; }
+	| MODMOD { $$=4; }
+	| POWPOW { $$=5; }
+	| FLOORDIVFLOORDIV { $$=6; }
 
 declareident
 	 : ident { $$=$1; enterScope(); addVariableIfNeeded($1); }
@@ -184,6 +194,7 @@ multiplicative_expression
 	: value { $$=$1; }
 	| multiplicative_expression MULT value { $$=createMulExpression($1, $3); }
 	| multiplicative_expression DIV value { $$=createDivExpression($1, $3); }
+	| multiplicative_expression FLOORDIV value { $$=createFloorDivExpression($1, $3); }
 	| multiplicative_expression MOD value { $$=createModExpression($1, $3); }
 	| multiplicative_expression POW value { $$=createPowExpression($1, $3); }
 	| SQRT LPAREN value RPAREN { $$=createSqrtExpression($3); }
@@ -200,7 +211,7 @@ multiplicative_expression
 	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
 	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
-	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
+	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }	
 ;
 
 value

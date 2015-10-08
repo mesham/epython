@@ -76,6 +76,7 @@ struct memorycontainer* appendIfStatement(struct memorycontainer*, struct memory
 struct memorycontainer* appendIfElseStatement(struct memorycontainer*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendArraySetStatement(char*, struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendLetStatement(char*, struct memorycontainer*);
+struct memorycontainer* appendLetWithOperatorStatement(char*, struct memorycontainer*, unsigned char);
 struct memorycontainer* appendReturnStatement(void);
 struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer*);
 struct memorycontainer* appendPrintStatement(struct memorycontainer*);
@@ -105,6 +106,7 @@ struct memorycontainer* createAddExpression(struct memorycontainer*, struct memo
 struct memorycontainer* createSubExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createMulExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createDivExpression(struct memorycontainer*, struct memorycontainer*);
+struct memorycontainer* createFloorDivExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createModExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createPowExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createSqrtExpression(struct memorycontainer*);

@@ -568,6 +568,31 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct memory
 	return memoryContainer;
 }
 
+struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct memorycontainer* expressionContainer, unsigned char operator) {
+	unsigned char token;
+	if (operator == 0) {
+		token=ADD_TOKEN;
+	} else if (operator == 1) {
+		token=SUB_TOKEN;
+	} else if (operator == 2) {
+		token=MUL_TOKEN;
+	} else if (operator == 3 || operator == 6) {
+		token=DIV_TOKEN;
+	} else if (operator == 4) {
+		token=MOD_TOKEN;
+	} else if (operator == 5) {
+		token=POW_TOKEN;
+	} else {
+		fprintf(stderr, "Can not find operator with id of %c\n", operator);
+	}
+	struct memorycontainer* rhs=createExpression(token, createIdentifierExpression(identifier), expressionContainer);
+	if (operator == 6) {
+		// Floor
+		rhs=createUnaryGeneralMathsExpression(rhs, FLOOR_MATHS_OP);
+	}
+	return appendLetStatement(identifier, rhs);
+}
+
 /**
  * Appends and returns a let statement which sets and declares scalars
  */
@@ -764,7 +789,7 @@ struct memorycontainer* createRealExpression(float number) {
 /**
  * Creates an expression wrapping an identifier
  */
-struct memorycontainer* createIdentifierExpression( char * identifier) {
+struct memorycontainer* createIdentifierExpression(char * identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
@@ -865,6 +890,10 @@ struct memorycontainer* createMulExpression(struct memorycontainer* expression1,
 
 struct memorycontainer* createDivExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	return createExpression(DIV_TOKEN, expression1, expression2);
+}
+
+struct memorycontainer* createFloorDivExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
+	return createUnaryGeneralMathsExpression(createExpression(DIV_TOKEN, expression1, expression2), FLOOR_MATHS_OP);
 }
 
 struct memorycontainer* createModExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
