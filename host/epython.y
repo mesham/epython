@@ -116,7 +116,9 @@ fncallargs
 fndeclarationargs
 	: /*blank*/ { enterScope(); $$=getNewStack(); }
 	| ident { $$=getNewStack(); enterScope(); pushIdentifier($$, $1); appendArgument($1); }
+	| ident ASSGN expression { $$=getNewStack(); enterScope(); pushIdentifierAssgnExpression($$, $1, $3); appendArgument($1); }
 	| fndeclarationargs COMMA ident { pushIdentifier($1, $3); $$=$1; appendArgument($3); }	
+	| fndeclarationargs COMMA ident ASSGN expression { pushIdentifierAssgnExpression($1, $3, $5); $$=$1; appendArgument($3); }
 	;
 
 codeblock

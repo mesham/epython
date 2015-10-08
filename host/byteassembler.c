@@ -67,6 +67,7 @@ static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
 static struct memorycontainer* createExpression(unsigned char, struct memorycontainer*, struct memorycontainer*);
 static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
+static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
 
 /**
  * Gets the total number of entries in the symbol table
@@ -529,10 +530,26 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 
 	((unsigned short *) numberArgsContainer->data)[0]=numberArgs;
 
+	struct memorycontainer* assignmentContainer=NULL;
+
 	int i;
 	for (i=0;i<numberArgs;i++) {
-		((unsigned short *) numberArgsContainer->data)[i+1]=getVariableId(popIdentifier(args), 1);
+		if (getTypeAt(args, i) == 2) {
+			((unsigned short *) numberArgsContainer->data)[i+1]=getVariableId(getIdentifierAt(args, i), 1);
+		} else {
+			struct identifier_exp * idexp=getExpressionIdentifierAt(args, i);
+			if (assignmentContainer == NULL) {
+				assignmentContainer=appendLetIfNoAliasStatement(idexp->identifier, idexp->exp);
+			} else {
+				assignmentContainer=concatenateMemory(assignmentContainer, appendLetIfNoAliasStatement(idexp->identifier, idexp->exp));
+			}
+			((unsigned short *) numberArgsContainer->data)[i+1]=getVariableId(idexp->identifier, 1);
+		}
 	}
+
+	clearStack(args);
+
+	if (assignmentContainer != NULL) numberArgsContainer=concatenateMemory(numberArgsContainer, assignmentContainer);
 
 	struct memorycontainer* completedFunction=concatenateMemory(concatenateMemory(numberArgsContainer, functionContents),
 			appendReturnStatement());
@@ -605,6 +622,20 @@ struct memorycontainer* appendLetStatement(char * identifier, struct memoryconta
 	unsigned int position=0;
 
 	position=appendStatement(memoryContainer, LET_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	appendMemory(memoryContainer, expressionContainer, position);
+	return memoryContainer;
+}
+
+static struct memorycontainer* appendLetIfNoAliasStatement(char * identifier, struct memorycontainer* expressionContainer) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + expressionContainer->length;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, LETNOALIAS_TOKEN, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
 	appendMemory(memoryContainer, expressionContainer, position);
 	return memoryContainer;

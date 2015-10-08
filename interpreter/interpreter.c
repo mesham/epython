@@ -68,7 +68,7 @@ static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
 static unsigned int handlePrint(char*, unsigned int, unsigned int, int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int, int);
-static unsigned int handleLet(char*, unsigned int, unsigned int, int);
+static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
@@ -92,7 +92,7 @@ static unsigned int handleGoto(char*, unsigned int, unsigned int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int);
 static unsigned int handlePrint(char*, unsigned int, unsigned int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int);
-static unsigned int handleLet(char*, unsigned int, unsigned int);
+static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
@@ -162,7 +162,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	for (i=currentPoint;i<length;) {
 		unsigned char command=getUChar(&assembled[i]);
 		i+=sizeof(unsigned char);
-		if (command == LET_TOKEN) i=handleLet(assembled, i, length, threadId);
+		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0, threadId);
+		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1, threadId);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length, threadId);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length, threadId);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length, threadId);
@@ -204,7 +205,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	for (i=currentPoint;i<length;) {
 		unsigned char command=getUChar(&assembled[i]);
 		i+=sizeof(unsigned char);
-		if (command == LET_TOKEN) i=handleLet(assembled, i, length);
+		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0);
+		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length);
@@ -435,24 +437,31 @@ static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, un
 #else
 static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, unsigned int * functionAddress, unsigned int length) {
 #endif
-	unsigned short fnAddress=getUShort(&assembled[currentPoint])+sizeof(unsigned short); // skip past initial num args entry in fn
+	unsigned short fnAddress=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
-	unsigned short numArgs=getUShort(&assembled[currentPoint]);
+
+	unsigned short fnNumArgs=getUShort(&assembled[fnAddress]);
+	fnAddress+=sizeof(unsigned short);
+
+	unsigned short callerNumArgs=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 	struct symbol_node* srcSymbol, *targetSymbol;
-	int i;
+	int i, numArgs;
+	numArgs=fnNumArgs > callerNumArgs ? fnNumArgs : callerNumArgs;
 	for (i=0;i<numArgs;i++) {
+		if (i<callerNumArgs && i<fnNumArgs) {
 #ifdef HOST_INTERPRETER
-		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 1);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
+			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 1);
+			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
 #else
-		srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 1);
-		targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
+			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 1);
+			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
 #endif
-		targetSymbol->isAlias=1;
-		targetSymbol->alias=srcSymbol->id;
-		currentPoint+=sizeof(unsigned short);
-		fnAddress+=sizeof(unsigned short);
+			targetSymbol->isAlias=1;
+			targetSymbol->alias=srcSymbol->id;
+		}
+		if (i<callerNumArgs) currentPoint+=sizeof(unsigned short);
+		if (i<fnNumArgs) fnAddress+=sizeof(unsigned short);
 	}
 	*functionAddress=fnAddress;
 	return currentPoint;
@@ -622,18 +631,20 @@ static unsigned int handleArraySet(char * assembled, unsigned int currentPoint, 
  * Set a scalar value (held in the symbol table)
  */
 #ifdef HOST_INTERPRETER
-static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
+static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsigned int length, char restrictNoAlias, int threadId) {
 #else
-static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsigned int length) {
+static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsigned int length, char restrictNoAlias) {
 #endif
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
+	if (restrictNoAlias && getVariableSymbol(varId, threadId, 0)->isAlias) return currentPoint;
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
+	if (restrictNoAlias && getVariableSymbol(varId, 0)->isAlias) return currentPoint;
 #endif
 	variableSymbol->value.type=value.type;
 	variableSymbol->value.dtype=value.dtype;
@@ -819,10 +830,10 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		cpy(value.data, ptr, sizeof(int));
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
-		*currentPoint=handleLet(assembled, *currentPoint, length, threadId);
+		*currentPoint=handleLet(assembled, *currentPoint, length, threadId, 0);
 		value=getExpressionValue(assembled, currentPoint, length, threadId);
 #else
-		*currentPoint=handleLet(assembled, *currentPoint, length);
+		*currentPoint=handleLet(assembled, *currentPoint, length, 0);
 		value=getExpressionValue(assembled, currentPoint, length)
 #endif
 	} else if (expressionId == FNCALL_TOKEN) {

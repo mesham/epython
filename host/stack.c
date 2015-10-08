@@ -56,11 +56,32 @@ struct memorycontainer* popExpression(struct stack_t* stack) {
    return NULL;
 }
 
+struct identifier_exp* popExpressionIdentifier(struct stack_t* stack) {
+	if (stack->size > 0) {
+		return (struct identifier_exp*) stack->data[--stack->size];
+	}
+	return NULL;
+}
+
+struct identifier_exp* getExpressionIdentifierAt(struct stack_t* stack, int index) {
+	if (stack->size > index) {
+		return (struct identifier_exp*) stack->data[index];
+	}
+	return NULL;
+}
+
 struct memorycontainer* getExpressionAt(struct stack_t* stack, int index) {
    if (stack->size > index) {
        return (struct memorycontainer*) stack->data[index];
    }
    return NULL;
+}
+
+char* getIdentifierAt(struct stack_t* stack, int index) {
+	if (stack->size > index) {
+		return (char*) stack->data[index];
+	}
+	return NULL;
 }
 
 int getTopType(struct stack_t* stack) {
@@ -99,6 +120,22 @@ void pushIdentifier(struct stack_t* stack, char* val) {
     stack->data[stack->size-1]=malloc(strlen(val)+1);
     stack->type[stack->size-1]=2;
     strcpy(stack->data[stack->size-1], val);
+}
+
+void pushIdentifierAssgnExpression(struct stack_t* stack, char* val, struct memorycontainer* exp) {
+	stack->size++;
+    if (stack->size >= stack->width) {
+        stack->width*=2;
+        stack->data=(void**) realloc(&stack->data, sizeof(void*) * stack->width);
+        stack->type=(char*) realloc(&stack->type, sizeof(char) * stack->width);
+    }
+    struct identifier_exp atom;
+    atom.identifier=(char*) malloc(strlen(val)+1);
+    strcpy(atom.identifier, val);
+    atom.exp=exp;
+    stack->data[stack->size-1]=malloc(sizeof(struct identifier_exp));
+    memcpy(stack->data[stack->size-1], &atom, sizeof(struct identifier_exp));
+    stack->type[stack->size-1]=4;
 }
 
 void pushExpression(struct stack_t* stack, struct memorycontainer* exp) {

@@ -77,6 +77,7 @@
 #define RETURN_EXP_TOKEN 0x2F
 #define BOOLEAN_TOKEN 0x30
 #define LEN_TOKEN 0x31
+#define LETNOALIAS_TOKEN 0x32
 
 #define SQRT_MATHS_OP 0x00
 #define SIN_MATHS_OP 0x01
