@@ -191,6 +191,7 @@ EPY_I_SYNC								return EPY_I_SYNC;
 EPY_I_BCAST								return EPY_I_BCAST;
 EPY_I_REDUCE							return EPY_I_REDUCE;
 IN										return IN;
+IS										return IS;
 LEN										return LEN;
 INTO									return INTO;
 EPY_I_SUM								return EPY_I_SUM;

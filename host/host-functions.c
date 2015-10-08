@@ -89,6 +89,8 @@ void displayToUser(struct value_defn value, int threadId) {
 		printf("[host %d] %f\n", threadId, *((float*) value.data));
 	} else if (value.type == BOOLEAN_TYPE) {
 		printf("[host %d] %s\n", threadId, *((int*) value.data) > 0 ? "true" : "false");
+	} else if (value.type == NONE_TYPE) {
+		printf("[host %d] NONE\n", threadId);
 	} else if (value.type == STRING_TYPE) {
 		char *c;
 		cpy(&c, &value.data, sizeof(char*));
@@ -198,6 +200,8 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		} else if (v2.type==BOOLEAN_TYPE) {
 			int int_v=*((int*) v2.data);
 			sprintf(newString,"%s%s", str1, int_v > 0?"true":"false");
+		} else if (v2.type==NONE_TYPE) {
+			sprintf(newString,"%sNONE", str1);
 		} else if (v2.type==REAL_TYPE) {
 			float f=*((float*) v2.data);
 			sprintf(newString,"%s%f", str1, f);
@@ -211,10 +215,12 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		if (v1.type==INT_TYPE) {
 			int int_v=*((int*) v1.data);
 			sprintf(newString,"%d%s", int_v, str2);
-		} else if (v2.type==BOOLEAN_TYPE) {
+		} else if (v1.type==BOOLEAN_TYPE) {
 			int int_v=*((int*) v1.data);
 			sprintf(newString,"%s%s", int_v > 0?"true":"false", str2);
-		} else if (v2.type==REAL_TYPE) {
+		} else if (v1.type==NONE_TYPE) {
+			sprintf(newString,"NONE%s", str2);
+		} else if (v1.type==REAL_TYPE) {
 			float f=*((float*) v1.data);
 			sprintf(newString,"%f%s", f, str2);
 		}

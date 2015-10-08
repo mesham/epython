@@ -78,6 +78,8 @@
 #define BOOLEAN_TOKEN 0x30
 #define LEN_TOKEN 0x31
 #define LETNOALIAS_TOKEN 0x32
+#define NONE_TOKEN 0x33
+#define IS_TOKEN 0x34
 
 #define SQRT_MATHS_OP 0x00
 #define SIN_MATHS_OP 0x01

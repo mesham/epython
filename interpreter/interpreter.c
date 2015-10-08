@@ -686,7 +686,7 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 		if (expressionId == AND_TOKEN) return s1 && s2;
 		if (expressionId == OR_TOKEN) return s1 || s2;
 	} else if (expressionId == EQ_TOKEN || expressionId == NEQ_TOKEN || expressionId == GT_TOKEN || expressionId == GEQ_TOKEN ||
-			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN) {
+			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN || expressionId == IS_TOKEN) {
 #ifdef HOST_INTERPRETER
 		struct value_defn expression1=getExpressionValue(assembled, currentPoint, length, threadId);
 		struct value_defn expression2=getExpressionValue(assembled, currentPoint, length, threadId);
@@ -694,6 +694,10 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 		struct value_defn expression1=getExpressionValue(assembled, currentPoint, length);
 		struct value_defn expression2=getExpressionValue(assembled, currentPoint, length);
 #endif
+		if (expressionId == IS_TOKEN) {
+			if (expression1.type == NONE_TYPE && expression2.type == NONE_TYPE) return 1;
+			return expression1.data == expression2.data;
+		}
 		if (expression1.type == expression2.type && expression1.type == INT_TYPE) {
 			int value1=getInt(expression1.data);
 			int value2=getInt(expression2.data);
@@ -718,8 +722,18 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 		} else if (expression1.type == expression2.type && expression1.type == STRING_TYPE) {
 			if (expressionId == EQ_TOKEN) {
 				return checkStringEquality(expression1, expression2);
+			} else if (expressionId == NEQ_TOKEN) {
+				return !checkStringEquality(expression1, expression2);
 			} else {
 				raiseError("Can only test for equality with strings");
+			}
+		} else if (expression1.type == expression2.type && expression1.type == NONE_TYPE) {
+			if (expressionId == EQ_TOKEN || expressionId == IS_TOKEN) {
+				return 1;
+			} else if (expressionId == NEQ_TOKEN) {
+				return 0;
+			} else {
+				raiseError("Can only test for equality with none");
 			}
 		}
 	} else if (expressionId == BOOLEAN_TOKEN) {
@@ -797,6 +811,9 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		char * strPtr=assembled + *currentPoint;
 		cpy(&value.data, &strPtr, sizeof(char*));
 		*currentPoint+=(slength(strPtr)+1);
+		value.dtype=SCALAR;
+	} else if (expressionId == NONE_TOKEN) {
+		value.type=NONE_TYPE;
 		value.dtype=SCALAR;
 	} else if (expressionId == COREID_TOKEN) {
 		value.type=INT_TYPE;

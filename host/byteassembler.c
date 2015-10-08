@@ -803,6 +803,16 @@ struct memorycontainer* createBooleanExpression(int booleanVal) {
 	return memoryContainer;
 }
 
+struct memorycontainer* createNoneExpression(void) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	appendStatement(memoryContainer, NONE_TOKEN, 0);
+	return memoryContainer;
+}
+
 /**
  * Creates an expression wrapping a real number
  */
@@ -878,6 +888,10 @@ struct memorycontainer* createAndExpression(struct memorycontainer* expression1,
 
 struct memorycontainer* createEqExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	return createExpression(EQ_TOKEN, expression1, expression2);
+}
+
+struct memorycontainer* createIsExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
+	return createExpression(IS_TOKEN, expression1, expression2);
 }
 
 struct memorycontainer* createNeqExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {

@@ -112,30 +112,31 @@ extern int yydebug;
     LT = 322,
     GT = 323,
     EQ = 324,
-    NOT = 325,
-    SQRT = 326,
-    SIN = 327,
-    COS = 328,
-    TAN = 329,
-    ASIN = 330,
-    ACOS = 331,
-    ATAN = 332,
-    SINH = 333,
-    COSH = 334,
-    TANH = 335,
-    FLOOR = 336,
-    CEIL = 337,
-    LOG = 338,
-    LOG10 = 339,
-    LPAREN = 340,
-    RPAREN = 341,
-    SLBRACE = 342,
-    SRBRACE = 343,
-    TRUE = 344,
-    FALSE = 345,
-    LEN = 346,
-    ASSGN = 347,
-    POW = 348
+    IS = 325,
+    NOT = 326,
+    SQRT = 327,
+    SIN = 328,
+    COS = 329,
+    TAN = 330,
+    ASIN = 331,
+    ACOS = 332,
+    ATAN = 333,
+    SINH = 334,
+    COSH = 335,
+    TANH = 336,
+    FLOOR = 337,
+    CEIL = 338,
+    LOG = 339,
+    LOG10 = 340,
+    LPAREN = 341,
+    RPAREN = 342,
+    SLBRACE = 343,
+    SRBRACE = 344,
+    TRUE = 345,
+    FALSE = 346,
+    LEN = 347,
+    ASSGN = 348,
+    POW = 349
   };
 #endif
 /* Tokens.  */
@@ -206,30 +207,31 @@ extern int yydebug;
 #define LT 322
 #define GT 323
 #define EQ 324
-#define NOT 325
-#define SQRT 326
-#define SIN 327
-#define COS 328
-#define TAN 329
-#define ASIN 330
-#define ACOS 331
-#define ATAN 332
-#define SINH 333
-#define COSH 334
-#define TANH 335
-#define FLOOR 336
-#define CEIL 337
-#define LOG 338
-#define LOG10 339
-#define LPAREN 340
-#define RPAREN 341
-#define SLBRACE 342
-#define SRBRACE 343
-#define TRUE 344
-#define FALSE 345
-#define LEN 346
-#define ASSGN 347
-#define POW 348
+#define IS 325
+#define NOT 326
+#define SQRT 327
+#define SIN 328
+#define COS 329
+#define TAN 330
+#define ASIN 331
+#define ACOS 332
+#define ATAN 333
+#define SINH 334
+#define COSH 335
+#define TANH 336
+#define FLOOR 337
+#define CEIL 338
+#define LOG 339
+#define LOG10 340
+#define LPAREN 341
+#define RPAREN 342
+#define SLBRACE 343
+#define SRBRACE 344
+#define TRUE 345
+#define FALSE 346
+#define LEN 347
+#define ASSGN 348
+#define POW 349
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -245,7 +247,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 249 "parser.h" /* yacc.c:1909  */
+#line 251 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

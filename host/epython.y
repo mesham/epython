@@ -37,13 +37,13 @@ void yyerror (char const *msg) {
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM
 
 %token ADD SUB EPY_I_ISHOST EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
-%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
+%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
 %left ADD SUB LEN ADDADD SUBSUB
 %left MULT DIV MOD MULMUL DIVDIV MODMOD
 %left AND OR
-%left NEQ LEQ GEQ LT GT EQ EPY_I_ISHOST EPY_I_ISDEVICE ASSGN
+%left NEQ LEQ GEQ LT GT EQ IS EPY_I_ISHOST EPY_I_ISDEVICE ASSGN
 %right NOT
 %right POW POWPOW FLOORDIVFLOORDIV FLOORDIV
 
@@ -101,8 +101,7 @@ statement
 	| STOP { $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
-	| RET { $$ = appendReturnStatement(); }
-	| RET NONE { $$ = appendReturnStatement(); }
+	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
@@ -174,6 +173,7 @@ equality_expression
 	: relational_expression { $$=$1; }
 	| equality_expression EQ relational_expression { $$=createEqExpression($1, $3); }
 	| equality_expression NEQ relational_expression { $$=createNeqExpression($1, $3); }
+	| equality_expression IS relational_expression { $$=createIsExpression($1, $3); }
 	| EPY_I_ISHOST { $$=createIsHostExpression(); }
 	| EPY_I_ISDEVICE { $$=createIsDeviceExpression(); }
 ;
@@ -239,6 +239,7 @@ constant
 		| STRING { $$=createStringExpression($1); }	
 		| TRUE { $$=createBooleanExpression(1); }
 		| FALSE { $$=createBooleanExpression(0); }
+		| NONE { $$=createNoneExpression(); }
 ;
 
 unary_operator
