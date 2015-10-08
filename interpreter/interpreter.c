@@ -1069,9 +1069,16 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 	if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(int*));
 	} else {
-		char * ptr;
-		cpy(&ptr, variableSymbol->value.data, sizeof(int*));
-		cpy(ptr+((index+1) *4), value.data, sizeof(int));
+		int currentAddress=getInt(variableSymbol->value.data);
+		if (currentAddress == 0) {
+			int * address=getArrayAddress(sizeof(int) * index, 0);
+			cpy(variableSymbol->value.data, &address, sizeof(int*));
+			cpy(address+((index+1) *4), value.data, sizeof(int*));
+		} else {
+			char * ptr;
+			cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+			cpy(ptr+((index+1) *4), value.data, sizeof(int));
+		}
 	}
 }
 

@@ -92,8 +92,8 @@ statement
 	| IF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }		
 	| IF expression COLON statements { $$=appendIfStatement($2, $4); }
 	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }	
-	| INPUT ident { $$=appendInputStatement($2); }
-	| INPUT constant COMMA ident { $$=appendInputStringStatement($2, $4); }
+	| ident ASSGN INPUT LPAREN RPAREN { $$=appendInputStatement($1); }
+	| ident ASSGN INPUT LPAREN constant RPAREN { $$=appendInputStringStatement($5, $1); }
     | ident ASSGN expression { $$=appendLetStatement($1, $3); }
     | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
     | ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
