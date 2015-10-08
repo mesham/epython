@@ -309,7 +309,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	position+=sizeof(unsigned short);
 	position=appendVariable(memoryContainer, numArgs, position);
 
-	for (i=numArgs-1;i>=0;i--) {
+	for (i=0;i<numArgs;i++) {
 		struct memorycontainer* expression=getExpressionAt(args, i);
 		unsigned char command=((unsigned char*) expression->data)[0];
 		if (command == IDENTIFIER_TOKEN) {
