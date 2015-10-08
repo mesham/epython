@@ -803,6 +803,29 @@ struct memorycontainer* createBooleanExpression(int booleanVal) {
 	return memoryContainer;
 }
 
+struct memorycontainer* createArrayExpression(struct stack_t* arrayVals) {
+	int lenOfArray=getStackSize(arrayVals);
+	struct memorycontainer* expressionContainer=NULL;
+	int i;
+	for (i=0;i<lenOfArray;i++) {
+		if (expressionContainer == NULL) {
+			expressionContainer=getExpressionAt(arrayVals, i);
+		} else {
+			expressionContainer=concatenateMemory(expressionContainer, getExpressionAt(arrayVals, i));
+		}
+	}
+
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char) + sizeof(int);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	int location=appendStatement(memoryContainer, ARRAY_TOKEN, 0);
+	memcpy(&memoryContainer->data[location], &lenOfArray, sizeof(int));
+
+	return concatenateMemory(memoryContainer, expressionContainer);
+}
+
 struct memorycontainer* createNoneExpression(void) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned char);

@@ -853,6 +853,22 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0);
 		value=getExpressionValue(assembled, currentPoint, length)
 #endif
+	} else if (expressionId == ARRAY_TOKEN) {
+		int i, numItems=getInt(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(int);
+		int * address=getArrayAddress(numItems+1, 0);
+		cpy(value.data, &address, sizeof(int*));
+		cpy(address, &numItems, sizeof(int));
+		for (i=0;i<numItems;i++) {
+#ifdef HOST_INTERPRETER
+			struct value_defn itemV=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+			struct value_defn itemV=getExpressionValue(assembled, currentPoint, length);
+#endif
+		cpy(address+(i+1), itemV.data, sizeof(int));
+		value.type=itemV.type;
+		}
+		value.dtype=ARRAY;
 	} else if (expressionId == FNCALL_TOKEN) {
 #ifdef HOST_INTERPRETER
 		unsigned int fnAddr;
@@ -1072,7 +1088,7 @@ struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index
 		char * ptr;
 		cpy(&ptr, variableSymbol->value.data, sizeof(int*));
 		ptr+=((index+1) *4);
-		cpy(&val.data, ptr, sizeof(int));
+		cpy(val.data, ptr, sizeof(int));
 	}
 	return val;
 }

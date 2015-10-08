@@ -51,7 +51,7 @@ void yyerror (char const *msg) {
 %type <integer> unary_operator 
 %type <uchar> reductionop opassgn
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
-%type <stack> fndeclarationargs fncallargs
+%type <stack> fndeclarationargs fncallargs commaseparray
 
 %start program 
 
@@ -213,7 +213,13 @@ multiplicative_expression
 	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
 	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
-	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }	
+	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
+	| SLBRACE commaseparray SRBRACE	{ $$=createArrayExpression($2); }
+;
+
+commaseparray
+	: expression { $$=getNewStack(); pushExpression($$, $1); }
+	| commaseparray COMMA expression { pushExpression($1, $3); }
 ;
 
 value
