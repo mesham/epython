@@ -45,7 +45,7 @@ void sendData(struct value_defn, int, int, int);
 struct value_defn recvData(int, int, int);
 struct value_defn sendRecvData(struct value_defn, int, int, int);
 struct value_defn bcastData(struct value_defn, int, int, int, int);
-struct value_defn reduceData(struct value_defn, unsigned short, int, int, int);
+struct value_defn reduceData(struct value_defn, unsigned char, int, int, int);
 void syncCores(int, int);
 #else
 struct value_defn getInputFromUser(void);
@@ -55,7 +55,7 @@ void sendData(struct value_defn, int);
 struct value_defn recvData(int);
 struct value_defn sendRecvData(struct value_defn, int);
 struct value_defn bcastData(struct value_defn, int, int);
-struct value_defn reduceData(struct value_defn, unsigned short, int);
+struct value_defn reduceData(struct value_defn, unsigned char, int);
 void syncCores(int);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);

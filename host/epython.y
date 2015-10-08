@@ -20,6 +20,7 @@ void yyerror (char const *msg) {
 
 %union {
 	int integer;
+	unsigned char uchar;
 	float real;	
 	struct memorycontainer * data;
 	char *string;
@@ -47,7 +48,8 @@ void yyerror (char const *msg) {
 %right POW
 
 %type <string> ident declareident
-%type <integer> unary_operator reductionop
+%type <integer> unary_operator 
+%type <uchar> reductionop
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
 %type <stack> fndeclarationargs fncallargs
 

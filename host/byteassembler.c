@@ -65,8 +65,8 @@ static unsigned short addVariable(char*);
 static unsigned short findVariable(struct variable_node*,  char*);
 static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
-static struct memorycontainer* createExpression(unsigned short, struct memorycontainer*, struct memorycontainer*);
-static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned short);
+static struct memorycontainer* createExpression(unsigned char, struct memorycontainer*, struct memorycontainer*);
+static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
 
 /**
  * Gets the total number of entries in the symbol table
@@ -85,15 +85,15 @@ void setNumberEntriesInSymbolTable(unsigned short e) {
 /**
  * Appends and returns a reduction statement
  */
-struct memorycontainer* appendReductionStatement(int op, struct memorycontainer* expression,  char* identifier) {
+struct memorycontainer* appendReductionStatement(unsigned char op, struct memorycontainer* expression,  char* identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*3 + expression->length;
+	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char)*2+ expression->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	unsigned int position=0;
 	position=appendStatement(memoryContainer, REDUCTION_TOKEN, position);
-	position=appendStatement(memoryContainer, (unsigned short) op, position);
+	position=appendStatement(memoryContainer, op, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
 	position=appendMemory(memoryContainer, expression, position);
 	return memoryContainer;
@@ -104,7 +104,7 @@ struct memorycontainer* appendReductionStatement(int op, struct memorycontainer*
  */
 struct memorycontainer* appendBcastStatement(struct memorycontainer* expression, struct memorycontainer* source,  char* identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + source->length+ expression->length;
+	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char) + source->length+ expression->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -119,9 +119,9 @@ struct memorycontainer* appendBcastStatement(struct memorycontainer* expression,
 /**
  * Appends and returns a P2P receive statement
  */
-struct memorycontainer* appendRecvStatement( char* identifier, struct memorycontainer* source) {
+struct memorycontainer* appendRecvStatement(char* identifier, struct memorycontainer* source) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + source->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char)+ source->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -137,7 +137,7 @@ struct memorycontainer* appendRecvStatement( char* identifier, struct memorycont
  */
 struct memorycontainer* appendRecvIntoArrayStatement( char* identifier, struct memorycontainer* index, struct memorycontainer* source) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + index->length+source->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + index->length+source->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -154,7 +154,7 @@ struct memorycontainer* appendRecvIntoArrayStatement( char* identifier, struct m
  */
 struct memorycontainer* appendSendStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + toSendExpression->length+target->length;
+	memoryContainer->length=sizeof(unsigned char) + toSendExpression->length+target->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -170,7 +170,7 @@ struct memorycontainer* appendSendStatement(struct memorycontainer* toSendExpres
  */
 struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target, char* identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + toSendExpression->length+target->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + toSendExpression->length+target->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -188,7 +188,7 @@ struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendEx
 struct memorycontainer* appendSendRecvStatementIntoArray(struct memorycontainer* toSendExpression, struct memorycontainer* target,
 		char* identifier, struct memorycontainer* arrayIndex) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + toSendExpression->length+target->length+arrayIndex->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + toSendExpression->length+target->length+arrayIndex->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -206,7 +206,7 @@ struct memorycontainer* appendSendRecvStatementIntoArray(struct memorycontainer*
  */
 struct memorycontainer* appendDeclareSharedArray( char* identifier, struct memorycontainer* exp1) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + exp1->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + exp1->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -223,7 +223,7 @@ struct memorycontainer* appendDeclareSharedArray( char* identifier, struct memor
  */
 struct memorycontainer* appendDeclareArray( char* identifier, struct memorycontainer* exp1) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + exp1->length;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + exp1->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -240,7 +240,7 @@ struct memorycontainer* appendDeclareArray( char* identifier, struct memoryconta
  */
 struct memorycontainer* appendInputStatement( char * identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2;
+	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -256,7 +256,7 @@ struct memorycontainer* appendInputStatement( char * identifier) {
  */
 struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDisplay,  char* identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + toDisplay->length;
+	memoryContainer->length=sizeof(unsigned short) +sizeof(unsigned char)+ toDisplay->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -291,14 +291,14 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	}
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*(3+numArgs);
+	memoryContainer->length=sizeof(unsigned short)*(2+numArgs)+sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 
 	defn->next=NULL;
 	defn->type=3;
 	defn->name=(char*) malloc(sizeof(functionName)+1);
 	strcpy(defn->name, functionName);
-	defn->currentpoint=sizeof(unsigned short);
+	defn->currentpoint=sizeof(unsigned char);
 
 	memoryContainer->lineDefns=defn;
 
@@ -310,7 +310,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 
 	for (i=numArgs-1;i>=0;i--) {
 		struct memorycontainer* expression=getExpressionAt(args, i);
-		short command=((short*) expression->data)[0];
+		unsigned char command=((unsigned char*) expression->data)[0];
 		if (command == IDENTIFIER_TOKEN) {
 			unsigned short varId=((unsigned short*) expression->data)[1];
 			position=appendVariable(memoryContainer, varId, position);
@@ -335,13 +335,13 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 struct memorycontainer* appendGotoStatement(int lineNumber) {
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2;
+	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 
 	defn->next=NULL;
 	defn->type=1;
 	defn->linenumber=lineNumber;
-	defn->currentpoint=sizeof(unsigned short);
+	defn->currentpoint=sizeof(unsigned char);
 
 	memoryContainer->lineDefns=defn;
 	appendStatement(memoryContainer, GOTO_TOKEN, 0);
@@ -358,7 +358,7 @@ struct memorycontainer* appendForStatement(char * identifier, struct memoryconta
 	struct memorycontainer* incrementLet=appendLetStatement("epy_i_ctr", createAddExpression(createIdentifierExpression("epy_i_ctr"), createIntegerExpression(1)));
 
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 6 + exp->length + (block != NULL ? block->length : 0) +
+	memoryContainer->length=sizeof(unsigned char)*2+sizeof(unsigned short) * 4 + exp->length + (block != NULL ? block->length : 0) +
 			initialLet->length + variantLet->length + incrementLet->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
@@ -401,7 +401,7 @@ struct memorycontainer* appendForStatement(char * identifier, struct memoryconta
  */
 struct memorycontainer* appendWhileStatement(struct memorycontainer* expression, struct memorycontainer* block) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 4 + expression->length + (block != NULL ? block->length : 0);
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) * 3 + expression->length + (block != NULL ? block->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -443,7 +443,7 @@ struct memorycontainer* appendWhileStatement(struct memorycontainer* expression,
  */
 struct memorycontainer* appendIfStatement(struct memorycontainer* expressionContainer, struct memorycontainer* thenBlock) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + expressionContainer->length +
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + expressionContainer->length +
 			(thenBlock != NULL ? thenBlock->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
@@ -470,7 +470,7 @@ struct memorycontainer* appendIfStatement(struct memorycontainer* expressionCont
 struct memorycontainer* appendIfElseStatement(struct memorycontainer* expressionContainer, struct memorycontainer* thenBlock,
 		struct memorycontainer* elseBlock) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*4 + expressionContainer->length +
+	memoryContainer->length=sizeof(unsigned char)*2+sizeof(unsigned short)*2 + expressionContainer->length +
 			(thenBlock != NULL ? thenBlock->length : 0) + (elseBlock != NULL ? elseBlock->length : 0);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
@@ -479,7 +479,7 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
 	position=appendStatement(memoryContainer, IFELSE_TOKEN, position);
 	position=appendMemory(memoryContainer, expressionContainer, position);
 
-	unsigned short combinedThenGotoLength=(unsigned short) (thenBlock != NULL ? thenBlock->length : 0)+4;
+	unsigned short combinedThenGotoLength=(unsigned short) (thenBlock != NULL ? thenBlock->length : 0)+3;	// add for goto and line num
 	memcpy(&memoryContainer->data[position], &combinedThenGotoLength, sizeof(unsigned short));
 	position+=sizeof(unsigned short);
 
@@ -555,7 +555,7 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 struct memorycontainer* appendArraySetStatement( char* identifier, struct memorycontainer* indexContainer,
 		struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + indexContainer->length+ expressionContainer->length;
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + indexContainer->length+ expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -573,7 +573,7 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct memory
  */
 struct memorycontainer* appendLetStatement(char * identifier, struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) * 2 + expressionContainer->length;
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -590,7 +590,7 @@ struct memorycontainer* appendLetStatement(char * identifier, struct memoryconta
  */
 struct memorycontainer* appendPrintStatement(struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+expressionContainer->length;
+	memoryContainer->length=sizeof(unsigned char)+expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -602,7 +602,7 @@ struct memorycontainer* appendPrintStatement(struct memorycontainer* expressionC
 
 struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+expressionContainer->length;
+	memoryContainer->length=sizeof(unsigned char)+expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -617,7 +617,7 @@ struct memorycontainer* appendReturnStatementWithExpression(struct memorycontain
  */
 struct memorycontainer* appendReturnStatement(void) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -630,7 +630,7 @@ struct memorycontainer* appendReturnStatement(void) {
  */
 struct memorycontainer* appendStopStatement() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -643,7 +643,7 @@ struct memorycontainer* appendStopStatement() {
  */
 struct memorycontainer* appendSyncStatement() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -656,14 +656,14 @@ struct memorycontainer* appendSyncStatement() {
  */
 struct memorycontainer* createStringExpression(char * string) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=strlen(string)-1+sizeof(unsigned short);
+	memoryContainer->length=strlen(string)-1+sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	unsigned short token=STRING_TOKEN;
+	unsigned char token=STRING_TOKEN;
 	unsigned int location=0;
-	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned short));
-	location+=sizeof(unsigned short);
+	memcpy(&memoryContainer->data[location], &token, sizeof(unsigned char));
+	location+=sizeof(unsigned char);
 
 	char * mstring=(char*) string;
 	mstring[strlen(mstring)-1]='\0';
@@ -676,7 +676,7 @@ struct memorycontainer* createStringExpression(char * string) {
  */
 struct memorycontainer* createRandomExpression() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -686,7 +686,7 @@ struct memorycontainer* createRandomExpression() {
 
 struct memorycontainer* createLenExpression(struct memorycontainer* expression) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + expression->length;
+	memoryContainer->length=sizeof(unsigned char) + expression->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -701,7 +701,7 @@ struct memorycontainer* createLenExpression(struct memorycontainer* expression) 
  */
 struct memorycontainer* createCoreIdExpression() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -714,7 +714,7 @@ struct memorycontainer* createCoreIdExpression() {
  */
 struct memorycontainer* createNumCoresExpression() {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -727,7 +727,7 @@ struct memorycontainer* createNumCoresExpression() {
  */
 struct memorycontainer* createIntegerExpression(int number) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(int) + sizeof(unsigned short);
+	memoryContainer->length=sizeof(int) + sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -738,7 +738,7 @@ struct memorycontainer* createIntegerExpression(int number) {
 
 struct memorycontainer* createBooleanExpression(int booleanVal) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(int) + sizeof(unsigned short);
+	memoryContainer->length=sizeof(int) + sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -752,7 +752,7 @@ struct memorycontainer* createBooleanExpression(int booleanVal) {
  */
 struct memorycontainer* createRealExpression(float number) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(float) + sizeof(unsigned short);
+	memoryContainer->length=sizeof(float) + sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -766,7 +766,7 @@ struct memorycontainer* createRealExpression(float number) {
  */
 struct memorycontainer* createIdentifierExpression( char * identifier) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2;
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -780,7 +780,7 @@ struct memorycontainer* createIdentifierExpression( char * identifier) {
  */
 struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, struct memorycontainer* accessExpression) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + accessExpression->length;
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + accessExpression->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -794,7 +794,7 @@ struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, 
 
 struct memorycontainer* createIsHostExpression(void) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -804,7 +804,7 @@ struct memorycontainer* createIsHostExpression(void) {
 
 struct memorycontainer* createIsDeviceExpression(void) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short);
+	memoryContainer->length=sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -930,9 +930,9 @@ struct memorycontainer* createLog10Expression(struct memorycontainer* expression
 /**
  * Creates unary maths expression which is a operator (such as sin, cos etc) and some value
  */
-static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer* expression, unsigned short maths_op) {
+static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer* expression, unsigned char maths_op) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)*2 + expression->length;
+	memoryContainer->length=sizeof(unsigned char)*2 + expression->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -973,9 +973,9 @@ void leaveScope() {
 /**
  * Creates an expression from two other expressions with some operator (such as add, equality test etc...)
  */
-static struct memorycontainer* createExpression(unsigned short token, struct memorycontainer* expression1, struct memorycontainer* expression2) {
+static struct memorycontainer* createExpression(unsigned char token, struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=expression1->length + expression2->length + sizeof(unsigned short);
+	memoryContainer->length=expression1->length + expression2->length + sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 
 	unsigned int location=0;
@@ -987,12 +987,12 @@ static struct memorycontainer* createExpression(unsigned short token, struct mem
 	memoryContainer->lineDefns=expression1->lineDefns;
 	struct lineDefinition * root=memoryContainer->lineDefns, *r2;
 	while (root != NULL) {
-		root->currentpoint+=sizeof(unsigned short);
+		root->currentpoint+=sizeof(unsigned char);
 		root=root->next;
 	}
 	root=expression2->lineDefns;
 	while (root != NULL) {
-		root->currentpoint+=expression1->length+sizeof(unsigned short);
+		root->currentpoint+=expression1->length+sizeof(unsigned char);
 		r2=root->next;
 		root->next=memoryContainer->lineDefns;
 		memoryContainer->lineDefns=root;

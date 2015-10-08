@@ -139,9 +139,9 @@ struct memorycontainer* concatenateMemory(struct memorycontainer* m1, struct mem
 /**
  * Appends a statement to some memory and returns the new current location (for next entry)
  */
-unsigned int appendStatement(struct memorycontainer* memory, unsigned short command, unsigned int position) {
-	memcpy(&memory->data[position], &command, sizeof(short));
-	position+=sizeof(short);
+unsigned int appendStatement(struct memorycontainer* memory, unsigned char command, unsigned int position) {
+	memcpy(&memory->data[position], &command, sizeof(unsigned char));
+	position+=sizeof(unsigned char);
 	return position;
 }
 

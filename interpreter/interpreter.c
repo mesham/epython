@@ -83,7 +83,7 @@ static unsigned int handleSync(char*, unsigned int, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, int, int);
 static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int, int);
 static int determine_logical_expression(char*, unsigned int*,  unsigned int, int);
-static struct value_defn computeExpressionResult(unsigned short, char*, unsigned int*, unsigned int, int);
+static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int, int);
 #else
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
 static unsigned int handleInput(char*, unsigned int, unsigned int);
@@ -107,11 +107,12 @@ static unsigned int handleSync(char*, unsigned int, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, int);
 static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int);
 static int determine_logical_expression(char*, unsigned int*, unsigned int);
-static struct value_defn computeExpressionResult(unsigned short, char*, unsigned int*, unsigned int);
+static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int);
 #endif
 void setVariableValue(struct symbol_node*, struct value_defn, int);
 struct value_defn getVariableValue(struct symbol_node*, int);
 static unsigned short getUShort(void*);
+static unsigned char getUChar(void*);
 static int getInt(void*);
 static float getFloat(void*);
 
@@ -159,8 +160,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	struct value_defn empty;
 	unsigned int i, fnAddr;
 	for (i=currentPoint;i<length;) {
-		unsigned short command=getUShort(&assembled[i]);
-		i+=sizeof(unsigned short);
+		unsigned char command=getUChar(&assembled[i]);
+		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, threadId);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length, threadId);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length, threadId);
@@ -201,8 +202,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	struct value_defn empty;
 	unsigned int i, fnAddr;
 	for (i=currentPoint;i<length;) {
-		unsigned short command=getUShort(&assembled[i]);
-		i+=sizeof(unsigned short);
+		unsigned char command=getUChar(&assembled[i]);
+		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length);
@@ -275,8 +276,8 @@ static unsigned int handleReduction(char * assembled, unsigned int currentPoint,
 #else
 static unsigned int handleReduction(char * assembled, unsigned int currentPoint, unsigned int length) {
 #endif
-	unsigned short reductionOperator=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
+	unsigned char reductionOperator=getUChar(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned char);
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
@@ -493,7 +494,7 @@ static unsigned int handleFor(char * assembled, unsigned int currentPoint, unsig
 		setVariableValue(variantVarSymbol, nextElement, -1);
 		return currentPoint;
 	}
-	currentPoint+=blockLen+sizeof(unsigned short)*2;
+	currentPoint+=(blockLen+sizeof(unsigned short)+sizeof(unsigned char));
 	return currentPoint;
 }
 
@@ -661,8 +662,8 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 #else
 static int determine_logical_expression(char * assembled, unsigned int * currentPoint, unsigned int length) {
 #endif
-	unsigned short expressionId=getUShort(&assembled[*currentPoint]);
-	*currentPoint+=sizeof(unsigned short);
+	unsigned char expressionId=getUChar(&assembled[*currentPoint]);
+	*currentPoint+=sizeof(unsigned char);
 	if (expressionId == AND_TOKEN || expressionId == OR_TOKEN) {
 #ifdef HOST_INTERPRETER
 		int s1=determine_logical_expression(assembled, currentPoint, length, threadId);
@@ -763,8 +764,8 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #endif
 	struct value_defn value;
 
-	unsigned short expressionId=getUShort(&assembled[*currentPoint]);
-	*currentPoint+=sizeof(unsigned short);
+	unsigned char expressionId=getUChar(&assembled[*currentPoint]);
+	*currentPoint+=sizeof(unsigned char);
 	if (expressionId == INTEGER_TOKEN) {
 		value.type=INT_TYPE;
 		value.dtype=SCALAR;
@@ -835,8 +836,8 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value=processAssembledCode(assembled, fnAddr, length-fnAddr);
 #endif
 	} else if (expressionId == MATHS_TOKEN) {
-		unsigned short maths_op=getUShort(&assembled[*currentPoint]);
-		*currentPoint+=sizeof(unsigned short);
+		unsigned char maths_op=getUChar(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(unsigned char);
 #ifdef HOST_INTERPRETER
 		value=performMathsOp(maths_op, getExpressionValue(assembled, currentPoint, length, threadId));
 #else
@@ -883,10 +884,10 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
  * then raises to be a real
  */
 #ifdef HOST_INTERPRETER
-static struct value_defn computeExpressionResult(unsigned short operator, char * assembled, unsigned int * currentPoint,
+static struct value_defn computeExpressionResult(unsigned char operator, char * assembled, unsigned int * currentPoint,
 		unsigned int length, int threadId) {
 #else
-static struct value_defn computeExpressionResult(unsigned short operator, char * assembled, unsigned int * currentPoint,
+static struct value_defn computeExpressionResult(unsigned char operator, char * assembled, unsigned int * currentPoint,
 		unsigned int length) {
 #endif
 	struct value_defn value;
@@ -1034,6 +1035,12 @@ struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index
 		cpy(&val.data, ptr, sizeof(int));
 	}
 	return val;
+}
+
+static unsigned char getUChar(void* data) {
+	unsigned char v;
+	cpy(&v, data, sizeof(unsigned char));
+	return v;
 }
 
 /**

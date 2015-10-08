@@ -223,12 +223,13 @@ union YYSTYPE
 #line 21 "epython.y" /* yacc.c:1909  */
 
 	int integer;
+	unsigned char uchar;
 	float real;	
 	struct memorycontainer * data;
 	char *string;
 	struct stack_t * stack;
 
-#line 232 "parser.h" /* yacc.c:1909  */
+#line 233 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

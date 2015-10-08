@@ -416,7 +416,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int totalProc
 /**
  * Reduction of data amongst the cores with some operator
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int totalProcesses) {
+struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int totalProcesses) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt;
 	float floatV, tempFloat;

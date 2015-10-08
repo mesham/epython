@@ -347,7 +347,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
 /**
  * Called when running on the host, the function for reducing data between processes
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned short operator, int threadId, int numberProcesses, int hostCoresBasePid) {
+struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int threadId, int numberProcesses, int hostCoresBasePid) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt;
 	float floatV, tempFloat;

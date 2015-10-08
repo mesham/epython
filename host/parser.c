@@ -295,12 +295,13 @@ union YYSTYPE
 #line 21 "epython.y" /* yacc.c:355  */
 
 	int integer;
+	unsigned char uchar;
 	float real;	
 	struct memorycontainer * data;
 	char *string;
 	struct stack_t * stack;
 
-#line 304 "parser.c" /* yacc.c:355  */
+#line 305 "parser.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -315,7 +316,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 319 "parser.c" /* yacc.c:358  */
+#line 320 "parser.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -621,18 +622,18 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    58,    58,    61,    62,    66,    67,    68,    72,    73,
-      77,    78,    79,    80,    81,    82,    83,    84,    85,    86,
-      87,    88,    89,    90,    91,    92,    93,    94,    95,    96,
-      97,    98,    99,   100,   101,   102,   103,   104,   108,   109,
-     110,   114,   115,   116,   120,   123,   126,   129,   130,   131,
-     132,   136,   140,   141,   142,   146,   147,   151,   152,   155,
-     156,   160,   161,   162,   163,   164,   168,   169,   170,   171,
-     172,   176,   177,   178,   182,   183,   184,   185,   186,   187,
-     188,   189,   190,   191,   192,   193,   194,   195,   196,   197,
-     198,   199,   200,   201,   205,   206,   207,   208,   209,   213,
-     217,   218,   219,   220,   221,   222,   223,   224,   225,   226,
-     230,   231
+       0,    60,    60,    63,    64,    68,    69,    70,    74,    75,
+      79,    80,    81,    82,    83,    84,    85,    86,    87,    88,
+      89,    90,    91,    92,    93,    94,    95,    96,    97,    98,
+      99,   100,   101,   102,   103,   104,   105,   106,   110,   111,
+     112,   116,   117,   118,   122,   125,   128,   131,   132,   133,
+     134,   138,   142,   143,   144,   148,   149,   153,   154,   157,
+     158,   162,   163,   164,   165,   166,   170,   171,   172,   173,
+     174,   178,   179,   180,   184,   185,   186,   187,   188,   189,
+     190,   191,   192,   193,   194,   195,   196,   197,   198,   199,
+     200,   201,   202,   203,   207,   208,   209,   210,   211,   215,
+     219,   220,   221,   222,   223,   224,   225,   226,   227,   228,
+     232,   233
 };
 #endif
 
@@ -1652,655 +1653,655 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 58 "epython.y" /* yacc.c:1646  */
+#line 60 "epython.y" /* yacc.c:1646  */
     { compileMemory((yyvsp[0].data)); }
-#line 1658 "parser.c" /* yacc.c:1646  */
+#line 1659 "parser.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 62 "epython.y" /* yacc.c:1646  */
+#line 64 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=concatenateMemory((yyvsp[-1].data), (yyvsp[0].data)); }
-#line 1664 "parser.c" /* yacc.c:1646  */
+#line 1665 "parser.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 66 "epython.y" /* yacc.c:1646  */
+#line 68 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = (yyvsp[-1].data); }
-#line 1670 "parser.c" /* yacc.c:1646  */
+#line 1671 "parser.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 67 "epython.y" /* yacc.c:1646  */
+#line 69 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = (yyvsp[0].data); }
-#line 1676 "parser.c" /* yacc.c:1646  */
+#line 1677 "parser.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 68 "epython.y" /* yacc.c:1646  */
+#line 70 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = NULL; }
-#line 1682 "parser.c" /* yacc.c:1646  */
+#line 1683 "parser.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 72 "epython.y" /* yacc.c:1646  */
+#line 74 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=concatenateMemory((yyvsp[-1].data), (yyvsp[0].data)); }
-#line 1688 "parser.c" /* yacc.c:1646  */
+#line 1689 "parser.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 77 "epython.y" /* yacc.c:1646  */
+#line 79 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendRecvStatement((yyvsp[-2].string), (yyvsp[0].data)); }
-#line 1694 "parser.c" /* yacc.c:1646  */
+#line 1695 "parser.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 78 "epython.y" /* yacc.c:1646  */
+#line 80 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendRecvIntoArrayStatement((yyvsp[-5].string), (yyvsp[-3].data), (yyvsp[0].data)); }
-#line 1700 "parser.c" /* yacc.c:1646  */
+#line 1701 "parser.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 79 "epython.y" /* yacc.c:1646  */
+#line 81 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendSendStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1706 "parser.c" /* yacc.c:1646  */
+#line 1707 "parser.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 80 "epython.y" /* yacc.c:1646  */
+#line 82 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendSendRecvStatement((yyvsp[-4].data), (yyvsp[-2].data), (yyvsp[0].string)); }
-#line 1712 "parser.c" /* yacc.c:1646  */
+#line 1713 "parser.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 81 "epython.y" /* yacc.c:1646  */
+#line 83 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendSendRecvStatementIntoArray((yyvsp[-7].data), (yyvsp[-5].data), (yyvsp[-3].string), (yyvsp[-1].data)); }
-#line 1718 "parser.c" /* yacc.c:1646  */
+#line 1719 "parser.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 82 "epython.y" /* yacc.c:1646  */
+#line 84 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendBcastStatement((yyvsp[-4].data), (yyvsp[-2].data), (yyvsp[0].string)); }
-#line 1724 "parser.c" /* yacc.c:1646  */
+#line 1725 "parser.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 83 "epython.y" /* yacc.c:1646  */
-    { (yyval.data)=appendReductionStatement((yyvsp[-3].integer), (yyvsp[-2].data), (yyvsp[0].string)); }
-#line 1730 "parser.c" /* yacc.c:1646  */
+#line 85 "epython.y" /* yacc.c:1646  */
+    { (yyval.data)=appendReductionStatement((yyvsp[-3].uchar), (yyvsp[-2].data), (yyvsp[0].string)); }
+#line 1731 "parser.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 84 "epython.y" /* yacc.c:1646  */
+#line 86 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendDeclareArray((yyvsp[-3].string), (yyvsp[-1].data)); }
-#line 1736 "parser.c" /* yacc.c:1646  */
+#line 1737 "parser.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 85 "epython.y" /* yacc.c:1646  */
+#line 87 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendDeclareSharedArray((yyvsp[-3].string), (yyvsp[-1].data)); }
-#line 1742 "parser.c" /* yacc.c:1646  */
+#line 1743 "parser.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 86 "epython.y" /* yacc.c:1646  */
+#line 88 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendForStatement((yyvsp[-4].string), (yyvsp[-2].data), (yyvsp[0].data)); leaveScope(); }
-#line 1748 "parser.c" /* yacc.c:1646  */
+#line 1749 "parser.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 87 "epython.y" /* yacc.c:1646  */
+#line 89 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendWhileStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1754 "parser.c" /* yacc.c:1646  */
+#line 1755 "parser.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 88 "epython.y" /* yacc.c:1646  */
+#line 90 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1760 "parser.c" /* yacc.c:1646  */
+#line 1761 "parser.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 89 "epython.y" /* yacc.c:1646  */
+#line 91 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfElseStatement((yyvsp[-5].data), (yyvsp[-3].data), (yyvsp[0].data)); }
-#line 1766 "parser.c" /* yacc.c:1646  */
+#line 1767 "parser.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 90 "epython.y" /* yacc.c:1646  */
+#line 92 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfElseStatement((yyvsp[-3].data), (yyvsp[-1].data), (yyvsp[0].data)); }
-#line 1772 "parser.c" /* yacc.c:1646  */
+#line 1773 "parser.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 91 "epython.y" /* yacc.c:1646  */
+#line 93 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1778 "parser.c" /* yacc.c:1646  */
+#line 1779 "parser.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 92 "epython.y" /* yacc.c:1646  */
+#line 94 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1784 "parser.c" /* yacc.c:1646  */
+#line 1785 "parser.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 93 "epython.y" /* yacc.c:1646  */
+#line 95 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendInputStatement((yyvsp[0].string)); }
-#line 1790 "parser.c" /* yacc.c:1646  */
+#line 1791 "parser.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 94 "epython.y" /* yacc.c:1646  */
+#line 96 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendInputStringStatement((yyvsp[-2].data), (yyvsp[0].string)); }
-#line 1796 "parser.c" /* yacc.c:1646  */
+#line 1797 "parser.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 95 "epython.y" /* yacc.c:1646  */
+#line 97 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendLetStatement((yyvsp[-2].string), (yyvsp[0].data)); }
-#line 1802 "parser.c" /* yacc.c:1646  */
+#line 1803 "parser.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 96 "epython.y" /* yacc.c:1646  */
+#line 98 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendArraySetStatement((yyvsp[-5].string), (yyvsp[-3].data), (yyvsp[0].data)); }
-#line 1808 "parser.c" /* yacc.c:1646  */
+#line 1809 "parser.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 97 "epython.y" /* yacc.c:1646  */
+#line 99 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendPrintStatement((yyvsp[0].data)); }
-#line 1814 "parser.c" /* yacc.c:1646  */
+#line 1815 "parser.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 98 "epython.y" /* yacc.c:1646  */
+#line 100 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendStopStatement(); }
-#line 1820 "parser.c" /* yacc.c:1646  */
+#line 1821 "parser.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 99 "epython.y" /* yacc.c:1646  */
+#line 101 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendSyncStatement(); }
-#line 1826 "parser.c" /* yacc.c:1646  */
+#line 1827 "parser.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 100 "epython.y" /* yacc.c:1646  */
+#line 102 "epython.y" /* yacc.c:1646  */
     { appendNewFunctionStatement((yyvsp[-5].string), (yyvsp[-3].stack), (yyvsp[0].data)); leaveScope(); (yyval.data) = NULL; }
-#line 1832 "parser.c" /* yacc.c:1646  */
+#line 1833 "parser.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 101 "epython.y" /* yacc.c:1646  */
+#line 103 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = appendReturnStatement(); }
-#line 1838 "parser.c" /* yacc.c:1646  */
+#line 1839 "parser.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 102 "epython.y" /* yacc.c:1646  */
+#line 104 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = appendReturnStatement(); }
-#line 1844 "parser.c" /* yacc.c:1646  */
+#line 1845 "parser.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 103 "epython.y" /* yacc.c:1646  */
+#line 105 "epython.y" /* yacc.c:1646  */
     { (yyval.data) = appendReturnStatementWithExpression((yyvsp[0].data)); }
-#line 1850 "parser.c" /* yacc.c:1646  */
+#line 1851 "parser.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 104 "epython.y" /* yacc.c:1646  */
+#line 106 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendCallFunctionStatement((yyvsp[-3].string), (yyvsp[-1].stack)); }
-#line 1856 "parser.c" /* yacc.c:1646  */
+#line 1857 "parser.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 108 "epython.y" /* yacc.c:1646  */
+#line 110 "epython.y" /* yacc.c:1646  */
     { (yyval.stack)=getNewStack(); }
-#line 1862 "parser.c" /* yacc.c:1646  */
+#line 1863 "parser.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 109 "epython.y" /* yacc.c:1646  */
+#line 111 "epython.y" /* yacc.c:1646  */
     { (yyval.stack)=getNewStack(); pushExpression((yyval.stack), (yyvsp[0].data)); }
-#line 1868 "parser.c" /* yacc.c:1646  */
+#line 1869 "parser.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 110 "epython.y" /* yacc.c:1646  */
+#line 112 "epython.y" /* yacc.c:1646  */
     { pushExpression((yyvsp[-2].stack), (yyvsp[0].data)); (yyval.stack)=(yyvsp[-2].stack); }
-#line 1874 "parser.c" /* yacc.c:1646  */
+#line 1875 "parser.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 114 "epython.y" /* yacc.c:1646  */
+#line 116 "epython.y" /* yacc.c:1646  */
     { enterScope(); (yyval.stack)=getNewStack(); }
-#line 1880 "parser.c" /* yacc.c:1646  */
+#line 1881 "parser.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 115 "epython.y" /* yacc.c:1646  */
+#line 117 "epython.y" /* yacc.c:1646  */
     { (yyval.stack)=getNewStack(); enterScope(); pushIdentifier((yyval.stack), (yyvsp[0].string)); appendArgument((yyvsp[0].string)); }
-#line 1886 "parser.c" /* yacc.c:1646  */
+#line 1887 "parser.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 116 "epython.y" /* yacc.c:1646  */
+#line 118 "epython.y" /* yacc.c:1646  */
     { pushIdentifier((yyvsp[-2].stack), (yyvsp[0].string)); (yyval.stack)=(yyvsp[-2].stack); appendArgument((yyvsp[0].string)); }
-#line 1892 "parser.c" /* yacc.c:1646  */
+#line 1893 "parser.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 120 "epython.y" /* yacc.c:1646  */
+#line 122 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[-1].data); }
-#line 1898 "parser.c" /* yacc.c:1646  */
+#line 1899 "parser.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 123 "epython.y" /* yacc.c:1646  */
+#line 125 "epython.y" /* yacc.c:1646  */
     { enterScope(); }
-#line 1904 "parser.c" /* yacc.c:1646  */
+#line 1905 "parser.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 126 "epython.y" /* yacc.c:1646  */
+#line 128 "epython.y" /* yacc.c:1646  */
     { leaveScope(); }
-#line 1910 "parser.c" /* yacc.c:1646  */
+#line 1911 "parser.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 129 "epython.y" /* yacc.c:1646  */
-    { (yyval.integer)=0; }
-#line 1916 "parser.c" /* yacc.c:1646  */
+#line 131 "epython.y" /* yacc.c:1646  */
+    { (yyval.uchar)=0; }
+#line 1917 "parser.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 130 "epython.y" /* yacc.c:1646  */
-    { (yyval.integer)=1; }
-#line 1922 "parser.c" /* yacc.c:1646  */
+#line 132 "epython.y" /* yacc.c:1646  */
+    { (yyval.uchar)=1; }
+#line 1923 "parser.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 131 "epython.y" /* yacc.c:1646  */
-    { (yyval.integer)=2; }
-#line 1928 "parser.c" /* yacc.c:1646  */
+#line 133 "epython.y" /* yacc.c:1646  */
+    { (yyval.uchar)=2; }
+#line 1929 "parser.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 132 "epython.y" /* yacc.c:1646  */
-    { (yyval.integer)=3; }
-#line 1934 "parser.c" /* yacc.c:1646  */
+#line 134 "epython.y" /* yacc.c:1646  */
+    { (yyval.uchar)=3; }
+#line 1935 "parser.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 136 "epython.y" /* yacc.c:1646  */
+#line 138 "epython.y" /* yacc.c:1646  */
     { (yyval.string)=(yyvsp[0].string); enterScope(); addVariableIfNeeded((yyvsp[0].string)); }
-#line 1940 "parser.c" /* yacc.c:1646  */
+#line 1941 "parser.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 140 "epython.y" /* yacc.c:1646  */
+#line 142 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfStatement((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1946 "parser.c" /* yacc.c:1646  */
+#line 1947 "parser.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 141 "epython.y" /* yacc.c:1646  */
+#line 143 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfElseStatement((yyvsp[-5].data), (yyvsp[-3].data), (yyvsp[0].data)); }
-#line 1952 "parser.c" /* yacc.c:1646  */
+#line 1953 "parser.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 142 "epython.y" /* yacc.c:1646  */
+#line 144 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendIfElseStatement((yyvsp[-3].data), (yyvsp[-1].data), (yyvsp[0].data)); }
-#line 1958 "parser.c" /* yacc.c:1646  */
+#line 1959 "parser.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 146 "epython.y" /* yacc.c:1646  */
+#line 148 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 1964 "parser.c" /* yacc.c:1646  */
+#line 1965 "parser.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 147 "epython.y" /* yacc.c:1646  */
+#line 149 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 1970 "parser.c" /* yacc.c:1646  */
+#line 1971 "parser.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 151 "epython.y" /* yacc.c:1646  */
+#line 153 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 1976 "parser.c" /* yacc.c:1646  */
+#line 1977 "parser.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 152 "epython.y" /* yacc.c:1646  */
+#line 154 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createOrExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1982 "parser.c" /* yacc.c:1646  */
+#line 1983 "parser.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 155 "epython.y" /* yacc.c:1646  */
+#line 157 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 1988 "parser.c" /* yacc.c:1646  */
+#line 1989 "parser.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 156 "epython.y" /* yacc.c:1646  */
+#line 158 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createAndExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 1994 "parser.c" /* yacc.c:1646  */
+#line 1995 "parser.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 160 "epython.y" /* yacc.c:1646  */
+#line 162 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 2000 "parser.c" /* yacc.c:1646  */
+#line 2001 "parser.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 161 "epython.y" /* yacc.c:1646  */
+#line 163 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createEqExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2006 "parser.c" /* yacc.c:1646  */
+#line 2007 "parser.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 162 "epython.y" /* yacc.c:1646  */
+#line 164 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createNeqExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2012 "parser.c" /* yacc.c:1646  */
+#line 2013 "parser.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 163 "epython.y" /* yacc.c:1646  */
+#line 165 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIsHostExpression(); }
-#line 2018 "parser.c" /* yacc.c:1646  */
+#line 2019 "parser.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 164 "epython.y" /* yacc.c:1646  */
+#line 166 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIsDeviceExpression(); }
-#line 2024 "parser.c" /* yacc.c:1646  */
+#line 2025 "parser.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 168 "epython.y" /* yacc.c:1646  */
+#line 170 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 2030 "parser.c" /* yacc.c:1646  */
+#line 2031 "parser.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 169 "epython.y" /* yacc.c:1646  */
+#line 171 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createGtExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2036 "parser.c" /* yacc.c:1646  */
+#line 2037 "parser.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 170 "epython.y" /* yacc.c:1646  */
+#line 172 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createLtExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2042 "parser.c" /* yacc.c:1646  */
+#line 2043 "parser.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 171 "epython.y" /* yacc.c:1646  */
+#line 173 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createLeqExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2048 "parser.c" /* yacc.c:1646  */
+#line 2049 "parser.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 172 "epython.y" /* yacc.c:1646  */
+#line 174 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createGeqExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2054 "parser.c" /* yacc.c:1646  */
+#line 2055 "parser.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 176 "epython.y" /* yacc.c:1646  */
+#line 178 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 2060 "parser.c" /* yacc.c:1646  */
+#line 2061 "parser.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 177 "epython.y" /* yacc.c:1646  */
+#line 179 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createAddExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2066 "parser.c" /* yacc.c:1646  */
+#line 2067 "parser.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 178 "epython.y" /* yacc.c:1646  */
+#line 180 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createSubExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2072 "parser.c" /* yacc.c:1646  */
+#line 2073 "parser.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 182 "epython.y" /* yacc.c:1646  */
+#line 184 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 2078 "parser.c" /* yacc.c:1646  */
+#line 2079 "parser.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 183 "epython.y" /* yacc.c:1646  */
+#line 185 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createMulExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2084 "parser.c" /* yacc.c:1646  */
+#line 2085 "parser.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 184 "epython.y" /* yacc.c:1646  */
+#line 186 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createDivExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2090 "parser.c" /* yacc.c:1646  */
+#line 2091 "parser.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 185 "epython.y" /* yacc.c:1646  */
+#line 187 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createModExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2096 "parser.c" /* yacc.c:1646  */
+#line 2097 "parser.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 186 "epython.y" /* yacc.c:1646  */
+#line 188 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createPowExpression((yyvsp[-2].data), (yyvsp[0].data)); }
-#line 2102 "parser.c" /* yacc.c:1646  */
+#line 2103 "parser.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 187 "epython.y" /* yacc.c:1646  */
+#line 189 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createSqrtExpression((yyvsp[-1].data)); }
-#line 2108 "parser.c" /* yacc.c:1646  */
+#line 2109 "parser.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 188 "epython.y" /* yacc.c:1646  */
+#line 190 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createSinExpression((yyvsp[-1].data)); }
-#line 2114 "parser.c" /* yacc.c:1646  */
+#line 2115 "parser.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 189 "epython.y" /* yacc.c:1646  */
+#line 191 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createCosExpression((yyvsp[-1].data)); }
-#line 2120 "parser.c" /* yacc.c:1646  */
+#line 2121 "parser.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 190 "epython.y" /* yacc.c:1646  */
+#line 192 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createTanExpression((yyvsp[-1].data)); }
-#line 2126 "parser.c" /* yacc.c:1646  */
+#line 2127 "parser.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 191 "epython.y" /* yacc.c:1646  */
+#line 193 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createASinExpression((yyvsp[-1].data)); }
-#line 2132 "parser.c" /* yacc.c:1646  */
+#line 2133 "parser.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 192 "epython.y" /* yacc.c:1646  */
+#line 194 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createACosExpression((yyvsp[-1].data)); }
-#line 2138 "parser.c" /* yacc.c:1646  */
+#line 2139 "parser.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 193 "epython.y" /* yacc.c:1646  */
+#line 195 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createATanExpression((yyvsp[-1].data)); }
-#line 2144 "parser.c" /* yacc.c:1646  */
+#line 2145 "parser.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 194 "epython.y" /* yacc.c:1646  */
+#line 196 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createSinHExpression((yyvsp[-1].data)); }
-#line 2150 "parser.c" /* yacc.c:1646  */
+#line 2151 "parser.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 195 "epython.y" /* yacc.c:1646  */
+#line 197 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createCosHExpression((yyvsp[-1].data)); }
-#line 2156 "parser.c" /* yacc.c:1646  */
+#line 2157 "parser.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 196 "epython.y" /* yacc.c:1646  */
+#line 198 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createTanHExpression((yyvsp[-1].data)); }
-#line 2162 "parser.c" /* yacc.c:1646  */
+#line 2163 "parser.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 197 "epython.y" /* yacc.c:1646  */
+#line 199 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createFloorExpression((yyvsp[-1].data)); }
-#line 2168 "parser.c" /* yacc.c:1646  */
+#line 2169 "parser.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 198 "epython.y" /* yacc.c:1646  */
+#line 200 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createCeilExpression((yyvsp[-1].data)); }
-#line 2174 "parser.c" /* yacc.c:1646  */
+#line 2175 "parser.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 199 "epython.y" /* yacc.c:1646  */
+#line 201 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createLogExpression((yyvsp[-1].data)); }
-#line 2180 "parser.c" /* yacc.c:1646  */
+#line 2181 "parser.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 200 "epython.y" /* yacc.c:1646  */
+#line 202 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createLog10Expression((yyvsp[-1].data)); }
-#line 2186 "parser.c" /* yacc.c:1646  */
+#line 2187 "parser.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 201 "epython.y" /* yacc.c:1646  */
+#line 203 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createLenExpression((yyvsp[-1].data)); }
-#line 2192 "parser.c" /* yacc.c:1646  */
+#line 2193 "parser.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 205 "epython.y" /* yacc.c:1646  */
+#line 207 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[0].data); }
-#line 2198 "parser.c" /* yacc.c:1646  */
+#line 2199 "parser.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 206 "epython.y" /* yacc.c:1646  */
+#line 208 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=(yyvsp[-1].data); }
-#line 2204 "parser.c" /* yacc.c:1646  */
+#line 2205 "parser.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 207 "epython.y" /* yacc.c:1646  */
+#line 209 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIdentifierExpression((yyvsp[0].string)); }
-#line 2210 "parser.c" /* yacc.c:1646  */
+#line 2211 "parser.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 208 "epython.y" /* yacc.c:1646  */
+#line 210 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIdentifierArrayAccessExpression((yyvsp[-3].string), (yyvsp[-1].data)); }
-#line 2216 "parser.c" /* yacc.c:1646  */
+#line 2217 "parser.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 209 "epython.y" /* yacc.c:1646  */
+#line 211 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=appendCallFunctionStatement((yyvsp[-3].string), (yyvsp[-1].stack)); }
-#line 2222 "parser.c" /* yacc.c:1646  */
+#line 2223 "parser.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 213 "epython.y" /* yacc.c:1646  */
+#line 215 "epython.y" /* yacc.c:1646  */
     { (yyval.string) = malloc(strlen((yyvsp[0].string))+1); strcpy((yyval.string), (yyvsp[0].string)); }
-#line 2228 "parser.c" /* yacc.c:1646  */
+#line 2229 "parser.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 217 "epython.y" /* yacc.c:1646  */
+#line 219 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIntegerExpression((yyvsp[0].integer)); }
-#line 2234 "parser.c" /* yacc.c:1646  */
+#line 2235 "parser.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 218 "epython.y" /* yacc.c:1646  */
+#line 220 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createRealExpression((yyvsp[0].real)); }
-#line 2240 "parser.c" /* yacc.c:1646  */
+#line 2241 "parser.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 219 "epython.y" /* yacc.c:1646  */
+#line 221 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createCoreIdExpression(); }
-#line 2246 "parser.c" /* yacc.c:1646  */
+#line 2247 "parser.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 220 "epython.y" /* yacc.c:1646  */
+#line 222 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createNumCoresExpression(); }
-#line 2252 "parser.c" /* yacc.c:1646  */
+#line 2253 "parser.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 221 "epython.y" /* yacc.c:1646  */
+#line 223 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createRandomExpression(); }
-#line 2258 "parser.c" /* yacc.c:1646  */
+#line 2259 "parser.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 222 "epython.y" /* yacc.c:1646  */
+#line 224 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createIntegerExpression((yyvsp[-1].integer) * (yyvsp[0].integer)); }
-#line 2264 "parser.c" /* yacc.c:1646  */
+#line 2265 "parser.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 223 "epython.y" /* yacc.c:1646  */
+#line 225 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createRealExpression((yyvsp[-1].integer) * (yyvsp[0].real)); }
-#line 2270 "parser.c" /* yacc.c:1646  */
+#line 2271 "parser.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 224 "epython.y" /* yacc.c:1646  */
+#line 226 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createStringExpression((yyvsp[0].string)); }
-#line 2276 "parser.c" /* yacc.c:1646  */
+#line 2277 "parser.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 225 "epython.y" /* yacc.c:1646  */
+#line 227 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createBooleanExpression(1); }
-#line 2282 "parser.c" /* yacc.c:1646  */
+#line 2283 "parser.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 226 "epython.y" /* yacc.c:1646  */
+#line 228 "epython.y" /* yacc.c:1646  */
     { (yyval.data)=createBooleanExpression(0); }
-#line 2288 "parser.c" /* yacc.c:1646  */
+#line 2289 "parser.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 230 "epython.y" /* yacc.c:1646  */
+#line 232 "epython.y" /* yacc.c:1646  */
     { (yyval.integer) = 1; }
-#line 2294 "parser.c" /* yacc.c:1646  */
+#line 2295 "parser.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 231 "epython.y" /* yacc.c:1646  */
+#line 233 "epython.y" /* yacc.c:1646  */
     { (yyval.integer) = -1; }
-#line 2300 "parser.c" /* yacc.c:1646  */
+#line 2301 "parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 2304 "parser.c" /* yacc.c:1646  */
+#line 2305 "parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2528,5 +2529,5 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 234 "epython.y" /* yacc.c:1906  */
+#line 236 "epython.y" /* yacc.c:1906  */
 
