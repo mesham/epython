@@ -201,7 +201,7 @@ EPY_I_PROD								return EPY_I_PROD;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 WHILE									return WHILE;
-STOP                                    return STOP;
+EXIT                                    return EXIT;
 FOR                                     return FOR;
 TO                                      return TO;
 FROM									return FROM;

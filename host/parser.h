@@ -54,7 +54,7 @@ extern int yydebug;
     OUTDENT = 264,
     DIM = 265,
     SDIM = 266,
-    STOP = 267,
+    EXIT = 267,
     ELSE = 268,
     ELIF = 269,
     COMMA = 270,
@@ -149,7 +149,7 @@ extern int yydebug;
 #define OUTDENT 264
 #define DIM 265
 #define SDIM 266
-#define STOP 267
+#define EXIT 267
 #define ELSE 268
 #define ELIF 269
 #define COMMA 270

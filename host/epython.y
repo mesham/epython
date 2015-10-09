@@ -32,7 +32,7 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token DIM SDIM STOP ELSE ELIF COMMA WHILE
+%token DIM SDIM EXIT ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
 %token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM
 
@@ -98,7 +98,7 @@ statement
     | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
     | ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendPrintStatement($2); }	
-	| STOP { $$=appendStopStatement(); }	
+	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
