@@ -1,6 +1,6 @@
 /*
 A simple hello world with string assignment and concatenation
-To run: ebasic hello
+To run: epython hello.py
 */
 
 a="hello"

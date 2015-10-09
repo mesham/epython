@@ -1,9 +1,0 @@
-/*
-Illustration of goto
-To run: ebasic goto
-*/
-
-a=0
-10 a=a+1
-print a
-if a < 10 then goto 10

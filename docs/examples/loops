@@ -1,8 +1,0 @@
-/*
-Illustration of loops
-To run: ebasic loops
-*/
-
-for i=1 to 10
-print "iteration "+i
-next

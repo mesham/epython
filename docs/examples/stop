@@ -1,9 +1,0 @@
-/*
-Illustration of stop
-To run: ebasic stop
-*/
-
-10 a=random % 100
-print a
-if a < 50 then stop
-goto 10

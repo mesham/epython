@@ -1,7 +1,9 @@
 /*
 Illustration of global reduction across all cores, here we find the maximum random number - can also do min, sum and prod
-To run: ebasic reduction
+To run: epython reduction.py
 */
 
-reduce max random % 100 into a
+import parallel
+
+a=reduce(random%100, "max")
 print "The highest random number is "+a
