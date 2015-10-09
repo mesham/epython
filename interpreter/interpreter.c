@@ -776,6 +776,17 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 #else
 		return 1;
 #endif
+	} else {
+		*currentPoint-=sizeof(unsigned char);
+		struct value_defn expValue;
+#ifdef HOST_INTERPRETER
+		expValue=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+		expValue=getExpressionValue(assembled, currentPoint, length);
+#endif
+		if (expValue.type == BOOLEAN_TYPE || expValue.type == INT_TYPE) {
+			return getInt(expValue.data) > 0;
+		}
 	}
 	return 0;
 }
@@ -876,9 +887,9 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length, threadId);
 		value=processAssembledCode(assembled, fnAddr, length, threadId);
 #else
-		int fnAddr;
+		unsigned int fnAddr;
 		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length);
-		value=processAssembledCode(assembled, fnAddr, length-fnAddr);
+		value=processAssembledCode(assembled, fnAddr, length);
 #endif
 	} else if (expressionId == MATHS_TOKEN) {
 		unsigned char maths_op=getUChar(&assembled[*currentPoint]);
