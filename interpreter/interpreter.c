@@ -495,7 +495,8 @@ static unsigned int handleFor(char * assembled, unsigned int currentPoint, unsig
 	int arrSize;
 	cpy(&ptr, expressionVal.data, sizeof(int*));
 	cpy(&arrSize, ptr, sizeof(int));
-	int incrementVal=getInt(getVariableValue(incrementVarSymbol, -1).data);
+	struct value_defn varVal=getVariableValue(incrementVarSymbol, -1);
+	int incrementVal=getInt(varVal.data);
 	if (incrementVal < arrSize) {
 		struct value_defn nextElement;
 		nextElement.type=expressionVal.type;
@@ -838,7 +839,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #ifdef HOST_INTERPRETER
 		value=getExpressionValue(assembled, currentPoint, length, threadId);
 #else
-		value=getExpressionValue(assembled, currentPoint, length)
+		value=getExpressionValue(assembled, currentPoint, length);
 #endif
 		value.type=INT_TYPE;
 		value.dtype=SCALAR;
@@ -851,7 +852,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value=getExpressionValue(assembled, currentPoint, length, threadId);
 #else
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0);
-		value=getExpressionValue(assembled, currentPoint, length)
+		value=getExpressionValue(assembled, currentPoint, length);
 #endif
 	} else if (expressionId == ARRAY_TOKEN) {
 		int i, numItems=getInt(&assembled[*currentPoint]);
