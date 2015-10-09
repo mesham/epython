@@ -697,7 +697,11 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 #endif
 		if (expressionId == IS_TOKEN) {
 			if (expression1.type == NONE_TYPE && expression2.type == NONE_TYPE) return 1;
-			return *expression1.data == *expression2.data;
+			if (expression1.type != expression2.type) return 0;
+			char *ptr1, *ptr2;
+			cpy(&ptr1, expression1.data, sizeof(int*));
+			cpy(&ptr2, expression2.data, sizeof(int*));
+			return ptr1 == ptr2;
 		}
 		if (expression1.type == expression2.type && expression1.type == INT_TYPE) {
 			int value1=getInt(expression1.data);
