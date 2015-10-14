@@ -134,23 +134,6 @@ struct memorycontainer* appendRecvStatement(char* identifier, struct memoryconta
 }
 
 /**
- * Appends and returns a P2P receive statement into an array
- */
-struct memorycontainer* appendRecvIntoArrayStatement( char* identifier, struct memorycontainer* index, struct memorycontainer* source) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + index->length+source->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, RECVTOARRAY_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, index, position);
-	position=appendMemory(memoryContainer, source, position);
-	return memoryContainer;
-}
-
-/**
  * Appends and returns a P2P send statement
  */
 struct memorycontainer* appendSendStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target) {
@@ -178,25 +161,6 @@ struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendEx
 	unsigned int position=0;
 	position=appendStatement(memoryContainer, SENDRECV_TOKEN, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, toSendExpression, position);
-	position=appendMemory(memoryContainer, target, position);
-	return memoryContainer;
-}
-
-/**
- * Appends a sendrecv statement writing to an array, which combined both p2p operations with one synchronisation
- */
-struct memorycontainer* appendSendRecvStatementIntoArray(struct memorycontainer* toSendExpression, struct memorycontainer* target,
-		char* identifier, struct memorycontainer* arrayIndex) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + toSendExpression->length+target->length+arrayIndex->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, SENDRECVARRAY_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, arrayIndex, position);
 	position=appendMemory(memoryContainer, toSendExpression, position);
 	position=appendMemory(memoryContainer, target, position);
 	return memoryContainer;

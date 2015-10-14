@@ -76,11 +76,9 @@ statements
 ;
 
 statement	
-	: EPY_I_RECV ident FROM expression { $$=appendRecvStatement($2, $4); }
-	| EPY_I_RECV ident SLBRACE expression SRBRACE FROM expression { $$=appendRecvIntoArrayStatement($2, $4, $7); }
+	: EPY_I_RECV ident FROM expression { $$=appendRecvStatement($2, $4); }	
 	| EPY_I_SEND expression TO expression { $$=appendSendStatement($2, $4); }
-	| EPY_I_SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }
-	| EPY_I_SENDRECV expression TOFROM expression INTO ident SLBRACE expression SRBRACE { $$=appendSendRecvStatementIntoArray($2, $4, $6, $8); }
+	| EPY_I_SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }	
 	| EPY_I_BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
 	| EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
 	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	

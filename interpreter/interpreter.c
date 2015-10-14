@@ -74,9 +74,7 @@ static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
 static unsigned int handleSend(char*, unsigned int, unsigned int, int);
 static unsigned int handleRecv(char*, unsigned int, unsigned int, int);
-static unsigned int handleRecvToArray(char*, unsigned int, unsigned int, int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
-static unsigned int handleSendRecvArray(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleSync(char*, unsigned int, unsigned int, int);
@@ -98,9 +96,7 @@ static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
 static unsigned int handleSend(char*, unsigned int, unsigned int);
 static unsigned int handleRecv(char*, unsigned int, unsigned int);
-static unsigned int handleRecvToArray(char*, unsigned int, unsigned int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
-static unsigned int handleSendRecvArray(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleSync(char*, unsigned int, unsigned int);
@@ -186,9 +182,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i, length, threadId);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i, length, threadId);
 		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length, threadId);
-		if (command == RECVTOARRAY_TOKEN) i=handleRecvToArray(assembled, i, length, threadId);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
-		if (command == SENDRECVARRAY_TOKEN) i=handleSendRecvArray(assembled, i, length, threadId);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
@@ -229,9 +223,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i, length);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i, length);
 		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length);
-		if (command == RECVTOARRAY_TOKEN) i=handleRecvToArray(assembled, i, length);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
-		if (command == SENDRECVARRAY_TOKEN) i=handleSendRecvArray(assembled, i, length);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
 		if (stopInterpreter) return empty;
@@ -343,31 +335,6 @@ static unsigned int handleRecv(char * assembled, unsigned int currentPoint, unsi
 }
 
 /**
- * Receiving some data from another core and placing this into an array structure
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleRecvToArray(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleRecvToArray(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
-	struct value_defn index=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn retrievedData=recvData(getInt(source_expression.data), threadId, hostCoresBasePid);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
-	struct value_defn index=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn retrievedData=recvData(getInt(source_expression.data));
-#endif
-	setVariableValue(variableSymbol, retrievedData, getInt(index.data));
-	return currentPoint;
-}
-
-/**
  * Handles the sendrecv call, which does both P2P in one action with 1 synchronisation
  */
 #ifdef HOST_INTERPRETER
@@ -388,33 +355,6 @@ static unsigned int handleSendRecv(char * assembled, unsigned int currentPoint, 
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data)), -1);
 #endif
-	return currentPoint;
-}
-
-/**
- * Handles the sendrecv call into an array, which does both P2P in one action with 1 synchronisation
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleSendRecvArray(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleSendRecvArray(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
-	struct value_defn index=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
-	struct value_defn index=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn retrievedData=sendRecvData(tosend_expression, getInt(target_expression.data));
-#endif
-	setVariableValue(variableSymbol, retrievedData, getInt(index.data));
 	return currentPoint;
 }
 
