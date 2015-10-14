@@ -280,7 +280,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	int i;
 	for (i=0;i<numArgs;i++) {
 		struct memorycontainer* expression=getExpressionAt(args, i);
-		short command=((short*) expression->data)[0];
+		unsigned char command=((unsigned char*) expression->data)[0];
 		if (command != IDENTIFIER_TOKEN) {
 			sprintf(varname,"%s#%d", functionName, i);
 			if (assignmentContainer == NULL) {
@@ -313,7 +313,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 		struct memorycontainer* expression=getExpressionAt(args, i);
 		unsigned char command=((unsigned char*) expression->data)[0];
 		if (command == IDENTIFIER_TOKEN) {
-			unsigned short varId=((unsigned short*) expression->data)[1];
+			unsigned short varId=*((unsigned short*) (&((char*) expression->data)[1]));
 			position=appendVariable(memoryContainer, varId, position);
 		} else {
 			sprintf(varname,"%s#%d", functionName, i);

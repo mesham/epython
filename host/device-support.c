@@ -464,13 +464,13 @@ static int getTypeOfInput(char * input) {
  */
 static void displayCoreMessage(int coreId, struct core_ctrl * core) {
 	if (core->data[0] == 0) {
-		int y=*((int*) &core->data[1]);
+		int y=*((int*) &(((char*) core->data)[1]));
 		printf("[device %d] %d\n", coreId, y);
 	} else if (core->data[0] == 1) {
-		float y=*((float*) &core->data[1]);
+		float y=*((float*) &(((char*) core->data)[1]));
 		printf("[device %d] %f\n", coreId, y);
 	} else if (core->data[0] == 3) {
-		int y=*((int*) &core->data[1]);
+		int y=*((int*) &(((char*) core->data)[1]));
 		printf("[device %d] %s\n", coreId, y> 0 ? "true" : "false");
 	} else if (core->data[0] == 4) {
 		printf("[device %d] NONE\n", coreId);

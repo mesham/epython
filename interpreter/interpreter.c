@@ -1025,7 +1025,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id, int followAlias)
 	for (i=0;i<currentSymbolEntries[threadId];i++) {
 		if (symbolTable[threadId][i].id == id) {
 			if (followAlias && symbolTable[threadId][i].isAlias) {
-				return getVariableSymbol(symbolTable[threadId][i].alias, threadId, 0);
+				return getVariableSymbol(symbolTable[threadId][i].alias, threadId, 1);
 			} else {
 				return &(symbolTable[threadId])[i];
 			}
