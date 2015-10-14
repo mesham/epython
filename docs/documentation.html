@@ -1,8 +1,8 @@
 <html>
-<head><title>Epiphany BASIC documentation</title></head>
+<head><title>Epiphany Python documentation</title></head>
 <body>
-<h1>Epiphany BASIC documentation</h1>
-eBASIC is entirely case insensitive, line numbers can be provided but are optional. By default the user code, symbol table and program data are all allocated in core local memory, although this can be selected via language mechanisms and command line arguments.
+<h1>Epiphany Python documentation</h1>
+ePython is a subset of python for the Eiphany architecture. It is possible to run code both on the Epiphany, ARM or both and these can communicate with each other. By default the user code, symbol table and program data are all allocated in core local memory, although this can be selected via language mechanisms and command line arguments.
 <ul>
 <li><a href="#assignment">Assignment</a></li>
 <li><a href="#parallel">Parallelism</a></li>
@@ -16,7 +16,7 @@ eBASIC is entirely case insensitive, line numbers can be provided but are option
 <section>
 <a name="assignment"></a>
 <h2>Assignment</h2>
-Normal variable assignment follows the form <i>identifier=expression</i> or <i>let identifier=expression</i>, both are which are handled the same. eBASIC supports integers, real numbers (single precision) and strings to be stored in variables. The type of a variable depends upon the current value being stored within it and if the variable does not currently exist then it will be created.
+Normal variable assignment follows the form <i>identifier=expression</i>, both are which are handled the same. ePython supports integers, real numbers (single precision), strings, booleans and none to be stored in variables. The type of a variable depends upon the current value being stored within it and if the variable does not currently exist then it will be created.
 <pre>
 a="hello"
 b="world"
@@ -31,12 +31,18 @@ a=a+b
 print b
 </pre>
 <h3>Arrays</h3>
-The language supports one dimensional arrays of integers and reals via the <i>dim</i> and <i>sdim</i> statements. The first will allocate the array into the default location (which will be core memory unless overridden by command line arguments) and the second, <i>sdim</i>, will allocate into shared memory which is larger but slower to access.
+The language supports one dimensional arrays of integers and reals via the <i>dim</i> and <i>sdim</i> statements. The first will allocate the array into the default location (which will be core memory unless overridden by command line arguments) and the second, <i>sdim</i>, will allocate into shared memory which is larger but slower to access. It is also possible to specify a list of values via <i>[v1,v2,...,vn]</i>
 <pre>
 dim a[100]
-for i=0 to 99
-a[i]=i
-next
+i=0
+while i<100:
+	a[i]=i
+	i+=1
+</pre>
+<pre>
+a=[10,20,30,40]
+for x in a:
+	print x
 </pre>
 <i>Note: All arrays can be forced into shared memory via supplying -datashared as a command line argument</i>
 </section>
@@ -44,71 +50,71 @@ next
 <section>
 <a name="parallel"></a>
 <h2>Parallelism</h2>
-eBASIC will run the code on each core, with each core being independant and having separate values of all data. Cores can communicate via some inbuilt language mechanisms. By default all cores on the Epiphany chip will execute the user code, but this can be selected via the <i>-c</i> command line switch; for instance <i>-c 1</i> will run on core 1 only, <i>-c 1,2,3,4</i> will run on cores 1,2,3 and 4, <i>-c 5:10</i> will run on cores 5 to 10 inclusive and <i>-c all</i> will run on all cores.
-<h3>coreid</h3>
-This expression determines the numeric (integer) id of a core in the Epiphany chip. This value can be used to select sections of code to be executed by a subset of the cores (SPMD style) and the integer value can be used in mathematic expressions like any other integer.
+ePython will run the code on each Epiphany core, with each core being independant and having separate values of all data. Cores can communicate via some inbuilt language mechanisms. By default all cores on the Epiphany chip will execute the user code, but this can be selected via the <i>-c</i> command line switch; for instance <i>-c 1</i> will run on core 1 only, <i>-c 1,2,3,4</i> will run on cores 1,2,3 and 4, <i>-c 5:10</i> will run on cores 5 to 10 inclusive and <i>-c all</i> will run on all cores. It is also possible to run code on the ARM host via <i>-h n</i> where <i>n</i> specifies the number of threads, and you can simply specify the number of Epiphany cores active via <i>-d n</i> which will activate <i>n</i> Epiphany cores. Epiphany cores and ARM threads can communicate with each other via the language commands. All these functions are provided in the <i>parallel</i> module which is used by issueing <i>import parallel</i> in your code.
+<h3>coreid()</h3>
+This function determines the numeric (integer) id of a core or thread. This value can be used to select sections of code to be executed by a subset of the cores (SPMD style) and the integer value can be used in mathematic expressions like any other integer.
 <pre>
-print "Hello world from core "+coreid
+import parallel
+print "Hello world from core "+coreid()
 </pre>
 <pre>
-if coreid=0 then
-  print "Hello only from core "+coreid
-end if
+import parallel
+if coreid()==0:
+	print "Hello only from core "+coreid()
 </pre>
 
-<h3>numcores</h3>
-This expression determines the number of cores (integer) that the BASIC code was run with.
+<h3>numcores()</h3>
+This expression determines the number of active cores and host threads (integer) that the code was run with.
 <pre>
-print "Number of cores: "+numcores
+import parallel
+print "Number of cores: "+numcores()
 </pre>
 
 <h3>Point to point communication</h3>
-eBASIC implements P2P communications between specific cores via the <i>send</i> and <i>recv</i> keywords. The send keyword follows the syntax <i>send expression to integer</i> where <i>expression</i> is any mathematical expression (including varables and arrays) that hold integers or reals. The <i>integer</i> represents the core id of the target core. The recv keyword follows the syntax <i>recv identifier from integer</i> where <i>identifier</i> is a variable or array access to a variable, and <i>integer</i> is the source core to receive from. Note that it is only possible to communicate single integers or reals, there is no communication of strings or arrays.
+ePython implements P2P communications between specific cores or threads via the <i>send</i> and <i>recv</i> functions. The send function follows the syntax <i>send(expression,  target)</i> where <i>expression</i> is any mathematical expression (including varables and arrays) that hold integers or reals. The <i>target</i> is an integer representing the core id of the target core/thread. The recv function follows the syntax <i>data=recv(source)</i> where <i>data</i> is returned from the call and the data which has been received, and <i>source</i> is the source integer core/thread to receive from. Note that it is only possible to communicate single integers or reals, there is no communication of strings or arrays.
 <pre>
-if coreid=0 then
-  send 20 to 1
-else if coreid = 1 then
-  recv a from 0
-  print "Got value "+a+" from core 0"
-end if
-end if
+import parallel
+
+if coreid()==0:
+	send(20,1)
+elif coreid() == 1:
+	a=recv(0)
+	print "Got value "+a+" from core 0"
 </pre>
 
 <h3>Sendrecv</h3>
-With the <i>sendrecv</i> command the programmer can send some data to and receive from another core in the same statement. Most importantly there is only one blocking point for both of these operations, rather than two if implemented as separate send and recv calls. This is especially useful in halo swapping code.
+With the <i>sendrecv</i> function the programmer can send some data to and receive from another core in the same statement. Most importantly there is only one blocking point for both of these operations, rather than two if implemented as separate send and recv calls. This is especially useful in halo swapping code.
 <pre>
+import parallel
 a=0
 b=0
-if coreid > 0 then
-  // Message left core with my core id
-  sendrecv coreid tofrom coreid-1 into a
-end if
+if coreid() > 0:
+	a=sendrecv(coreid(), coreid()-1)
 
-if coreid < numcores-1 then
-  // Message right core with my core id
-  sendrecv coreid tofrom coreid+1 into b
-end if
+if coreid() < numcores()-1:
+	b=sendrecv(coreid(), coreid()+1)
 print "Values are "+a+" and "+b
 </pre>
 
 <h3>Collective communication</h3>
-Two forms of collective communication are supported; broadcasting data and reducing data. The broadcast follows the syntax <i>bcast expression from integer into identifier</i> which will broadcast an expression (a variable, maths expression etc) from the root core with id of <i>integer</i> supplied and each core will store this in <i>identifier</i> which will be created if it does not exist and this includes the root core. Note that it is only possible to communicate single integers or reals, there is no communication of strings or arrays.
+Two forms of collective communication are supported; broadcasting data and reducing data. The broadcast follows the syntax <i>(expression, root)</i> which will broadcast an expression (a variable, maths expression etc) from the root core with id of <i>integer</i> supplied and each core will store this in the return value.  Note that it is only possible to communicate single integers or reals, there is no communication of strings or arrays.
 <pre>
-bcast random % 100 from 0 into a
-print "The random number from core 0 is "+a
+import parallel
+print "The random number from core 0 is "+bcast(random%100, 0)
 </pre>
-A reduction follows the syntax <i>reduce operator expression into identifier</i> where operator is one of <i>sum</i>, <i>prod</i>, <i>min</i> or <i>max</i>, the <i>expression</i> (which is often different on different cores) on each core is combined, the operator applied and the result available in <i>identifier</i> on each core.
+A reduction follows the syntax <i>(expression, string operator)</i> where operator is one of <i>"sum"</i>, <i>"prod"</i>, <i>"min"</i> or <i>"max"</i>, the <i>expression</i> (which is often different on different cores) is combined, the operator applied and the result returned from the function and available to all.
 <pre>
-reduce max random % 100 into a
-print "The highest random number is "+a
+import parallel
+print "The highest random number is "+reduce(random%100, "max")
 </pre>
 
 <h3>Synchronisation</h3>
-All the active cores can be synchronised via the <i>sync</i> keyword, where they will all wait at this barrier until every other core has reached a corresponding <i>sync</i> call
+All the active cores can be synchronised via the <i>sync</i> call, where they will all wait at this barrier until every other core has reached a corresponding <i>sync</i> call
 <pre>
-print "Hello from core "+coreid
-sync
-print "After sync from core "+coreid
+import parallel
+print "Hello from core "+coreid()
+sync()
+print "After sync from core "+coreid()
 </pre>
 </section>
 <hr>
@@ -117,44 +123,79 @@ print "After sync from core "+coreid
 <h2>Control flow</h2>
 Code blocks have their own scope, i.e. if a variable is declared in a block (first seen) then it will only be available to that block and sub blocks.
 <h3>Conditional</h3>
-eBASIC implements conditionals via the <i>if</i> statement, <i>if expression then then-block end if</i> or <i>if expression then then-block else else-block end if</i> or <i>if expression then statement</i>. The later is constrained to a single statement (on the same line) whereas the other two can have any number of statements, including other conditionals in their <i>then-block</I> or <i>else-block</i>. The <i>expression</i> should be a logical expression and eBASIC supports, = (equality test), != (not equals), < (smaller than), <= (smaller or equals), > (greater than) and >= (greater or equals.) It is also possible to and expressions together via <i>and</i>, you can also or expressions via <i>or</i>. Note the only operator supported for strings is equality testing. It is possible to combine integers and reals when testing, in such cases integers are tested as floats.
+ePython implements conditionals via the <i>if</i> statement, the operators == (equality test), != (not equals), < (smaller than), <= (smaller or equals), > (greater than), >= (greater or equals) and is (pointer test.) It is also possible to and expressions together via <i>and</i>, you can also or expressions via <i>or</i>. Note the only operator supported for strings is equality testing. It is possible to combine integers and reals when testing, in such cases integers are tested as floats.
 <pre>
-if coreid=0 or coreid=1 then
-  print "Core id is 0 or 1"
-else
-  print "Core id is not 0 or 1"
-end if
+import parallel
+if coreid()==0 or coreid()==1:
+	print "Core id is 0 or 1"
+else:
+	print "Core id is not 0 or 1"
+</pre>
+
+<pre>
+import parallel
+if coreid()==0:
+	print "Core id is 0"
+elif coreid()==1:
+	print "Core id is 1"
+else:
+	print "Core id is not 0 or 1"
 </pre>
 <h3>For loops</h3>
-For loops are implemented via the <i>for</i> keyword, <i>for identifier=expression1 to expression2 block next</i> . Where identifier is the variable holding the integer index (it is created if does not already exist) and set to be the result of <i>expression1</i> initially. On each iteration it is incremented by 1 and will continue to loop until it passes the integer value of <i>expression2</i> .
+For loops are implemented via the <i>for</i> keyword, and will loop through elements in an array. The <i>range</i> function can be used to create prepacked iterator arrays.
 <pre>
-for i=1 to 10
-  print "iteration "+i
-next
+import util
+
+for i in range(10):
+	print i
+
+for i in range(500, 510):
+	print i
 </pre>
-<h3>Do while loops</h3>
-Do while loops are more flexible than the for loop as these continue whilst some condition is true. They are implemented via the <i>do while</i> keyword, <i>do while expression block end do</i>.
+
 <pre>
+dim a[10]
 i=0
-do while i<10
-  print i
-  i=i+1
-end do
+while i<10:
+	a[i]=10-i
+	i+=1
+
+for x in a:
+	print "V="+x
 </pre>
-<h3>Goto</h3>
-Optionally lines can be given a line number (provided at the start of the line) and the <i>goto</i> statement can be used to set control flow to that line.
+<h3>Functions</h3>
+Python functions are implemented via the <i>def</i> keyword. Default values can be provided to arguments.
+
 <pre>
-a=0
-10 a=a+1
-print a
-if a < 10 then goto 10
+def adder(a,b):
+	return a+b
+
+print adder(10,20)
 </pre>
-</section>
-<hr>
-<section>
+
+<pre>
+def printer(a=0,b=0):
+	print "A="+a
+	print "B="+a
+
+printer()
+printer(22)
+printer ("Hello", 10)
+</pre>
+
+<pre>
+def noneex(a=none):
+	if (a is none):
+		print "Empty args"
+	else:
+		print a
+
+noneex()
+noneex("HEllO")
+</pre>
 <a name="maths"></a>
 <h2>Maths</h2>
-Maths functions work with both integer and real numbers and variables. There are a number of inbuilt operators for sum (+), minus (-), multiplication (/), divide (*), modulo (%) and power (^ or **). A number of keywords are built into the language that provide other maths functionality.
+Maths functions work with both integer and real numbers and variables. There are a number of inbuilt operators for sum (+), minus (-), multiplication (*), divide (/), floor divide (//), modulo (%) and power (^ or **). These can be used in unary fashion, i.e. <i>a+=1</i>. A number of functions are built into the language that provide other maths functionality.
 <table rows=3 border=1>
 <tr><td>Keyword</td><td>Argument</td><td>Returns</td><td>Explanation</td></tr>
 <tr><td>random</td><td>none</td><td>integer</td><td>Random number up to large arbitrary size. random % a will provide a random number between 0 and a</td></tr>
@@ -172,15 +213,16 @@ Maths functions work with both integer and real numbers and variables. There are
 <tr><td>ceil</td><td>integer/real</td><td>real</td><td>Ceiling of input value</td></tr>
 <tr><td>log</td><td>integer/real</td><td>real</td><td>Natural log</td></tr>
 <tr><td>log10</td><td>integer/real</td><td>real</td><td>Log base 10</td></tr>
+<tr><td>len</td><td>array/real</td><td>integer</td><td>Length of the array</td></tr>
 </table>
 </section>
 <hr>
 <section>
 <a name="io"></a>
 <h2>IO</h2>
-eBASIC provides the <i>print</i> and <i>input</i> statements. These work with integers, reals and strings.
+ePython provides the <i>print</i> and <i>input</i> functions. These work with integers, reals, booleans and strings. Braces around a print statement are optional.
 <pre>
-input "Enter your name: ", a
+a=input("Enter your name: ")
 print "Hello "+a
 </pre>
 </section>
@@ -189,32 +231,33 @@ print "Hello "+a
 <a name="misc"></a>
 <h2>Miscellaneous</h2>
 <h3>Comments</h3>
-There are three ways of commenting code. Using traditional BASIC syntax, <i>REM</i> can be prefixed at the start of a line to denotes that it is a comment and to be ignored. Both C (<i> /* .... */</i>) spanning multiple lines and C++ (<i>//</i>) comments are also supported.
-<h3>Stop</h3>
+There are two ways of commenting code. C (<i> /* .... */</i>) spanning multiple lines and (<i>#</i>) comments are supported.
+<h3>Exit</h3>
 Terminates execution
 <pre>
-10 a=random % 100
-print a
-if a < 50 then stop
-goto 10
+while 1==1:
+	a=random % 100
+	print a
+	if a < 50: exit()
 </pre>
 </section>
 <hr>
 <section>
 <a name="cmd"></a>
 <h2>Command line arguments</h2>
-You must provide the filename of the user program (or <i>-l bytecodefile</i> if loading from byte code.) eBASIC provides a number of command line arguments to manage aspects such as the placement of data, actives cores etc..
+You must provide the filename of the user program (or <i>-l bytecodefile</i> if loading from byte code.) ePython provides a number of command line arguments to manage aspects such as the placement of data, actives cores etc..
 <table rows=3 border=1>
 <tr><td>Switch</td><td>Arguments</td><td>Explanation</td></tr>
-<tr><td>-s</td><td></td><td>Displays memory usage statistics of the BASIC code</td></tr>
+<tr><td>-s</td><td></td><td>Displays memory usage statistics of the Python code</td></tr>
 <tr><td>-t</td><td></td><td>Displays running time for each core</td></tr>
 <tr><td>-datashared</td><td></td><td>Forces all data to be placed within shared memory (512 Kb shared memory allocated for each core.)</td></tr>
-<tr><td>-corecode</td><td></td><td>Forces the byte representation of the BASIC program to be copied onto each core, this is the default choice</td></tr>
-<tr><td>-coreshared</td><td></td><td>Forces the byte representation of the BASIC program to be copied into shared memory, this impacts performance</td></tr>
-<tr><td>-o</td>filename<td></td><td>Writes the byte format of the BASIC program to file, does not run the program</td></tr>
+<tr><td>-corecode</td><td></td><td>Forces the byte representation of the Python program to be copied onto each core, this is the default choice</td></tr>
+<tr><td>-coreshared</td><td></td><td>Forces the byte representation of the Python program to be copied into shared memory, this impacts performance</td></tr>
+<tr><td>-o</td>filename<td></td><td>Writes the byte format of the Python program to file, does not run the program</td></tr>
 <tr><td>-l</td>filename<td></td><td>Loads the byte format of a code from file and runs it</td></tr>
-<tr><td>-h</td><td></td><td>Display help message</td></tr>
 <tr><td>-c</td>a a,b,c a:c all<td></td><td>Core selection; single core (a), list of cores (a,b,c), range (a:c) or all (all)</td></tr>
+<tr><td>-d</td>number<td></td><td>Number of Epiphany core processes to run (number of cores to run over)</td></tr>
+<tr><td>-h</td>number<td></td><td>Number of Host processes to run (number of threads to run over)</td></tr>
 </table>
 </section>
 </body>
