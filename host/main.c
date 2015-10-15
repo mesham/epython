@@ -182,7 +182,7 @@ static char * getSourceFileContents(char * filename) {
 	if (sourceCode != NULL) {
 		sprintf(contents, "<<<%s\n", filename);
 		while (fgets(buffer, 1024, sourceCode) != NULL) {
-			if (strstr(buffer, "import") != NULL) {
+			if (strstr(buffer, "import") != NULL && buffer[0] != '#') {
 				char * importPoint=strstr(buffer, "import");
 				int startIdx, idx=0, foundSpace=0;
 				while (importPoint[idx] != '\0') {
