@@ -11,16 +11,20 @@ If you do not install it then you can still run ebasic from the current director
 
 Hello world
 --------------------
-Create a file called hello, then put in the line
-print "Hello world from core "+coreid
+Create a file called hello, then put in the lines
+print "Hello world"
 
-save it, and execute ebasic hello (or ./epython.sh hello if you have not done make install.)
+save it, and execute epython hello (or ./epython.sh hello if you have not done make install.)
 
 Each core will display the Hello world message to the screen along with their core id
 
+Include Path
+-------------------
+When including files, by default ePython will search in the current directory. You can add additional directories by exporting the PYTHONPATH environment variable which follows the same syntax as the PATH environment variable. i.e. export PYTHONPATH=$HOME/epython
+
 64 cores
 --------------
-eBASIC has been developed and tested on a 16 core Epiphany machine, if you have a 64 core chip machine then it should work (still on 16 cores), and it should be trivial to edit the source to support the full 64 cores.
+ePython has been developed and tested on a 16 core Epiphany machine, if you have a 64 core chip machine then it should work (still on 16 cores), and it should be trivial to edit the source to support the full 64 cores.
 
 Troubleshooting
 ----------------------------
