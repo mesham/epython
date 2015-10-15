@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "stack.h"
 #include "ctype.h"
@@ -68,6 +69,7 @@ static char * getSourceFileContents(char*);
 static void displayParsedBasicInfo(void);
 void writeOutByteCode(char*);
 void loadByteCode(char*);
+static char* getIncludeFileWithPath(char*);
 static void runCodeOnHost(struct interpreterconfiguration*, struct shared_basic*);
 static void * runSpecificHostProcess(void*);
 #ifndef HOST_STANDALONE
@@ -194,11 +196,17 @@ static char * getSourceFileContents(char * filename) {
 					if (isspace(importPoint[idx]) && foundSpace==2) break;
 					idx++;
 				}
-				importPoint[idx-1]='\0';
+				importPoint[idx]='\0';
 				char * newFilename=(char*) malloc(strlen(&importPoint[startIdx])+4);
 				sprintf(newFilename, "%s.py", &importPoint[startIdx]);
-				char * importedContents=getSourceFileContents(newFilename);
+				char* entirePathForFile=getIncludeFileWithPath(newFilename);
+				if (entirePathForFile == NULL) {
+					fprintf(stderr, "Opening of Python file '%s' failed, are you sure this file exists?\n", newFilename);
+					exit(0);
+				}
+				char * importedContents=getSourceFileContents(entirePathForFile);
 				free(newFilename);
+				free(entirePathForFile);
 				if (strlen(importedContents)+strlen(contents)+1 >= contentsSize) {
 					contentsSize=strlen(importedContents)+strlen(contents)+TEXTUAL_BASIC_SIZE_STRIDE;
 					contents=realloc(contents, contentsSize);
@@ -222,6 +230,41 @@ static char * getSourceFileContents(char * filename) {
 		fprintf(stderr, "Opening of Python file '%s' failed, are you sure this file exists?\n", filename);
 		exit(0);
 	}
+}
+
+static char* getIncludeFileWithPath(char * filename) {
+	if(access(filename, F_OK) != -1 ) {
+		char * tr=(char*) malloc(strlen(filename) + 1);
+		strcpy(tr, filename);
+		return tr;
+	} else {
+		char * prev = getenv("PYTHONPATH");
+		char * pch=strchr(prev, ':');
+		while (pch != NULL) {
+			char * newPath=(char*) malloc((pch-prev)+1);
+			strncpy(newPath, prev, pch-prev);
+			if (prev[(pch-prev)-1] == '/') {
+				newPath[(pch-prev)-1]='\0';
+			} else {
+				newPath[pch-prev]='\0';
+			}
+			char * testFilename=(char*) malloc(strlen(newPath) + strlen(filename) + 2);
+			sprintf(testFilename, "%s/%s", newPath, filename);
+			free(newPath);
+			if(access(testFilename, F_OK) != -1 ) return testFilename;
+			free(testFilename);
+			prev=pch+1;
+			pch=strchr(prev,':');
+		}
+		if (prev[strlen(prev)-1] == '/') {
+			prev[strlen(prev)-1]='\0';
+		}
+		char * testFilename=(char*) malloc(strlen(prev) + strlen(filename) + 2);
+		sprintf(testFilename, "%s/%s", prev, filename);
+		if(access(testFilename, F_OK) != -1 ) return testFilename;
+		free(testFilename);
+	}
+	return NULL;
 }
 
 /**
