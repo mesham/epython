@@ -2,7 +2,7 @@
 <head><title>Epiphany Python documentation</title></head>
 <body>
 <h1>Epiphany Python documentation</h1>
-ePython is a subset of python for the Eiphany architecture. It is possible to run code both on the Epiphany, ARM or both and these can communicate with each other. By default the user code, symbol table and program data are all allocated in core local memory, although this can be selected via language mechanisms and command line arguments.
+ePython is a subset of python for the Eiphany architecture. It is possible to run code both on physical cores (Epiphany device) and virtual cores (the ARM host) and these can communicate with each other. By default the user code, symbol table and program data are all allocated in core local memory, although this can be selected via language mechanisms and command line arguments.
 <ul>
 <li><a href="#assignment">Assignment</a></li>
 <li><a href="#parallel">Parallelism</a></li>
@@ -69,6 +69,19 @@ This expression determines the number of active cores and host threads (integer)
 import parallel
 print "Number of cores: "+numcores()
 </pre>
+
+<h3>Core type</h3>
+The <i>ishost()</i> and <i>isdevice()</i> function calls determine whether the current core is a physical one (running on the Epiphany chip) or virtual (running on the ARM host)
+
+<pre>
+import parallel
+if isdevice():
+  print coreid()+" is a physical core"
+elif ishost():
+  print coreid()+" is a virtual core"
+</pre>
+
+You can use the <i>-h n</i> command line argument to determine the number of host (virtual) cores, where n is the number and <i>-d n</i> to determine the number of device (physical) cores. For instance, <i>epython -h 5 -d 5 mycode.py<i> will run this over 5 physical and 5 virtual cores (assuming the code is in a file named <i>mycode.py</i>)
 
 <h3>Point to point communication</h3>
 ePython implements P2P communications between specific cores or threads via the <i>send</i> and <i>recv</i> functions. The send function follows the syntax <i>send(expression,  target)</i> where <i>expression</i> is any mathematical expression (including varables and arrays) that hold integers or reals. The <i>target</i> is an integer representing the core id of the target core/thread. The recv function follows the syntax <i>data=recv(source)</i> where <i>data</i> is returned from the call and the data which has been received, and <i>source</i> is the source integer core/thread to receive from. Note that it is only possible to communicate single integers or reals, there is no communication of strings or arrays.
