@@ -803,7 +803,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		cpy(value.data, ptr, sizeof(int));
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
-		*currentPoint=handleLet(assembled, *currentPoint, length, threadId, 0);
+		*currentPoint=handleLet(assembled, *currentPoint, length, 0, threadId);
 		value=getExpressionValue(assembled, currentPoint, length, threadId);
 #else
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0);
