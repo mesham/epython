@@ -13,7 +13,7 @@ epiphany: clean host-build device-build
 full: clean host-full device-build
 
 host-build:
-	@cd host; $(MAKE) ebasic
+	@cd host; $(MAKE) epython
 	@mv host/epython-host .
 
 host-full:
