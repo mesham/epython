@@ -36,3 +36,9 @@ install:
 	@cp util.py /usr/include
 	@echo 'export PYTHONPATH=$$PYTHONPATH:/usr/include:$(shell pwd)' >> ~/.bashrc
 	@echo "ePython installed, start a new bash session by executing bash before running ePython"
+
+uninstall:
+	@rm /usr/bin/epython-host
+	@rm /usr/bin/epython
+	@rm /usr/include/parallel.py
+	@rm /usr/include/util.py
