@@ -30,5 +30,9 @@ clean:
 	@cd device; $(MAKE) clean
 
 install:
-	cp epython-host epython-device.srec /usr/bin
-	cp epython.sh /usr/bin/epython
+	@cp epython-host epython-device.srec /usr/bin
+	@cp epython.sh /usr/bin/epython
+	@cp parallel.py /usr/include
+	@cp util.py /usr/include
+	@echo 'export PYTHONPATH=$$PYTHONPATH:/usr/include:$(shell pwd)' >> ~/.bashrc
+	@echo "ePython installed, start a new bash session by executing bash before running ePython"

@@ -5,7 +5,7 @@ This is an interpreter for Python which will run on the Epiphany chip and allows
 Installation
 -------------------
 Type make
-If you wish to install it (into the bin directory) then sudo make install
+If you wish to install it (into the bin directory) then sudo make install followed by starting a new bash session (execute bash at the command line.)
 
 If you do not install it then you can still run epython from the current directory, as ./epython.sh but ensure that epython-device.srec is in the current directory when you run the interpreter. The epython.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
 
