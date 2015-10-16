@@ -196,7 +196,7 @@ static char * getSourceFileContents(char * filename) {
 					if (isspace(importPoint[idx]) && foundSpace==2) break;
 					idx++;
 				}
-				if (importPoint[idx-1]=="\n") importPoint[idx-1]='\0';
+				if (importPoint[idx-1]=='\n') importPoint[idx-1]='\0';
 				importPoint[idx]='\0';
 				char * newFilename=(char*) malloc(strlen(&importPoint[startIdx])+4);
 				sprintf(newFilename, "%s.py", &importPoint[startIdx]);
