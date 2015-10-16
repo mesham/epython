@@ -7,7 +7,11 @@ Installation
 Type make
 If you wish to install it (into the bin directory) then sudo make install
 
-If you do not install it then you can still run ebasic from the current directory, as ./epython.sh but ensure that epython-device.srec is in the current directory when you run the interpreter. The epython.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
+If you do not install it then you can still run epython from the current directory, as ./epython.sh but ensure that epython-device.srec is in the current directory when you run the interpreter. The epython.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
+
+In order to include files (required for parallel functions) you must either run your Python codes in the same directory as the executables (and parallel.py & util.py) and/or export the PYTHONPATH environment variable to point to this. When including files, by default ePython will search in the current directory and then the PYTHONPATH variable, which follows the same syntax as the PATH variable.
+
+Issuing export export PYTHONPATH=$PYTHONPATH:`pwd` in the epython directory will set this to point to the current directory. You can also modify your ~/.bashrc file to contain a similiar command.
 
 Hello world
 --------------------
@@ -17,10 +21,6 @@ print "Hello world"
 save it, and execute epython hello (or ./epython.sh hello if you have not done make install.)
 
 Each core will display the Hello world message to the screen along with their core id
-
-Include Path
--------------------
-When including files, by default ePython will search in the current directory. You can add additional directories by exporting the PYTHONPATH environment variable which follows the same syntax as the PATH environment variable. i.e. export PYTHONPATH=$HOME/epython
 
 64 cores
 --------------

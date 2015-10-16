@@ -6,6 +6,8 @@ ELIBS="${EPIPHANY_HOME}/tools/host/lib"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ELIBS}
 EHDF=/opt/adapteva/esdk/bsps/current/parallella_E16G3_1GB.hdf
 
+export PYTHONPATH=$PYTHONPATH:`pwd`
+
 OS_MAJ="$(uname -a | cut -d' ' -f3 | cut -d'.' -f1)"
 OS_VER="$(uname -a | cut -d' ' -f3 | cut -d'.' -f2)"
 
