@@ -187,7 +187,7 @@ static char * getSourceFileContents(char * filename) {
 			if (strstr(buffer, "import") != NULL && buffer[0] != '#') {
 				char * importPoint=strstr(buffer, "import");
 				int startIdx, idx=0, foundSpace=0;
-				while (importPoint[idx] != '\0') {
+				while (importPoint[idx] != '\0' && importPoint[idx] != '\n') {
 					if (isspace(importPoint[idx])) foundSpace=1;
 					if (!isspace(importPoint[idx]) && foundSpace==1) {
 						startIdx=idx;
@@ -196,6 +196,7 @@ static char * getSourceFileContents(char * filename) {
 					if (isspace(importPoint[idx]) && foundSpace==2) break;
 					idx++;
 				}
+				if (importPoint[idx-1]=="\n") importPoint[idx-1]='\0';
 				importPoint[idx]='\0';
 				char * newFilename=(char*) malloc(strlen(&importPoint[startIdx])+4);
 				sprintf(newFilename, "%s.py", &importPoint[startIdx]);
