@@ -53,7 +53,7 @@ int totalActive;
 volatile unsigned int * pb;
 
 static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
-static void loadBinaryInterpreterOntoCores(char, char*);
+static void loadBinaryInterpreterOntoCores(struct interpreterconfiguration*, char);
 static void placeByteCode(struct shared_basic*, int, char*);
 static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
 static void deactivateCore(struct interpreterconfiguration*, int);
@@ -65,7 +65,7 @@ static void stringConcatenate(int, struct core_ctrl*);
 static void inputCoreMessage(int, struct core_ctrl*);
 static void performMathsOp(struct core_ctrl*);
 static int getTypeOfInput(char*);
-static char* getEpiphanyExecutableFile(void);
+static char* getEpiphanyExecutableFile(struct interpreterconfiguration*);
 static int doesFileExist(char*);
 
 /**
@@ -217,37 +217,47 @@ static void initialiseCores(struct shared_basic * basicState, int codeOnCore, st
 		active[i]=0;
 		if (!configuration->intentActive[i]) allActive=0;
 	}
-	loadBinaryInterpreterOntoCores(allActive, configuration->intentActive);
+	loadBinaryInterpreterOntoCores(configuration, allActive);
 }
 
 /**
  * Physically loads the binary interpreter onto the cores
  */
-static void loadBinaryInterpreterOntoCores(char allActive, char * intentActive) {
+static void loadBinaryInterpreterOntoCores(struct interpreterconfiguration* configuration, char allActive) {
 	unsigned int i;
 	int result;
-	char* binaryName=getEpiphanyExecutableFile();
+	char* binaryName=getEpiphanyExecutableFile(configuration);
 	if (allActive && e_platform.chip[0].num_cores == TOTAL_CORES) {
 		result = e_load_group(binaryName, &epiphany, 0, 0, epiphany.rows, epiphany.cols, E_TRUE);
 		if (result != E_OK) fprintf(stderr, "Error loading Epiphany program\n");
 	} else {
 		for (i=0;i<TOTAL_CORES;i++) {
-			if (intentActive[i]) {
+			if (configuration->intentActive[i]) {
 				int row=i/epiphany.cols;
 				result = e_load(binaryName, &epiphany, row, i-(row*epiphany.cols), E_TRUE);
 				if (result != E_OK) fprintf(stderr, "Error loading Epiphany program onto core %d\n", i);
 			}
 		}
 	}
+	free(binaryName);
 }
 
-static char* getEpiphanyExecutableFile() {
-	if (doesFileExist(EPIPHANY_BINARY_FILE)) return EPIPHANY_BINARY_FILE;
-	char * binLocation=(char*) malloc(strlen(EPIPHANY_BINARY_FILE) + strlen(BIN_PATH) + 1);
-	sprintf(binLocation, "%s%s", BIN_PATH, EPIPHANY_BINARY_FILE);
+static char* getEpiphanyExecutableFile(struct interpreterconfiguration* configuration) {
+        char * fullFilename=(char*) malloc(strlen(EPIPHANY_BINARY_FILE) + 6);
+	if (configuration->loadElf) {
+		sprintf(fullFilename, "%s.elf", EPIPHANY_BINARY_FILE);
+	} else if (configuration->loadSrec) {
+		sprintf(fullFilename, "%s.srec", EPIPHANY_BINARY_FILE);
+	} else {
+		fprintf(stderr, "Neither ELF nore SREC file formats selected for device executable\n");
+		exit(0);
+	}
+	if (doesFileExist(fullFilename)) return fullFilename;
+	char * binLocation=(char*) malloc(strlen(fullFilename) + strlen(BIN_PATH) + 1);
+	sprintf(binLocation, "%s%s", BIN_PATH, fullFilename);
 	if (doesFileExist(binLocation)) return binLocation;
 	fprintf(stderr, "Can not device binary '%s' in the local directory or binary (%s) directory\n",
-			EPIPHANY_BINARY_FILE, BIN_PATH);
+			fullFilename, BIN_PATH);
 	exit(0);
 }
 

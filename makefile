@@ -23,6 +23,7 @@ host-full:
 device-build:	
 	@cd device; $(MAKE)
 	@mv device/epython-device.srec .
+	@mv device/epython-device.elf .
 
 clean: 
 	@cd interpreter; rm -f *.o *.d

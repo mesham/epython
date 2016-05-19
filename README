@@ -38,3 +38,7 @@ export EPIPHANY_HOME=/opt/adapteva/esdk
 Rebuilding the parser/lexer
 ----------------------------------------------
 To rebuild the parser and lexer too, then do make full
+
+SREC and ELF
+------------
+The device executable is built in both srec and elf format, as of 2016 the loading of srec is deprecated and will be removed from later sdk releases. You can choose which to load via the -elf and -srec command line arguments. Elf is the default, apart from very old SDK versions which use srec.

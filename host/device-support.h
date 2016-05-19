@@ -37,7 +37,7 @@
 
 extern volatile unsigned int * pb;
 
-#define EPIPHANY_BINARY_FILE "epython-device.srec"
+#define EPIPHANY_BINARY_FILE "epython-device"
 // Binary directory path for finding epython device binary, needs trailing slash
 #define BIN_PATH "/usr/bin/"
 

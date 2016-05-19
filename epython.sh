@@ -24,5 +24,5 @@ if [[ "$OS_VER" -ge "14" || "$OS_MAJ" -gt "3" ]]
 then
 $FILE "$@"
 else
-sudo -E LD_LIBRARY_PATH=${ELIBS} EPIPHANY_HDF=${EHDF} $FILE "$@"
+sudo -E LD_LIBRARY_PATH=${ELIBS} EPIPHANY_HDF=${EHDF} $FILE -srec "$@"
 fi

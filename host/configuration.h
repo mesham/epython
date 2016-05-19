@@ -34,7 +34,7 @@ struct interpreterconfiguration {
 	char * intentActive;
 	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared, displayPPCode;
 	char * filename, *compiledByteFilename, *loadByteFilename;
-	int hostProcs, coreProcs;
+	int hostProcs, coreProcs, loadElf, loadSrec;
 };
 
 struct interpreterconfiguration* readConfiguration(int, char *[]);

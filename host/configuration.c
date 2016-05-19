@@ -71,12 +71,20 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		configuration->hostProcs=0;
 #endif
 		configuration->coreProcs=0;
+                configuration->loadElf=1;
+		configuration->loadSrec=0;
 		int i;
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
 				configuration->displayStats=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-pp")) {
 				configuration->displayPPCode=1;
+                        } else if (areStringsEqualIgnoreCase(argv[i], "-srec")) {
+				configuration->loadElf=0;
+		                configuration->loadSrec=1;
+			} else if (areStringsEqualIgnoreCase(argv[i], "-elf")) {
+				configuration->loadElf=1;
+		                configuration->loadSrec=0;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-t")) {
 				configuration->displayTiming=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-datashared")) {
@@ -202,6 +210,8 @@ static void displayHelp() {
 	printf("-codecore      Placement code on each core (default up to %d bytes length)\n", CORE_CODE_MAX_SIZE);
 	printf("-codeshared    Placement code in shared memory (automatic after %d bytes in length)\n", CORE_CODE_MAX_SIZE);
 	printf("-datashared    Data (arrays and strings) stored in shared memory, storage on core is default\n");
+        printf("-elf           Use ELF device executable\n");
+        printf("-srec          Use SREC device executable\n");
 #endif
 	printf("-s             Display parse statistics\n");
 	printf("-pp            Display preprocessed code\n");
