@@ -31,7 +31,7 @@ clean:
 	@cd device; $(MAKE) clean
 
 install:
-	@cp epython-host epython-device.srec /usr/bin
+	@cp epython-host epython-device.srec epython-device.elf /usr/bin
 	@cp epython.sh /usr/bin/epython
 	@cp parallel.py /usr/include
 	@cp util.py /usr/include
@@ -40,6 +40,8 @@ install:
 
 uninstall:
 	@rm /usr/bin/epython-host
+	@rm /usr/bin/epython-device.srec
+	@rm /usr/bin/epython-device.elf
 	@rm /usr/bin/epython
 	@rm /usr/include/parallel.py
 	@rm /usr/include/util.py
