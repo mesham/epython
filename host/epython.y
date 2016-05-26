@@ -47,7 +47,7 @@ void yyerror (char const *msg) {
 %right NOT
 %right POW POWPOW FLOORDIVFLOORDIV FLOORDIV
 
-%type <string> ident declareident
+%type <string> ident declareident fn_entry
 %type <integer> unary_operator 
 %type <uchar> reductionop opassgn
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
@@ -98,7 +98,7 @@ statement
 	| PRINT expression { $$=appendPrintStatement($2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
-	| DEF ident LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($2, $4, $7); leaveScope(); $$ = NULL; }
+	| fn_entry LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($1, $3, $6); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
@@ -117,6 +117,9 @@ fndeclarationargs
 	| fndeclarationargs COMMA ident { pushIdentifier($1, $3); $$=$1; appendArgument($3); }	
 	| fndeclarationargs COMMA ident ASSGN expression { pushIdentifierAssgnExpression($1, $3, $5); $$=$1; appendArgument($3); }
 	;
+	
+fn_entry
+	: DEF ident { enterFunction($2); $$=$2; }
 
 codeblock
 	: NEWLINE indent_rule lines outdent_rule { $$=$3; }

@@ -29,10 +29,11 @@
 #include <string.h>
 #include <stddef.h>
 #include <ctype.h>
-
 #include "memorymanager.h"
 #include "basictokens.h"
 #include "byteassembler.h"
+
+#define RECURSION_VAR_DEPTH 10
 
 /*
  * Node for holding a specific scope information - the variables that belong to
@@ -57,6 +58,8 @@ struct variable_node {
 
 // The current for line, this is is used in conjunction with GOTO to code for repetition
 int currentForLine=-1;
+int currentSymbolTableId, isFnRecursive;
+char * currentFunctionName=NULL;
 
 static unsigned short current_var_id=1; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
@@ -69,11 +72,18 @@ static struct memorycontainer* createExpression(unsigned char, struct memorycont
 static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
 static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
 
+void enterFunction(char* fn_name) {
+	currentSymbolTableId=current_var_id;
+	isFnRecursive=0;
+	currentFunctionName=(char*) malloc(strlen(fn_name) + 1);
+	strcpy(currentFunctionName, fn_name);
+}
+
 /**
  * Gets the total number of entries in the symbol table
  */
 unsigned short getNumberEntriesInSymbolTable() {
-	return current_var_id;
+	return current_var_id + (getNumberSymbolTableEntriesForRecursion()*(RECURSION_VAR_DEPTH-1));
 }
 
 /**
@@ -238,6 +248,8 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
  * which is needed as the function might appear at any point
  */
 struct memorycontainer* appendCallFunctionStatement(char* functionName, struct stack_t* args) {
+	if (currentFunctionName != NULL && strcmp(currentFunctionName, functionName) == 0) isFnRecursive=1;
+
 	struct memorycontainer* assignmentContainer=NULL;
 	unsigned short numArgs=(unsigned short) getStackSize(args);
 	char * varname=(char*) malloc(strlen(functionName)+5);
@@ -527,6 +539,10 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 	completedFunction->lineDefns=defn;
 
 	fn->contents=completedFunction;
+	fn->numberEntriesInSymbolTable=current_var_id - currentSymbolTableId;
+	fn->recursive=isFnRecursive;
+	free(currentFunctionName);
+	currentFunctionName=NULL;
 	addFunction(fn);
 }
 

@@ -84,6 +84,16 @@ void addFunction(struct functionDefinition* functionDefintion) {
 	functionListHead=node;
 }
 
+int getNumberSymbolTableEntriesForRecursion(void) {
+	int r=0;
+	struct functionListNode * fnHead=functionListHead;
+	while (fnHead != NULL) {
+		if (fnHead->fn->recursive) r+=fnHead->fn->numberEntriesInSymbolTable;
+		fnHead=fnHead->next;
+	}
+	return r;
+}
+
 /**
  * Given a line number will return the byte location of this in the memory
  */

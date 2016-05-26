@@ -36,6 +36,7 @@ struct functionListNode {
 };
 
 void addFunction(struct functionDefinition*);
+int getNumberSymbolTableEntriesForRecursion(void);
 void compileMemory(struct memorycontainer*);
 struct memorycontainer* concatenateMemory(struct memorycontainer*, struct memorycontainer*);
 unsigned int appendStatement(struct memorycontainer*, unsigned char, unsigned int);

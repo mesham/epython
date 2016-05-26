@@ -51,8 +51,10 @@ struct memorycontainer {
 struct functionDefinition {
 	char * name;
 	struct memorycontainer * contents;
+	int numberEntriesInSymbolTable, recursive;
 };
 
+void enterFunction(char*);
 unsigned short getNumberEntriesInSymbolTable(void);
 void setNumberEntriesInSymbolTable(unsigned short);
 void appendNewFunctionStatement(char*, struct stack_t*, struct memorycontainer*);
