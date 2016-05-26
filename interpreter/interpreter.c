@@ -45,6 +45,8 @@ static int * currentSymbolEntries;
 static int * localCoreId;
 // Number of active cores
 static int * numActiveCores;
+// Function call level
+unsigned char * fnLevel;
 #else
 // Whether we should stop the interpreter or not (due to error raised)
 char stopInterpreter;
@@ -56,6 +58,8 @@ static int currentSymbolEntries;
 static int localCoreId;
 // Number of active cores
 static int numActiveCores;
+// Function call level
+unsigned char fnLevel;
 #endif
 
 static int hostCoresBasePid;
@@ -78,7 +82,9 @@ static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleSync(char*, unsigned int, unsigned int, int);
-static struct symbol_node* getVariableSymbol(unsigned short, int, int);
+static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
+static int getSymbolTableEntryId(int);
+static void clearVariablesToLevel(unsigned char, int);
 static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int, int);
 static int determine_logical_expression(char*, unsigned int*,  unsigned int, int);
 static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int, int);
@@ -100,7 +106,9 @@ static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleSync(char*, unsigned int, unsigned int);
-static struct symbol_node* getVariableSymbol(unsigned short, int);
+static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
+static int getSymbolTableEntryId(void);
+static void clearVariablesToLevel(unsigned char);
 static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int);
 static int determine_logical_expression(char*, unsigned int*, unsigned int);
 static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int);
@@ -119,6 +127,7 @@ void initThreadedAspectsForInterpreter(int total_number_threads, int baseHostPid
 	currentSymbolEntries=(int*) malloc(sizeof(int) * total_number_threads);
 	localCoreId=(int*) malloc(sizeof(int) * total_number_threads);
 	numActiveCores=(int*) malloc(sizeof(int) * total_number_threads);
+	fnLevel=(unsigned char*) malloc(sizeof(unsigned char) * total_number_threads);
 	initHostCommunicationData(total_number_threads, basicState);
 	hostCoresBasePid=baseHostPid;
 }
@@ -128,7 +137,8 @@ void initThreadedAspectsForInterpreter(int total_number_threads, int baseHostPid
 void runIntepreter(char * assembled, unsigned int length, unsigned short numberSymbols,
 		int coreId, int numberActiveCores, int threadId) {
 	stopInterpreter[threadId]=0;
-	currentSymbolEntries[threadId]=0;
+	currentSymbolEntries[threadId]=-1;
+	fnLevel[threadId]=0;
 	localCoreId[threadId]=coreId;
 	numActiveCores[threadId]=numberActiveCores;
 	symbolTable[threadId]=initialiseSymbolTable(numberSymbols);
@@ -139,7 +149,8 @@ void runIntepreter(char * assembled, unsigned int length, unsigned short numberS
 void runIntepreter(char * assembled, unsigned int length, unsigned short numberSymbols,
 		int coreId, int numberActiveCores, int baseHostPid) {
 	stopInterpreter=0;
-	currentSymbolEntries=0;
+	currentSymbolEntries=-1;
+	fnLevel=0;
 	localCoreId=coreId;
 	numActiveCores=numberActiveCores;
 	symbolTable=initialiseSymbolTable(numberSymbols);
@@ -172,7 +183,10 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i, length, threadId);
 		if (command == FNCALL_TOKEN) {
 			i=handleFnCall(assembled, i, &fnAddr, length, threadId);
+			fnLevel[threadId]++;
 			processAssembledCode(assembled, fnAddr, length, threadId);
+			clearVariablesToLevel(fnLevel[threadId], threadId);
+			fnLevel[threadId]--;
 		}
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
@@ -213,7 +227,10 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i, length);
 		if (command == FNCALL_TOKEN) {
 			i=handleFnCall(assembled, i, &fnAddr, length);
+			fnLevel++;
 			processAssembledCode(assembled, fnAddr, length);
+			clearVariablesToLevel(fnLevel);
+			fnLevel--;
 		}
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
@@ -275,12 +292,12 @@ static unsigned int handleReduction(char * assembled, unsigned int currentPoint,
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	setVariableValue(variableSymbol, reduceData(broadcast_expression,
 			reductionOperator, threadId, numActiveCores[threadId], hostCoresBasePid), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, reduceData(broadcast_expression, reductionOperator, numActiveCores), -1);
 #endif
@@ -298,13 +315,13 @@ static unsigned int handleBcast(char * assembled, unsigned int currentPoint, uns
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data),
 			threadId, numActiveCores[threadId], hostCoresBasePid), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), -1);
@@ -323,11 +340,11 @@ static unsigned int handleRecv(char * assembled, unsigned int currentPoint, unsi
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	setVariableValue(variableSymbol, recvData(getInt(source_expression.data), threadId, hostCoresBasePid), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, recvData(getInt(source_expression.data)), -1);
 #endif
@@ -345,12 +362,12 @@ static unsigned int handleSendRecv(char * assembled, unsigned int currentPoint, 
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
 	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length);
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data)), -1);
@@ -391,13 +408,13 @@ static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, un
 	for (i=0;i<numArgs;i++) {
 		if (i<callerNumArgs && i<fnNumArgs) {
 #ifdef HOST_INTERPRETER
-			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), threadId, 1);
-			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), threadId, 0);
+			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), fnLevel[threadId], threadId, 0);
+			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), fnLevel[threadId]+1, threadId, 0);
 #else
-			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), 1);
-			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), 0);
+			srcSymbol=getVariableSymbol(getUShort(&assembled[currentPoint]), fnLevel, 0);
+			targetSymbol=getVariableSymbol(getUShort(&assembled[fnAddress]), fnLevel+1, 0);
 #endif
-			targetSymbol->isAlias=1;
+			targetSymbol->state=ALIAS;
 			targetSymbol->alias=srcSymbol->id;
 		}
 		if (i<callerNumArgs) currentPoint+=sizeof(unsigned short);
@@ -420,12 +437,12 @@ static unsigned int handleFor(char * assembled, unsigned int currentPoint, unsig
 	unsigned short loopVariantId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* incrementVarSymbol=getVariableSymbol(loopIncrementerId, threadId, 1);
-	struct symbol_node* variantVarSymbol=getVariableSymbol(loopVariantId, threadId, 1);
+	struct symbol_node* incrementVarSymbol=getVariableSymbol(loopIncrementerId, fnLevel[threadId], threadId, 1);
+	struct symbol_node* variantVarSymbol=getVariableSymbol(loopVariantId, fnLevel[threadId], threadId, 1);
 	struct value_defn expressionVal=getExpressionValue(assembled, &currentPoint, length, threadId);
 #else
-	struct symbol_node* incrementVarSymbol=getVariableSymbol(loopIncrementerId, 1);
-	struct symbol_node* variantVarSymbol=getVariableSymbol(loopVariantId, 1);
+	struct symbol_node* incrementVarSymbol=getVariableSymbol(loopIncrementerId, fnLevel, 1);
+	struct symbol_node* variantVarSymbol=getVariableSymbol(loopVariantId, fnLevel, 1);
 	struct value_defn expressionVal=getExpressionValue(assembled, &currentPoint, length);
 #endif
 	unsigned short blockLen=getUShort(&assembled[currentPoint]);
@@ -474,10 +491,10 @@ static unsigned int handleInput(char * assembled, unsigned int currentPoint, uns
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	setVariableValue(variableSymbol, getInputFromUser(threadId), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	setVariableValue(variableSymbol, getInputFromUser(), -1);
 #endif
 	return currentPoint;
@@ -494,11 +511,11 @@ static unsigned int handleInputWithString(char * assembled, unsigned int current
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length, threadId);
 	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, threadId), -1);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, getInputFromUserWithString(string_display), -1);
 #endif
@@ -531,10 +548,10 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn size=getExpressionValue(assembled, &currentPoint, length, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn size=getExpressionValue(assembled, &currentPoint, length);
 #endif
 	variableSymbol->value.type=INT_TYPE;
@@ -556,11 +573,11 @@ static unsigned int handleArraySet(char * assembled, unsigned int currentPoint, 
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint, length, threadId);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn index=getExpressionValue(assembled, &currentPoint, length);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
 #endif
@@ -579,13 +596,13 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, threadId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
-	if (restrictNoAlias && getVariableSymbol(varId, threadId, 0)->isAlias) return currentPoint;
+	if (restrictNoAlias && getVariableSymbol(varId, fnLevel[threadId], threadId, 0)->state==ALIAS) return currentPoint;
 #else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, 1);
+	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
-	if (restrictNoAlias && getVariableSymbol(varId, 0)->isAlias) return currentPoint;
+	if (restrictNoAlias && getVariableSymbol(varId, fnLevel, 0)->state==ALIAS) return currentPoint;
 #endif
 	variableSymbol->value.type=value.type;
 	variableSymbol->value.dtype=value.dtype;
@@ -691,9 +708,9 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, threadId, 1);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel[threadId], threadId, 1);
 #else
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, 1);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
 #endif
 		value=getVariableValue(variableSymbol, -1);
 		if (expressionId == ARRAYACCESS_TOKEN) {
@@ -829,11 +846,17 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #ifdef HOST_INTERPRETER
 		unsigned int fnAddr;
 		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length, threadId);
+		fnLevel[threadId]++;
 		value=processAssembledCode(assembled, fnAddr, length, threadId);
+		clearVariablesToLevel(fnLevel[threadId], threadId);
+		fnLevel[threadId]--;
 #else
 		unsigned int fnAddr;
 		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length);
+		fnLevel++;
 		value=processAssembledCode(assembled, fnAddr, length);
+		clearVariablesToLevel(fnLevel);
+		fnLevel--;
 #endif
 	} else if (expressionId == MATHS_TOKEN) {
 		unsigned char maths_op=getUChar(&assembled[*currentPoint]);
@@ -848,9 +871,9 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, threadId, 1);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel[threadId], threadId, 1);
 #else
-		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, 1);
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
 #endif
 		if (expressionId == IDENTIFIER_TOKEN) {
 			if (variableSymbol->value.dtype==SCALAR) {
@@ -920,7 +943,7 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
 		if (operator==DIV_TOKEN) result=value1/value2;
 		if (operator==MOD_TOKEN) result=value1%value2;
 		if (operator==POW_TOKEN) {
-			result=value1;
+			result=value2 == 0 ? 1 : value1;
 			for (i=1;i<value2;i++) result=result*value1;
 		}
 		cpy(&value.data, &result, sizeof(int));
@@ -956,25 +979,25 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
  * Retrieves the symbol entry of a variable based upon its id
  */
 #ifdef HOST_INTERPRETER
-static struct symbol_node* getVariableSymbol(unsigned short id, int threadId, int followAlias) {
+static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lvl, int threadId, int followAlias) {
 #else
-static struct symbol_node* getVariableSymbol(unsigned short id, int followAlias) {
+static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lvl, int followAlias) {
 #endif
 	int i;
 #ifdef HOST_INTERPRETER
-	for (i=0;i<currentSymbolEntries[threadId];i++) {
-		if (symbolTable[threadId][i].id == id) {
-			if (followAlias && symbolTable[threadId][i].isAlias) {
-				return getVariableSymbol(symbolTable[threadId][i].alias, threadId, 1);
+	for (i=0;i<=currentSymbolEntries[threadId];i++) {
+		if (symbolTable[threadId][i].id == id && (symbolTable[threadId][i].level == 0 || symbolTable[threadId][i].level==lvl)) {
+			if (followAlias && symbolTable[threadId][i].state == ALIAS) {
+				return getVariableSymbol(symbolTable[threadId][i].alias, lvl-1, threadId, 1);
 			} else {
 				return &(symbolTable[threadId])[i];
 			}
 		}
 #else
-	for (i=0;i<currentSymbolEntries;i++) {
-		if (symbolTable[i].id == id) {
-			if (followAlias && symbolTable[i].isAlias) {
-				return getVariableSymbol(symbolTable[i].alias, 1);
+	for (i=0;i<=currentSymbolEntries;i++) {
+		if (symbolTable[i].id == id && (symbolTable[i].level == 0 || symbolTable[i].level==lvl)) {
+			if (followAlias && symbolTable[i].state == ALIAS) {
+				return getVariableSymbol(symbolTable[i].alias, lvl-1, 1);
 			} else {
 				return &symbolTable[i];
 			}
@@ -983,17 +1006,57 @@ static struct symbol_node* getVariableSymbol(unsigned short id, int followAlias)
 	}
 	int zero=0;
 #ifdef HOST_INTERPRETER
-	symbolTable[threadId][currentSymbolEntries[threadId]].id=id;
-	symbolTable[threadId][currentSymbolEntries[threadId]].value.type=INT_TYPE;
-	cpy(symbolTable[threadId][currentSymbolEntries[threadId]].value.data, &zero, sizeof(int));
-	return &symbolTable[threadId][currentSymbolEntries[threadId]++];
+	int newEntryLocation=getSymbolTableEntryId(threadId);
+	symbolTable[threadId][newEntryLocation].id=id;
+	symbolTable[threadId][newEntryLocation].state=ALLOCATED;
+	symbolTable[threadId][newEntryLocation].level=lvl;
+	symbolTable[threadId][newEntryLocation].value.type=INT_TYPE;
+	cpy(symbolTable[threadId][newEntryLocation].value.data, &zero, sizeof(int));
+	return &symbolTable[threadId][newEntryLocation];
 #else
-	symbolTable[currentSymbolEntries].id=id;
-	symbolTable[currentSymbolEntries].isAlias=0;
-	symbolTable[currentSymbolEntries].value.type=INT_TYPE;
-	symbolTable[currentSymbolEntries].value.dtype=SCALAR;
-	cpy(symbolTable[currentSymbolEntries].value.data, &zero, sizeof(int));
-	return &symbolTable[currentSymbolEntries++];
+	int newEntryLocation=getSymbolTableEntryId();
+	symbolTable[newEntryLocation].id=id;
+	symbolTable[newEntryLocation].level=lvl;
+	symbolTable[newEntryLocation].state=ALLOCATED;
+	symbolTable[newEntryLocation].value.type=INT_TYPE;
+	symbolTable[newEntryLocation].value.dtype=SCALAR;
+	cpy(symbolTable[newEntryLocation].value.data, &zero, sizeof(int));
+	return &symbolTable[newEntryLocation];
+#endif
+}
+#ifdef HOST_INTERPRETER
+static int getSymbolTableEntryId(int threadId) {
+#else
+static int getSymbolTableEntryId(void) {
+#endif
+	int i;
+#ifdef HOST_INTERPRETER
+	for (i=0;i<=currentSymbolEntries[threadId];i++) {
+			if (symbolTable[threadId][i].state == UNALLOCATED) return i;
+	}
+	return ++currentSymbolEntries[threadId];
+#else
+	for (i=0;i<=currentSymbolEntries;i++) {
+		if (symbolTable[i].state == UNALLOCATED) return i;
+	}
+	return ++currentSymbolEntries;
+#endif
+}
+
+#ifdef HOST_INTERPRETER
+static void clearVariablesToLevel(unsigned char clearLevel, int threadId) {
+#else
+static void clearVariablesToLevel(unsigned char clearLevel) {
+#endif
+	int i;
+#ifdef HOST_INTERPRETER
+	for (i=0;i<=currentSymbolEntries[threadId];i++) {
+		if (symbolTable[threadId][i].level >= clearLevel) symbolTable[threadId][i].state=UNALLOCATED;
+	}
+#else
+	for (i=0;i<=currentSymbolEntries;i++) {
+		if (symbolTable[i].level >= clearLevel) symbolTable[i].state=UNALLOCATED;
+	}
 #endif
 }
 

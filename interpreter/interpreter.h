@@ -38,6 +38,10 @@
 #define SCALAR 0
 #define ARRAY 1
 
+#define UNALLOCATED 1
+#define ALLOCATED 2
+#define ALIAS 3
+
 // The value in a symbol table; its type and data (which is integer/real or pointer to string
 // or array.) In host mode this is 8 bytes as often pointers are 64bit, but on Epiphany only 4 byte as 32 bit pointers
 struct value_defn {
@@ -52,7 +56,7 @@ struct value_defn {
 // A node in the symbol table - its id and value
 struct symbol_node {
 	unsigned short id, alias;
-	char isAlias;
+	unsigned char state, level;
 	struct value_defn value __attribute__((aligned(8)));
 };
 
