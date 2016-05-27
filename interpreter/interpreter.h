@@ -61,7 +61,7 @@ struct symbol_node {
 };
 
 #ifdef HOST_INTERPRETER
-extern char * stopInterpreter;
+extern volatile char * stopInterpreter;
 void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 #else

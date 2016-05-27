@@ -36,17 +36,17 @@
 
 #ifdef HOST_INTERPRETER
 // Whether we should stop the interpreter or not (due to error raised)
-char * stopInterpreter;
+volatile char * stopInterpreter;
 // The symbol table
 static struct symbol_node ** symbolTable;
 // Number of entries currently in the symbol table
-static int * currentSymbolEntries;
+static volatile int * currentSymbolEntries;
 // The absolute ID of the local core
-static int * localCoreId;
+static volatile int * localCoreId;
 // Number of active cores
-static int * numActiveCores;
+static volatile int * numActiveCores;
 // Function call level
-unsigned char * fnLevel;
+unsigned volatile char * fnLevel;
 #else
 // Whether we should stop the interpreter or not (due to error raised)
 char stopInterpreter;
@@ -956,7 +956,7 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
 			value2=(float) getInt(v2.data);
 			if (operator == POW_TOKEN) {
 				int i;
-				result=value1;
+				result=value2 == 0 ? 1 : value1;
 				for (i=1;i<(int) value2;i++) result=result*value1;
 			}
 		}
