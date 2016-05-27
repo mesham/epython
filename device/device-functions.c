@@ -62,7 +62,7 @@ void displayToUser(struct value_defn value) {
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
-	if (value.type == STRING_TYPE) sharedDataEntries-=length; // Clears up the temporary memory used
+	if (value.type == STRING_TYPE) sharedHeapEntries-=length; // Clears up the temporary memory used
 }
 
 /**
@@ -104,16 +104,16 @@ struct value_defn getInputFromUser() {
 static struct value_defn doGetInputFromUser() {
 	struct value_defn v;
 	v.dtype=SCALAR;
-	cpy(&sharedData->core_ctrl[myId].data[6], &sharedDataEntries, sizeof(unsigned int));
+	cpy(&sharedData->core_ctrl[myId].data[6], &sharedHeapEntries, sizeof(unsigned int));
 	sharedData->core_ctrl[myId].core_command=2;
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 	v.type=sharedData->core_ctrl[myId].data[0];
 	if (v.type==STRING_TYPE) {
-		char * strPtr=sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
+		char * strPtr=sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
 		cpy(&v.data, &strPtr, sizeof(char*));
-		sharedDataEntries+=slength(strPtr)+1;
+		sharedHeapEntries+=slength(strPtr)+1;
 	} else {
 		cpy(v.data, &sharedData->core_ctrl[myId].data[1], 4);
 	}
@@ -166,7 +166,7 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		cpy(&sharedData->core_ctrl[myId].data[6], v2.data, 4);
 	}
 	sharedData->core_ctrl[myId].data[10]=STRING_TYPE;
-	cpy(&sharedData->core_ctrl[myId].data[11], &sharedDataEntries, sizeof(unsigned int));
+	cpy(&sharedData->core_ctrl[myId].data[11], &sharedHeapEntries, sizeof(unsigned int));
 
 	sharedData->core_ctrl[myId].core_command=4;
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
@@ -174,9 +174,9 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 
 	v.type=STRING_TYPE;
-	char * strPtr=sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
+	char * strPtr=sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
 	cpy(&v.data, &strPtr, sizeof(char*));
-	sharedDataEntries+=slength(strPtr)+1;
+	sharedHeapEntries+=slength(strPtr)+1;
 	return v;
 }
 
@@ -206,15 +206,15 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
  */
 int* getHeapMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-		int * dS= (int*) sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
+		int * dS= (int*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
 		sharedHeapEntries+=size;
 		if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
 		return dS;
 	} else {
-		int * dS= (int*) sharedData->core_ctrl[myId].heap_start + localHeapEntries;
+		int * dS= (int*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries);
 		localHeapEntries+=size;
-		if ((int) ((int*) sharedData->core_ctrl[myId].heap_start + localHeapEntries) >= LOCAL_CORE_MEMORY_MAP_TOP) {
-			dS= (int*) sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
+		if ((int) ((int*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries)) >= LOCAL_CORE_MEMORY_MAP_TOP) {
+			dS= (int*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
 			sharedHeapEntries+=size;
 			if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
 		}
@@ -224,15 +224,15 @@ int* getHeapMemory(int size, char isShared) {
 
 int* getStackMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-			int * dS= (int*) sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries;
+			int * dS= (int*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 			sharedStackEntries+=size;
 			if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of shared stack memory for data");
 			return dS;
 		} else {
-			int * dS= (int*) sharedData->core_ctrl[myId].stack_start + localStackEntries;
+			int * dS= (int*) (sharedData->core_ctrl[myId].stack_start + localStackEntries);
 			localStackEntries+=size;
 			if (localStackEntries >= LOCAL_CORE_STACK_SIZE) {
-				dS= (int*) sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries;
+				dS= (int*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 				sharedStackEntries+=size;
 				if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of core and shared stack memory for data");
 			}
@@ -491,10 +491,10 @@ void cpy(volatile void* to, volatile void * from, unsigned int size) {
  */
 static int copyStringToSharedMemoryAndSetLocation(char * string, int start) {
 	int len=slength(string)+1;
-	char* ptr=sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
+	char* ptr=sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
 	cpy(ptr, string, len);
-	cpy(&sharedData->core_ctrl[myId].data[start], &sharedDataEntries, sizeof(unsigned int));
-	sharedDataEntries+=len;
+	cpy(&sharedData->core_ctrl[myId].data[start], &sharedHeapEntries, sizeof(unsigned int));
+	sharedHeapEntries+=len;
 	return len;
 }
 
