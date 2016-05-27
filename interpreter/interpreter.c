@@ -556,7 +556,7 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
 #endif
 	variableSymbol->value.type=INT_TYPE;
 	variableSymbol->value.dtype=ARRAY;
-	int * address=getArrayAddress(sizeof(int)*(getInt(size.data)+1), inSharedMemory);
+	int * address=getHeapMemory(sizeof(int)*(getInt(size.data)+1), inSharedMemory);
 	cpy(variableSymbol->value.data, &address, sizeof(int*));
 	cpy(address, size.data, sizeof(int));
 	return currentPoint;
@@ -613,7 +613,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 	} else {
 		int currentAddress=getInt(variableSymbol->value.data);
 		if (currentAddress == 0) {
-			int * address=getArrayAddress(sizeof(int), 0);
+			int * address=getStackMemory(sizeof(int), 0);
 			cpy(variableSymbol->value.data, &address, sizeof(int*));
 			cpy(address, value.data, sizeof(int));
 		} else {
@@ -829,7 +829,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == ARRAY_TOKEN) {
 		int i, numItems=getInt(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(int);
-		int * address=getArrayAddress(sizeof(int)*(numItems+1), 0);
+		int * address=getHeapMemory(sizeof(int)*(numItems+1), 0);
 		cpy(value.data, &address, sizeof(int*));
 		cpy(address, &numItems, sizeof(int));
 		for (i=0;i<numItems;i++) {
@@ -1090,7 +1090,7 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 	} else {
 		int currentAddress=getInt(variableSymbol->value.data);
 		if (currentAddress == 0) {
-			int * address=getArrayAddress(sizeof(int) * index, 0);
+			int * address=getStackMemory(sizeof(int) * index, 0);
 			cpy(variableSymbol->value.data, &address, sizeof(int*));
 			cpy(address+((index+1) *4), value.data, sizeof(int));
 		} else {

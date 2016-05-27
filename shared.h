@@ -31,16 +31,18 @@
 // Start location in shared memory where we place the data structures
 #define EXTERNAL_MEM_ABSOLUTE_START 0x01000000
 
-#define SHARED_DATA_AREA_PER_CORE 0x0007D000
+#define SHARED_HEAP_DATA_AREA_PER_CORE 0x6D600
+#define SHARED_STACK_DATA_AREA_PER_CORE 0xFA00
 #define SHARED_DATA_AREA_START 0x00200000
 #define SHARED_CODE_AREA_START 0x00100000
 #define SHARED_DATA_SIZE 0x01000000
 #define LOCAL_CORE_MEMORY_MAP_TOP 0x8000
+#define LOCAL_CORE_STACK_SIZE 0x400
 
 struct core_ctrl {
 	unsigned int core_run, core_busy, core_command;
-	char *symbol_table, *data_start,
-			*shared_data_start, *postbox_start,
+	char *symbol_table, *stack_start, *heap_start,
+			*shared_heap_start, *shared_stack_start, *postbox_start,
 			*host_shared_data_start;
 	char data[15];
 	char active;

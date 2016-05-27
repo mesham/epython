@@ -31,7 +31,7 @@
 #include "shared.h"
 #include <e-lib.h>
 
-volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
+volatile static unsigned int localHeapEntries=0, sharedHeapEntries=0, sharedStackEntries=0, localStackEntries=0;
 volatile static unsigned char communication_data[6];
 
 static void sendDataToDeviceCore(struct value_defn, int);
@@ -204,22 +204,40 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 /**
  * Gets the address of an array either from core or shared data and updates the required location flag to point past this
  */
-int* getArrayAddress(int size, char isShared) {
+int* getHeapMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-		int * dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
-		sharedDataEntries+=size;
-		if (sharedDataEntries >= SHARED_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
+		int * dS= (int*) sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
+		sharedHeapEntries+=size;
+		if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
 		return dS;
 	} else {
-		int * dS= (int*) sharedData->core_ctrl[myId].data_start + localDataEntries;
-		localDataEntries+=size;
-		if ((int) ((int*) sharedData->core_ctrl[myId].data_start + localDataEntries) >= LOCAL_CORE_MEMORY_MAP_TOP) {
-			dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
-			sharedDataEntries+=size;
-			if (sharedDataEntries >= SHARED_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
+		int * dS= (int*) sharedData->core_ctrl[myId].heap_start + localHeapEntries;
+		localHeapEntries+=size;
+		if ((int) ((int*) sharedData->core_ctrl[myId].heap_start + localHeapEntries) >= LOCAL_CORE_MEMORY_MAP_TOP) {
+			dS= (int*) sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries;
+			sharedHeapEntries+=size;
+			if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
 		}
 		return dS;
 	}
+}
+
+int* getStackMemory(int size, char isShared) {
+	if (sharedData->allInSharedMemory || isShared) {
+			int * dS= (int*) sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries;
+			sharedStackEntries+=size;
+			if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of shared stack memory for data");
+			return dS;
+		} else {
+			int * dS= (int*) sharedData->core_ctrl[myId].stack_start + localStackEntries;
+			localStackEntries+=size;
+			if (localStackEntries >= LOCAL_CORE_STACK_SIZE) {
+				dS= (int*) sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries;
+				sharedStackEntries+=size;
+				if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of core and shared stack memory for data");
+			}
+			return dS;
+		}
 }
 
 /**

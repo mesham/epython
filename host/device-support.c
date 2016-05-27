@@ -208,12 +208,15 @@ static void initialiseCores(struct shared_basic * basicState, int codeOnCore, st
 				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA))+(codeOnCore?basicState->length:0));
 		if (!configuration->forceDataOnShared) {
 			// If on core then store after the symbol table and code
-			basicState->core_ctrl[i].data_start=basicState->core_ctrl[i].postbox_start+100;
+			basicState->core_ctrl[i].stack_start=basicState->core_ctrl[i].postbox_start+100;
+			basicState->core_ctrl[i].heap_start=basicState->core_ctrl[i].stack_start+LOCAL_CORE_STACK_SIZE;
 		} else {
-			basicState->core_ctrl[i].data_start=SHARED_DATA_AREA_START+(i*SHARED_DATA_AREA_PER_CORE)+(void*)management_DRAM.ephy_base;
+			basicState->core_ctrl[i].stack_start=SHARED_DATA_AREA_START+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*)management_DRAM.ephy_base;
+			basicState->core_ctrl[i].heap_start=basicState->core_ctrl[i].stack_start+SHARED_STACK_DATA_AREA_PER_CORE;
 		}
-		basicState->core_ctrl[i].shared_data_start=SHARED_DATA_AREA_START+(i*SHARED_DATA_AREA_PER_CORE)+(void*)management_DRAM.ephy_base;
-		basicState->core_ctrl[i].host_shared_data_start=SHARED_DATA_AREA_START+(i*SHARED_DATA_AREA_PER_CORE)+(void*) management_DRAM.base;
+		basicState->core_ctrl[i].shared_stack_start=SHARED_DATA_AREA_START+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*)management_DRAM.ephy_base;
+		basicState->core_ctrl[i].shared_heap_start=basicState->core_ctrl[i].shared_stack_start+SHARED_STACK_DATA_AREA_PER_CORE;
+		basicState->core_ctrl[i].host_shared_data_start=SHARED_DATA_AREA_START+SHARED_STACK_DATA_AREA_PER_CORE+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*) management_DRAM.base;
 		active[i]=0;
 		if (!configuration->intentActive[i]) allActive=0;
 	}

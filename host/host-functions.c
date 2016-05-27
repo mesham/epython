@@ -239,8 +239,12 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 /**
  * Called when running on the host, will get the memory address to store some array into
  */
-int* getArrayAddress(int size, char shared) {
+int* getHeapMemory(int size, char shared) {
 	return (int*) malloc(size);
+}
+
+int* getStackMemory(int size, char shared) {
+	return getHeapMemory(size, shared);
 }
 
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
