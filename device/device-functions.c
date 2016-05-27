@@ -214,7 +214,7 @@ int* getArrayAddress(int size, char isShared) {
 		int * dS= (int*) sharedData->core_ctrl[myId].data_start + localDataEntries;
 		localDataEntries+=size;
 		if ((int) ((int*) sharedData->core_ctrl[myId].data_start + localDataEntries) >= LOCAL_CORE_MEMORY_MAP_TOP) {
-			int * dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
+			dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
 			sharedDataEntries+=size;
 			if (sharedDataEntries >= SHARED_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
 		}
