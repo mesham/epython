@@ -1,8 +1,18 @@
+/*
+Parallel mergesort using divide and conquer. An unsorted random list of numbers is generated on core 0, then each core will split the data until 
+there are no more cores left, then each will sequentially solve its base case using a bubblesort. The sorted results on each core are then merged 
+back together and core 0 will display the sorted list. Whilst the sequential (bubblesort) algorithm is inefficient, this illustrates the general
+concept and could be swapped out for something better such as quicksort if desired.
+
+Important, the data is quite extensive and won't fit into the core's memory - therefore it should be placed in shared memory. To do this run epython
+with the -datashared option, i.e. epython -datashared mergesort.py
+*/
+
 import util
 import parallel
 
 na=128
-dim data[na]
+sdim data[na]
 
 if coreid()==0:
 	populateData(data, na)
@@ -23,7 +33,7 @@ def sort(d, level, thissize):
 		pivot=thissize/2
 		cid=coreid() + (2^(3-level))
 		send(d, cid, pivot)
-		dim split[thissize-pivot]
+		sdim split[thissize-pivot]
 		for x in range(pivot, thissize-1):
 			split[x-pivot]=d[x]
 		sort(split,level+1, thissize-pivot)
@@ -63,8 +73,10 @@ def bubblesort(d,size):
 
 
 def populateData(d, l):
-	for x in range(l-1):
-		d[x]=random%1000
+	i=0
+	while i<l:
+		d[i]=random%1000
+		i=i+1
 
 def displayData(d, l):
 	i=0
