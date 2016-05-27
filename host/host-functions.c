@@ -247,6 +247,10 @@ int* getStackMemory(int size, char shared) {
 	return getHeapMemory(size, shared);
 }
 
+void clearFreedStackFrames(char* targetPointer) {
+	// No operation here (allow stack to leak on host)
+}
+
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 	if (target >= (int) basicState->num_procs) raiseError("Attempting to sendrecv with non-existent process");

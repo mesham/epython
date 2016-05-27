@@ -1049,15 +1049,25 @@ static void clearVariablesToLevel(unsigned char clearLevel, int threadId) {
 static void clearVariablesToLevel(unsigned char clearLevel) {
 #endif
 	int i;
+	char * smallestMemoryAddress=0, *ptr;
 #ifdef HOST_INTERPRETER
 	for (i=0;i<=currentSymbolEntries[threadId];i++) {
-		if (symbolTable[threadId][i].level >= clearLevel) symbolTable[threadId][i].state=UNALLOCATED;
+		if (symbolTable[threadId][i].level >= clearLevel) {
+			symbolTable[threadId][i].state=UNALLOCATED;
+			cpy(&ptr, symbolTable[threadId][i].value.data, sizeof(int*));
+			if (smallestMemoryAddress == 0 || smallestMemoryAddress > ptr) smallestMemoryAddress=ptr;
+		}
 	}
 #else
 	for (i=0;i<=currentSymbolEntries;i++) {
-		if (symbolTable[i].level >= clearLevel) symbolTable[i].state=UNALLOCATED;
+		if (symbolTable[i].level >= clearLevel) {
+			symbolTable[i].state=UNALLOCATED;
+			cpy(&ptr, symbolTable[i].value.data, sizeof(int*));
+			if (smallestMemoryAddress == 0 || smallestMemoryAddress > ptr) smallestMemoryAddress=ptr;
+		}
 	}
 #endif
+	if (smallestMemoryAddress != 0) clearFreedStackFrames(smallestMemoryAddress);
 }
 
 /**

@@ -202,7 +202,7 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 }
 
 /**
- * Gets the address of an array either from core or shared data and updates the required location flag to point past this
+ * Allocates some memory in the heap
  */
 int* getHeapMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
@@ -222,6 +222,9 @@ int* getHeapMemory(int size, char isShared) {
 	}
 }
 
+/**
+ * Allocates some memory in the stack
+ */
 int* getStackMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
 			int * dS= (int*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
@@ -238,6 +241,18 @@ int* getStackMemory(int size, char isShared) {
 			}
 			return dS;
 		}
+}
+
+/**
+ * Removes items from the stack which are no longer needed (i.e. the reference has been removed due to the function returning.)
+ */
+void clearFreedStackFrames(char* targetPointer) {
+	if (targetPointer >= sharedData->core_ctrl[myId].shared_stack_start) {
+		sharedStackEntries=targetPointer-sharedData->core_ctrl[myId].shared_stack_start;
+	} else {
+		sharedStackEntries=0;
+		localStackEntries=targetPointer-sharedData->core_ctrl[myId].stack_start;
+	}
 }
 
 /**
