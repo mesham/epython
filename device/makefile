@@ -1,6 +1,6 @@
 CC=e-gcc
 CFLAGS=-I ../ -I ../interpreter -O1 -Os -fno-exceptions -freg-struct-return -fno-default-inline
-LDFLAGS=-T ${EPIPHANY_HOME}/bsps/current/fast.ldf -Wl,--gc-sections
+LDFLAGS=-T linker.ldf -Wl,--gc-sections
 
 all: clean epython-device.elf
 epython-device.elf: main.o device-functions.o ../interpreter/interpreter.o
