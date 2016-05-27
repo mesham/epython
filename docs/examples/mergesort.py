@@ -3,9 +3,6 @@ Parallel mergesort using divide and conquer. An unsorted random list of numbers 
 there are no more cores left, then each will sequentially solve its base case using a bubblesort. The sorted results on each core are then merged 
 back together and core 0 will display the sorted list. Whilst the sequential (bubblesort) algorithm is inefficient, this illustrates the general
 concept and could be swapped out for something better such as quicksort if desired.
-
-Important, the data is quite extensive and won't fit into the core's memory - therefore it should be placed in shared memory. To do this run epython
-with the -datashared option, i.e. epython -datashared mergesort.py
 */
 
 import util
