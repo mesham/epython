@@ -28,6 +28,7 @@
 #include "main.h"
 #include "basictokens.h"
 #include "interpreter.h"
+#include "shared.h"
 #include <e-lib.h>
 
 volatile static unsigned int localDataEntries=0, sharedDataEntries=0;
@@ -207,12 +208,15 @@ int* getArrayAddress(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
 		int * dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
 		sharedDataEntries+=size;
+		if (sharedDataEntries >= SHARED_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
 		return dS;
 	} else {
 		int * dS= (int*) sharedData->core_ctrl[myId].data_start + localDataEntries;
 		localDataEntries+=size;
-		if ((int) ((int*) sharedData->core_ctrl[myId].data_start + localDataEntries) >= 0x8000) {
-			raiseError("Out of core memory, allocate in shared memory instead");
+		if ((int) ((int*) sharedData->core_ctrl[myId].data_start + localDataEntries) >= LOCAL_CORE_MEMORY_MAP_TOP) {
+			int * dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
+			sharedDataEntries+=size;
+			if (sharedDataEntries >= SHARED_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
 		}
 		return dS;
 	}

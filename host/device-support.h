@@ -30,11 +30,6 @@
 #ifndef DEVICE_SUPPORT_H_
 #define DEVICE_SUPPORT_H_
 
-#define SHARED_DATA_AREA_PER_CORE 0x0007D000
-#define SHARED_DATA_AREA_START 0x00200000
-#define SHARED_CODE_AREA_START 0x00100000
-#define SHARED_DATA_SIZE 0x01000000
-
 extern volatile unsigned int * pb;
 
 #define EPIPHANY_BINARY_FILE "epython-device"
