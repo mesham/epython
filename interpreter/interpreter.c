@@ -556,7 +556,7 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
 #endif
 	variableSymbol->value.type=INT_TYPE;
 	variableSymbol->value.dtype=ARRAY;
-	int * address=getArrayAddress(getInt(size.data)+1, inSharedMemory);
+	int * address=getArrayAddress(sizeof(int)*(getInt(size.data)+1), inSharedMemory);
 	cpy(variableSymbol->value.data, &address, sizeof(int*));
 	cpy(address, size.data, sizeof(int));
 	return currentPoint;
@@ -615,7 +615,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 		if (currentAddress == 0) {
 			int * address=getArrayAddress(sizeof(int), 0);
 			cpy(variableSymbol->value.data, &address, sizeof(int*));
-			cpy(address, value.data, sizeof(int*));
+			cpy(address, value.data, sizeof(int));
 		} else {
 			setVariableValue(variableSymbol, value, -1);
 		}
@@ -829,7 +829,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == ARRAY_TOKEN) {
 		int i, numItems=getInt(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(int);
-		int * address=getArrayAddress(numItems+1, 0);
+		int * address=getArrayAddress(sizeof(int)*(numItems+1), 0);
 		cpy(value.data, &address, sizeof(int*));
 		cpy(address, &numItems, sizeof(int));
 		for (i=0;i<numItems;i++) {
@@ -986,7 +986,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lv
 	int i;
 #ifdef HOST_INTERPRETER
 	for (i=0;i<=currentSymbolEntries[threadId];i++) {
-		if (symbolTable[threadId][i].id == id && (symbolTable[threadId][i].level == 0 || symbolTable[threadId][i].level==lvl)) {
+		if (symbolTable[threadId][i].id == id && symbolTable[threadId][i].state != UNALLOCATED && (symbolTable[threadId][i].level == 0 || symbolTable[threadId][i].level==lvl)) {
 			if (followAlias && symbolTable[threadId][i].state == ALIAS) {
 				return getVariableSymbol(symbolTable[threadId][i].alias, lvl-1, threadId, 1);
 			} else {
@@ -995,7 +995,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lv
 		}
 #else
 	for (i=0;i<=currentSymbolEntries;i++) {
-		if (symbolTable[i].id == id && (symbolTable[i].level == 0 || symbolTable[i].level==lvl)) {
+		if (symbolTable[i].id == id && symbolTable[i].state != UNALLOCATED && (symbolTable[i].level == 0 || symbolTable[i].level==lvl)) {
 			if (followAlias && symbolTable[i].state == ALIAS) {
 				return getVariableSymbol(symbolTable[i].alias, lvl-1, 1);
 			} else {
@@ -1092,7 +1092,7 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 		if (currentAddress == 0) {
 			int * address=getArrayAddress(sizeof(int) * index, 0);
 			cpy(variableSymbol->value.data, &address, sizeof(int*));
-			cpy(address+((index+1) *4), value.data, sizeof(int*));
+			cpy(address+((index+1) *4), value.data, sizeof(int));
 		} else {
 			char * ptr;
 			cpy(&ptr, variableSymbol->value.data, sizeof(int*));

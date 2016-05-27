@@ -206,12 +206,12 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 int* getArrayAddress(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
 		int * dS= (int*) sharedData->core_ctrl[myId].shared_data_start + sharedDataEntries;
-		sharedDataEntries+=size*4;
+		sharedDataEntries+=size;
 		return dS;
 	} else {
 		int * dS= (int*) sharedData->core_ctrl[myId].data_start + localDataEntries;
-		localDataEntries+=size*4;
-		if ((int) (sharedData->core_ctrl[myId].data_start + localDataEntries) >= 0x8000) {
+		localDataEntries+=size;
+		if ((int) ((int*) sharedData->core_ctrl[myId].data_start + localDataEntries) >= 0x8000) {
 			raiseError("Out of core memory, allocate in shared memory instead");
 		}
 		return dS;
