@@ -273,7 +273,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 
 	defn->next=NULL;
 	defn->type=3;
-	defn->name=(char*) malloc(sizeof(functionName)+1);
+	defn->name=(char*) malloc(strlen(functionName)+1);
 	strcpy(defn->name, functionName);
 	defn->currentpoint=sizeof(unsigned char);
 
