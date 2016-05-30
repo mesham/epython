@@ -214,11 +214,22 @@ static char * getSourceFileContents(char * filename) {
 				}
 				sprintf(contents, "%s%s", contents, importedContents);
 			} else {
-				if (strlen(buffer)+strlen(contents)+1 >= contentsSize) {
-					contentsSize+=TEXTUAL_BASIC_SIZE_STRIDE;
-					contents=realloc(contents, contentsSize);
+				int i=0;
+				while(isspace(buffer[i]) && buffer[i] != '\0' && i < 1024) i++;
+				if (buffer[i] != '#') {
+					if (strlen(buffer)+strlen(contents)+1 >= contentsSize) {
+						contentsSize+=TEXTUAL_BASIC_SIZE_STRIDE;
+						contents=realloc(contents, contentsSize);
+					}
+					sprintf(contents, "%s%s", contents, buffer);
+				} else {
+					// Empty line to preserve line numberings
+					if (strlen(buffer)+2 >= contentsSize) {
+						contentsSize+=TEXTUAL_BASIC_SIZE_STRIDE;
+						contents=realloc(contents, contentsSize);
+					}
+					sprintf(contents, "%s\n", contents);
 				}
-				sprintf(contents, "%s%s", contents, buffer);
 			}
 		}
 		if (strlen(contents)+7 >=contentsSize) {
