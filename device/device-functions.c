@@ -259,9 +259,19 @@ void clearFreedStackFrames(char* targetPointer) {
  * Sends data to some other core and blocks on this being received
  */
 void sendData(struct value_defn to_send, int target) {
+	int largestCoreId=sharedData->baseHostPid;
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
-	if (target >= sharedData->num_procs) raiseError("Attempting to send to non-existent process");
-	if (target < sharedData->baseHostPid) {
+	if (target >= sharedData->num_procs) {
+		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
+			int i;
+			for (i=0;i<TOTAL_CORES;i++) {
+				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
+			}
+		} else {
+			raiseError("Attempting to send to non-existent or inactive process");
+		}
+	}
+	if (target < largestCoreId) {
 		sendDataToDeviceCore(to_send, target);
 	} else {
 		sendDataToHostProcess(to_send, target);
@@ -298,8 +308,18 @@ static void sendDataToDeviceCore(struct value_defn to_send, int target) {
 }
 
 struct value_defn recvData(int source) {
-	if (source >= sharedData->num_procs) raiseError("Attempting to receive from non-existent process");
-	if (source < sharedData->baseHostPid) {
+	int largestCoreId=sharedData->baseHostPid;
+	if (source >= sharedData->num_procs) {
+		if (source < TOTAL_CORES && sharedData->core_ctrl[source].active) {
+			int i;
+			for (i=0;i<TOTAL_CORES;i++) {
+				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
+			}
+		} else {
+			raiseError("Attempting to receive from non-existent or inactive process");
+		}
+	}
+	if (source < largestCoreId) {
 		return recvDataFromDeviceCore(source);
 	} else {
 		return recvDataFromHostProcess(source-sharedData->baseHostPid);
@@ -348,9 +368,19 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  * blocks on receive and then blocks on the initial send to form one overall block
  */
 struct value_defn sendRecvData(struct value_defn to_send, int target) {
+	int largestCoreId=sharedData->baseHostPid;
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
-	if (target >= sharedData->num_procs) raiseError("Attempting to sendrecv with non-existent process");
-	if (target < sharedData->baseHostPid) {
+	if (target >= sharedData->num_procs) {
+		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
+			int i;
+			for (i=0;i<TOTAL_CORES;i++) {
+				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
+			}
+		} else {
+			raiseError("Attempting to sendrecv with non-existent or inactive process");
+		}
+	}
+	if (target < largestCoreId) {
 		return sendRecvDataWithDeviceCore(to_send, target);
 	} else {
 		return sendRecvDataWithHostProcess(to_send, target);
@@ -439,10 +469,13 @@ static void performBarrier(volatile e_barrier_t barrier_array[], e_barrier_t  * 
  */
 struct value_defn bcastData(struct value_defn to_send, int source, int totalProcesses) {
 	if (myId==source) {
-		int i;
-		for (i=0;i<totalProcesses;i++) {
-			if (i == myId) continue;
-			sendData(to_send, i);
+		int i, totalActioned=0;
+		for (i=0;i<TOTAL_CORES && totalActioned<totalProcesses;i++) {
+			if (sharedData->core_ctrl[i].active) {
+				totalActioned++;
+				if (i == myId) continue;
+				sendData(to_send, i);
+			}
 		}
 		return to_send;
 	} else {
@@ -455,7 +488,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int totalProc
  */
 struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int totalProcesses) {
 	struct value_defn returnValue, retrieved;
-	int i, intV, tempInt;
+	int i, intV, tempInt, totalActioned=0;
 	float floatV, tempFloat;
 	if (to_send.type==INT_TYPE) {
 		cpy(&intV, to_send.data, sizeof(int));
@@ -463,21 +496,24 @@ struct value_defn reduceData(struct value_defn to_send, unsigned char operator, 
 		cpy(&floatV, to_send.data, sizeof(int));
 	}
 	syncCores(1);
-	for (i=0;i<totalProcesses;i++) {
-		if (i == myId) continue;
-		retrieved=sendRecvData(to_send, i);
-		if (to_send.type==INT_TYPE) {
-			cpy(&tempInt, retrieved.data, sizeof(int));
-			if (operator==0) intV+=tempInt;
-			if (operator==1 && tempInt < intV) intV=tempInt;
-			if (operator==2 && tempInt > intV) intV=tempInt;
-			if (operator==3) intV*=tempInt;
-		} else {
-			cpy(&tempFloat, retrieved.data, sizeof(float));
-			if (operator==0) floatV+=tempFloat;
-			if (operator==1 && tempFloat < floatV) floatV=tempFloat;
-			if (operator==2 && tempFloat > floatV) floatV=tempFloat;
-			if (operator==3) floatV*=tempFloat;
+	for (i=0;i<TOTAL_CORES && totalActioned<totalProcesses;i++) {
+		if (sharedData->core_ctrl[i].active) {
+			totalActioned++;
+			if (i == myId) continue;
+			retrieved=sendRecvData(to_send, i);
+			if (to_send.type==INT_TYPE) {
+				cpy(&tempInt, retrieved.data, sizeof(int));
+				if (operator==0) intV+=tempInt;
+				if (operator==1 && tempInt < intV) intV=tempInt;
+				if (operator==2 && tempInt > intV) intV=tempInt;
+				if (operator==3) intV*=tempInt;
+			} else {
+				cpy(&tempFloat, retrieved.data, sizeof(float));
+				if (operator==0) floatV+=tempFloat;
+				if (operator==1 && tempFloat < floatV) floatV=tempFloat;
+				if (operator==2 && tempFloat > floatV) floatV=tempFloat;
+				if (operator==3) floatV*=tempFloat;
+			}
 		}
 	}
 	returnValue.type=to_send.type;

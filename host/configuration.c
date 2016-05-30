@@ -71,9 +71,9 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		configuration->hostProcs=0;
 #endif
 		configuration->coreProcs=0;
-                configuration->loadElf=1;
+		configuration->loadElf=1;
 		configuration->loadSrec=0;
-		int i;
+		int i, coreplacement=0;
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
 				configuration->displayStats=1;
@@ -115,6 +115,10 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 					fprintf(stderr, "You must provide a number of host processes to use\n");
 					exit(0);
 				} else {
+					if (coreplacement) {
+						fprintf(stderr, "Can not specify explicit core placement and have host virtual processes\n");
+						exit(0);
+					}
 					configuration->hostProcs=atoi(argv[++i]);
 				}
 			} else if (areStringsEqualIgnoreCase(argv[i], "-d")) {
@@ -132,6 +136,11 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 					fprintf(stderr, "When specifying core placement you must provide arguments\n");
 					exit(0);
 				} else {
+					if (configuration->hostProcs > 0) {
+						fprintf(stderr, "Can only specify explicit core placement with no host virtual processes\n");
+						exit(0);
+					}
+					coreplacement=1;
 					parseCoreActiveInfo(configuration, argv[++i]);
 				}
 			} else {
