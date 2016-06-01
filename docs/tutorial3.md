@@ -90,7 +90,7 @@ while norm >= 1e-4 and its < MAX_ITS:
 if coreid()==0: print "Completed in "+its+" iterations, RNorm="+norm
 ```
 
-Copy this into a file named *jacobi.py* and execute *epython jacobi.py* (it is also provided in *examples/jacobi.py*), you will see something like:
+Copy this into a file named *jacobi.py* and execute *epython jacobi.py* (it is also provided in *examples/jacobi.py*), this will execute over all 16 Epiphany cores and you will see something like:
 
 ```
 [device 0] RNorm is 1.000000 at 0 iterations
