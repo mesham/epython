@@ -1,6 +1,6 @@
 #ePython tutorial two
 
-In the previous tutorial we looked at installing ePython, an Epiphany version of the Python programming language, and then wrote some simple code which runs on the Epiphany chip. In this tutorial we are going to build on what we previously looked at to explore the parallel capabilities of the Epiphany in more detail and develop some parallel codes which focus on the fact we have multiple cores available. The techniques we will be discussing are the same as those used by HPC programmers to write large scale parallel codes on modern supercomputers. The previous ePython tutorial can be found [here](docs/tutorial1.md)
+In the previous tutorial we looked at installing ePython, an Epiphany version of the Python programming language, and then wrote some simple code which runs on the Epiphany chip. In this tutorial we are going to build on what we previously looked at to explore the parallel capabilities of the Epiphany in more detail and develop some parallel codes which focus on the fact we have multiple cores available. The techniques we will be discussing are the same as those used by HPC programmers to write large scale parallel codes on modern supercomputers. The previous ePython tutorial can be found [here](tutorial1.md)
 
 ###Point to point communications
 
