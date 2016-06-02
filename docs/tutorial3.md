@@ -1,9 +1,9 @@
-#ePython tutorial three
+#Geometric decomposition on the Epiphany
 In the previous tutorial (available [here](tutorial2.md)) we concentrated on different ways to pass messages between cores which is one of the core mechanisms of parallelism. We saw that messages can be point to point, where only two cores are involved, or collective where every core is involved. The forms of communication that you select depends upon the problem you are trying to solve, and the example we considered (finding PI via the dartboard method) fitted very well with collective communications.
 
 This tutorial will build upon tutorial two's mechanisms of parallelism in order to take a higher level view of parallel codes by considering some of the common strategies (also known as patterns) that are available to parallel programmers and widely used. This tutorial will concentrate on geometric decomposition, which is also known as domain decomposition.
 
-Before going any further, if you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
+Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
 ###Geometric decomposition
 Splitting a problem up geometrically, and allocating different chunks of the data to different cores (or processes) is a very useful technique when there is one key data structure and the major organising principal of parallelism is splitting up of the data itself. In this strategy each core performs (roughly) the same instructions, just operating upon different data. 
