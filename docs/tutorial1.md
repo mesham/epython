@@ -1,4 +1,4 @@
-#ePython tutorial one
+#Installing and getting to grips with ePython
 
 Programming the Epiphany chip is actually very simple, and in this walk through we will be using an Epiphany version the Python programming language (ePython) as our technology. Using ePython you can go from being a complete novice to writing and running your own code on the Epiphany co-processor in 60 seconds. This walk through is intended as an introductory guide, and we will initially discuss installation & configuration of ePython, before looking at some code examples which you can then modify to further explore the concepts.
 
