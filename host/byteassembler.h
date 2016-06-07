@@ -40,6 +40,11 @@ struct lineDefinition {
 	struct lineDefinition * next;
 };
 
+struct function_call_tree_node {
+	int number_of_calls;
+	char* calledFunctions[256];
+};
+
 // A memory container, containing some bytecode, the length of the code and line definitions that relate to it
 struct memorycontainer {
 	unsigned int length;
@@ -51,7 +56,8 @@ struct memorycontainer {
 struct functionDefinition {
 	char * name;
 	struct memorycontainer * contents;
-	int numberEntriesInSymbolTable, recursive;
+	int numberEntriesInSymbolTable, recursive, number_of_fn_calls, called;
+	char ** functionCalls;
 };
 
 void enterFunction(char*);

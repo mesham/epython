@@ -47,4 +47,6 @@ void setMemoryFilledSize(unsigned int);
 char * getAssembledCode(void);
 void setAssembledCode(char*);
 
+extern struct function_call_tree_node mainCodeCallTree;
+
 #endif /* MEMORYMANAGER_H_ */

@@ -35,19 +35,32 @@ struct memorycontainer* assembledMemory=NULL;
 // This is the function list
 struct functionListNode* functionListHead=NULL;
 
+struct function_call_tree_node mainCodeCallTree;
+
+static void determineUsedFunctions(void);
+static void processUsedFunction(struct functionDefinition*);
 static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
 static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*);
+static struct functionDefinition* findFunctionDefinition(char*);
 
 /**
  * Compiles the memory by going through and resolving relative links (i.e. gotos) and adds a stop at the end
  */
 void compileMemory(struct memorycontainer* memory) {
+	int i;
+	determineUsedFunctions();
 	struct memorycontainer* stopStatement=appendStopStatement();
 	if (memory != NULL) {
 		struct memorycontainer* compiledMem=concatenateMemory(memory, stopStatement);
 		struct functionListNode * fnHead=functionListHead;
 		while (fnHead != NULL) {
-			compiledMem=concatenateMemory(compiledMem, fnHead->fn->contents);
+			if (fnHead->fn->called) compiledMem=concatenateMemory(compiledMem, fnHead->fn->contents);
+			if (fnHead->fn->functionCalls != NULL) {
+				for (i=0;i<fnHead->fn->number_of_fn_calls;i++) {
+					free(fnHead->fn->functionCalls[i]);
+				}
+				free(fnHead->fn->functionCalls);
+			}
 			fnHead=fnHead->next;
 		}
 		struct lineDefinition * root=compiledMem->lineDefns, *r2;
@@ -75,6 +88,42 @@ void compileMemory(struct memorycontainer* memory) {
 }
 
 /**
+ * Determines the used (i.e. called by the code) functions, driven from the main function
+ */
+static void determineUsedFunctions(void) {
+	int i;
+	for (i=0;i<mainCodeCallTree.number_of_calls;i++) {
+		struct functionDefinition* defn=findFunctionDefinition(mainCodeCallTree.calledFunctions[i]);
+		if (defn != NULL) {
+			if (!defn->called) processUsedFunction(defn);
+		} else {
+			fprintf(stderr, "Can not find function name %s\n", mainCodeCallTree.calledFunctions[i]);
+			exit(0);
+		}
+	}
+}
+
+/**
+ * Marks the current function as used (i.e. called from code), if it has not already been processed will then
+ * go and examine all the called functions from this
+ */
+static void processUsedFunction(struct functionDefinition* specificFunction) {
+	specificFunction->called=1;
+	if (specificFunction->functionCalls != NULL) {
+		int i;
+		for (i=0;i<specificFunction->number_of_fn_calls;i++) {
+			struct functionDefinition* defn=findFunctionDefinition(specificFunction->functionCalls[i]);
+			if (defn != NULL) {
+				if (!defn->called) processUsedFunction(defn);
+			} else {
+				fprintf(stderr, "Can not find function name %s\n", specificFunction->functionCalls[i]);
+				exit(0);
+			}
+		}
+	}
+}
+
+/**
  * Adds a function to the function list which are all combined in the compile memory function
  */
 void addFunction(struct functionDefinition* functionDefintion) {
@@ -82,6 +131,15 @@ void addFunction(struct functionDefinition* functionDefintion) {
 	node->fn=functionDefintion;
 	node->next=functionListHead;
 	functionListHead=node;
+}
+
+static struct functionDefinition* findFunctionDefinition(char * functionName) {
+	struct functionListNode * node=functionListHead;
+	while (node != NULL) {
+		if (strcmp(node->fn->name, functionName) == 0) return node->fn;
+		node=node->next;
+	}
+	return NULL;
 }
 
 int getNumberSymbolTableEntriesForRecursion(void) {

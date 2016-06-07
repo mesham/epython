@@ -63,6 +63,7 @@ char * currentFunctionName=NULL;
 
 static unsigned short current_var_id=1; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
+struct function_call_tree_node *currentCall=NULL;
 
 static unsigned short addVariable(char*);
 static unsigned short findVariable(struct variable_node*,  char*);
@@ -77,6 +78,9 @@ void enterFunction(char* fn_name) {
 	isFnRecursive=0;
 	currentFunctionName=(char*) malloc(strlen(fn_name) + 1);
 	strcpy(currentFunctionName, fn_name);
+	struct function_call_tree_node * newFunctionCallNode=(struct function_call_tree_node*) malloc(sizeof(struct function_call_tree_node));
+	newFunctionCallNode->number_of_calls=0;
+	currentCall=newFunctionCallNode;
 }
 
 /**
@@ -298,6 +302,13 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	}
 	clearStack(args);
 	free(varname);
+	if (currentCall==NULL) {
+		mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls]=(char*)malloc(strlen(functionName)+1);
+		strcpy(mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls++], functionName);
+	} else {
+		currentCall->calledFunctions[currentCall->number_of_calls]=(char*)malloc(strlen(functionName)+1);
+		strcpy(currentCall->calledFunctions[currentCall->number_of_calls++], functionName);
+	}
 	if (assignmentContainer != NULL) {
 		return concatenateMemory(assignmentContainer, memoryContainer);
 	} else {
@@ -497,6 +508,7 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 	struct functionDefinition * fn=(struct functionDefinition*) malloc(sizeof(struct functionDefinition));
 	fn->name=(char*) malloc(strlen(functionName) + 1);
 	strcpy(fn->name, functionName);
+	fn->called=0;
 
 	unsigned short numberArgs=(unsigned short) getStackSize(args);
 	struct memorycontainer* numberArgsContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
@@ -541,8 +553,16 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 	fn->contents=completedFunction;
 	fn->numberEntriesInSymbolTable=current_var_id - currentSymbolTableId;
 	fn->recursive=isFnRecursive;
+	fn->number_of_fn_calls=currentCall->number_of_calls;
+	if (currentCall->number_of_calls == 0) {
+		fn->functionCalls=NULL;
+	} else {
+		fn->functionCalls=(char**) malloc(sizeof(char*) * currentCall->number_of_calls);
+		memcpy(fn->functionCalls, currentCall->calledFunctions, sizeof(char*) * currentCall->number_of_calls);
+	}
 	free(currentFunctionName);
 	currentFunctionName=NULL;
+	currentCall=NULL;
 	addFunction(fn);
 }
 
