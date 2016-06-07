@@ -63,7 +63,7 @@ char * currentFunctionName=NULL;
 
 static unsigned short current_var_id=1; // Current variable id (unique for each unique variable)
 static struct scope_info * scope=NULL; // Scope stack
-struct function_call_tree_node *currentCall=NULL;
+struct function_call_tree_node *currentCall=NULL; // The current function call tree state
 
 static unsigned short addVariable(char*);
 static unsigned short findVariable(struct variable_node*,  char*);
@@ -73,6 +73,9 @@ static struct memorycontainer* createExpression(unsigned char, struct memorycont
 static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
 static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
 
+/**
+ * Function entry, used for tracking recursive functions and the call tree
+ */
 void enterFunction(char* fn_name) {
 	currentSymbolTableId=current_var_id;
 	isFnRecursive=0;

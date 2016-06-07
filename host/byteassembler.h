@@ -40,6 +40,7 @@ struct lineDefinition {
 	struct lineDefinition * next;
 };
 
+// Tree node for the current function call and the main entry point
 struct function_call_tree_node {
 	int number_of_calls;
 	char* calledFunctions[256];
