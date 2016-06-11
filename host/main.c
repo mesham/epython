@@ -109,6 +109,9 @@ int main (int argc, char *argv[]) {
 		runCodeOnHost(configuration, standAloneState);
 #endif
 		pthread_exit(NULL);
+#ifndef HOST_STANDALONE
+		finaliseCores();
+#endif
 	}
 	free(configuration->intentActive);
 	free(configuration);
@@ -134,7 +137,6 @@ static void doParse(char * contents) {
 static void* runCodeOnEpiphany(void * raw_wrapper) {
 	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
 	monitorCores(wrapper->deviceState, wrapper->configuration);
-	finaliseCores();
 	return NULL;
 }
 #endif
