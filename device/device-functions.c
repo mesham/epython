@@ -322,7 +322,7 @@ struct value_defn recvData(int source) {
 	if (source < largestCoreId) {
 		return recvDataFromDeviceCore(source);
 	} else {
-		return recvDataFromHostProcess(source-sharedData->baseHostPid);
+		return recvDataFromHostProcess(source);
 	}
 }
 
