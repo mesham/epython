@@ -79,6 +79,7 @@
 #define NONE_TOKEN 0x33
 #define IS_TOKEN 0x34
 #define ARRAY_TOKEN 0x35
+#define NOT_TOKEN 0x036
 
 #define SQRT_MATHS_OP 0x00
 #define SIN_MATHS_OP 0x01

@@ -69,6 +69,7 @@ static unsigned short addVariable(char*);
 static unsigned short findVariable(struct variable_node*,  char*);
 static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
+static struct memorycontainer* createUnaryExpression(unsigned char token, struct memorycontainer*);
 static struct memorycontainer* createExpression(unsigned char, struct memorycontainer*, struct memorycontainer*);
 static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
 static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
@@ -904,6 +905,10 @@ struct memorycontainer* createIsDeviceExpression(void) {
 	return memoryContainer;
 }
 
+struct memorycontainer* createNotExpression(struct memorycontainer* expression) {
+	return createUnaryExpression(NOT_TOKEN, expression);
+}
+
 struct memorycontainer* createOrExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	return createExpression(OR_TOKEN, expression1, expression2);
 }
@@ -1068,6 +1073,23 @@ void leaveScope() {
 		var=nextVar;
 	}
 	free(oldScope);
+}
+
+static struct memorycontainer* createUnaryExpression(unsigned char token, struct memorycontainer* expression) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=expression->length + sizeof(unsigned char);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+
+	unsigned int location=0;
+	location=appendStatement(memoryContainer, token, location);
+	memcpy(&memoryContainer->data[location], expression->data, expression->length);
+
+	memoryContainer->lineDefns=expression->lineDefns;
+
+	// Free up the expression memory
+	free(expression->data);
+	free(expression);
+	return memoryContainer;
 }
 
 /**

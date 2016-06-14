@@ -103,6 +103,7 @@ struct memorycontainer* createIdentifierArrayAccessExpression(char*, struct memo
 struct memorycontainer* createNumberExpression(float);
 struct memorycontainer* createIsHostExpression(void);
 struct memorycontainer* createIsDeviceExpression(void);
+struct memorycontainer* createNotExpression(struct memorycontainer*);
 struct memorycontainer* createOrExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createAndExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createEqExpression(struct memorycontainer*, struct memorycontainer*);

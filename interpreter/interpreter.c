@@ -643,6 +643,15 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 #endif
 		if (expressionId == AND_TOKEN) return s1 && s2;
 		if (expressionId == OR_TOKEN) return s1 || s2;
+	} else if (expressionId == NOT_TOKEN) {
+#ifdef HOST_INTERPRETER
+		struct value_defn expression=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+		struct value_defn expression=getExpressionValue(assembled, currentPoint, length);
+#endif
+		int value=getInt(expression.data);
+		if (value > 0) return 0;
+		return 1;
 	} else if (expressionId == EQ_TOKEN || expressionId == NEQ_TOKEN || expressionId == GT_TOKEN || expressionId == GEQ_TOKEN ||
 			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN || expressionId == IS_TOKEN) {
 #ifdef HOST_INTERPRETER

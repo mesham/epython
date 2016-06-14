@@ -158,7 +158,7 @@ elifblock
 
 expression
 	: logical_or_expression { $$=$1; }
-	| NOT logical_or_expression { $$=$2; }
+	| NOT logical_or_expression { $$=createNotExpression($2); }
 ;
 
 logical_or_expression
@@ -241,6 +241,7 @@ constant
         | EPY_I_COREID { $$=createCoreIdExpression(); }
         | EPY_I_NUMCORES { $$=createNumCoresExpression(); }
         | RANDOM { $$=createRandomExpression(); }
+        | RANDOM LPAREN RPAREN { $$=createRandomExpression(); }
 		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 		| unary_operator REAL { $$=createRealExpression($1 * $2); }		
 		| STRING { $$=createStringExpression($1); }	
