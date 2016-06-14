@@ -23,10 +23,21 @@ def recv(pid, n=none):
 			i=i+1
 		return retV
 
-def sendrecv(data, pid):
-	retV=0
-	epy_i_sendrecv data tofrom pid into retV
-	return retV
+def sendrecv(data, pid, n=none):
+	if (n is none):
+		retV=0
+		epy_i_sendrecv data tofrom pid into retV
+		return retV
+	else:
+		dim retV[n]
+		i=0
+		while i<n:
+			v=0
+			d=data[i]	
+			epy_i_sendrecv d tofrom pid into v
+			retV[i]=v
+			i=i+1
+		return retV
 
 def bcast(data, root):
 	retV=0
