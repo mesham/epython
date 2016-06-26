@@ -14,10 +14,10 @@ This is illustrated in the diagram, in a pipeline data only flows one way (here 
 ###ePython pipeline
 Now it's time for an example, based upon a large set of numbers we want to know the percentage of numbers that are contiguous, i.e. where the same numeric value lies one after another. This leads to a pipeline with four stages:
 <ol>
-<li>**Stage 1:** Decide the number of data elements (chosen randomly) for that specific sequence.</li>
-<li>**Stage 2:** Based upon the number of elements generate random numbers for each of these.</li>
-<li>**Stage 3:** Sorts the number sequence</li>
-<li>** Stage 4:** Progresses through the sequence and counts the number of contiguous elements, the percentage of which is output</li>
+<li><b>Stage 1:</b> Decide the number of data elements (chosen randomly) for that specific sequence.</li>
+<li><b>Stage 2:</b> Based upon the number of elements generate random numbers for each of these.</li>
+<li><b>Stage 3:</b> Sorts the number sequence</li>
+<li><b>Stage 4:</b> Progresses through the sequence and counts the number of contiguous elements, the percentage of which is output</li>
 </ol>
 
 The input to the entire pipeline is the number of sequences to work on and the output of the pipeline is the percentage of contiguous numbers in that sequence.
