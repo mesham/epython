@@ -91,12 +91,12 @@ def pipelineStageFour():
 
 **This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/pipeline.py">here</a>**
 
-Based upon its core ID, a core will execute the appropriate function, waiting for data and once it has received this will process it and send the results onto the next stage. The *odd_even_sort* function will perform an odd-even sort on the number sequence. It can be seen that at the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down.
+Based upon its core ID, a core will execute the appropriate function, waiting for data and once it has received this will process it and send the results onto the next stage. The *odd_even_sort* function (not shown here, but in the executable version) will perform an odd-even sort on the number sequence. It can be seen that at the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down.
 
 So we now have a pipeline, passing data between the cores and each stage operates on this data. However there is a problem, namely that the amount of work per pipeline stage is very uneven. For instance stage 1 will progress very quickly, whereas stage 3 (the sorting stage) will take much longer and fast stages will be held up by the slower stages. Bear in mind though, that our current pipeline is only using 4 of the Epiphany cores, and we have 12 idle cores.... so can we take advantage of these to help address this problem?
 
 ###Splitting the pipeline
-What we are going to do here is keep stage 1 unique (i.e. on core 0), but then duplicate stages 2, 3 and 4 across all the remaining cores. It will look like the diagram here:
+What we are going to do here is keep stage 1 unique (i.e. on core 0), but then duplicate stages 2, 3 and 4 across all the remaining cores. This is known as a non-linear pipeline and it will look like the diagram here:
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/split_pipeline.jpg">
 Importantly all cores are busy and we have further parallelised the problem, as now not only will each of the four stages operate in parallel, but also multiple cores will be performing the exact same stage work.
 
@@ -212,3 +212,8 @@ def pipelineStageFour():
 **This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/parallel_pipeline.py">here</a>**
 
 This approach is a bit more complex as, instead of filling in the entire number sequence and passing it along, stage two will complete each subsequence needed for the different cores working on stage three. Stage three cores then receive the data, executes the *parallel_odd_even_sort* function and send their values onto stage four which assemble them and perform the calculation.
+
+***Summary
+In this tutorial we have looked at pipelines, where the parallelism is oriented around the data flow and as it flows through the pipeline's stages the data is refined until we get a final value. This approach is suited to many problems, and some that you might not nescesarily expect (such as <a href="https://en.wikipedia.org/wiki/Instruction_pipelining">CPU instruction pipelines</a>.) Due to the fast interconnect between the Epiphany cores this approach of streaming data between them is potentially very advantageous - but as we have seen you want each stage to be busy at all times, and if your stages have different amounts of computation then additional options need to be considered.
+
+More information about pipelines can be found <a href="http://parlab.eecs.berkeley.edu/wiki/_media/patterns/pipeline-v1.pdf" here</a>
