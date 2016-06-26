@@ -98,6 +98,7 @@ So we now have a pipeline, passing data between the cores and each stage operate
 ###Splitting the pipeline
 What we are going to do here is keep stage 1 unique (i.e. on core 0), but then duplicate stages 2, 3 and 4 across all the remaining cores. This is known as a non-linear pipeline and it will look like the diagram here:
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/split_pipeline.jpg">
+
 Importantly all cores are busy and we have further parallelised the problem, as now not only will each of the four stages operate in parallel, but also multiple cores will be performing the exact same stage work.
 
 ```python
