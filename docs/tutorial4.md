@@ -1,26 +1,26 @@
 #Pipelines on the Epiphany
 In the previous tutorial (available [here](tutorial3.md)) we looked at splitting a problem up geometrically. Driven by the decomposition of the data, different parts of the problem ran on different Epiphany cores with these cores often needing to communuicate when a neighbouring value held on another core was required. 
 
-Whilst geometric decomposition is a very common approach, not all problems are suited to being split around the geometry of the data and instead this tutorial we will look at splitting up a problem based upon the flow of data, known as a pipeline, 
+Whilst geometric decomposition is a very common approach not all problems are suited to being split around the geometry of the data and instead this tutorial we will look at splitting up a problem based upon the flow of data, known as a pipeline.
 
 Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
 ###Pipeline
-A core represents a stage of a pipeline and here data flows into the first stage, some processing is performed on it and a resulting value flows into the next stage, which performs processing and passes it onto the next stage etc.. Once data has been sent from one stage to the next then that stage is ready to receive some more data and start processing that. 
+Data flows into the first stage, some processing is performed on it and a resulting value flows into the next stage, which performs processing and passes it onto the next stage etc.. Once data has been sent from one stage to the next then that stage is ready to receive some more data and start processing that. 
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/pipeline.jpg">
 
-This is illustrated in the diagram, in a pipeline data only flows one way (here from left to right) and at each stage the data is refined, from its initial "raw" value to the final "finished" value. Ideally you want all stages in the pipeline to be busy, when your program starts it takes some time to fill up the pipeline and at the end the pipeline drains.
+This is illustrated in the diagram, in a pipeline data only flows one way (here from left to right) and at each stage the data is refined, from its initial "raw" value to the final "finished" value. Ideally you want all stages in the pipeline to be busy, when your program starts it takes some time to fill up the pipeline and at the end the pipeline drains. The simplest approach to a pipeline will map a single stage to a single Epiphany core.
 
 ###ePython pipeline
-Based upon a large set of numbers, we want to know the percentage of numbers that are contiguous, i.e. where the same numeric value lies one after another. This leads to a pipeline with four stages:
+Now it's time for an example, based upon a large set of numbers we want to know the percentage of numbers that are contiguous, i.e. where the same numeric value lies one after another. This leads to a pipeline with four stages:
 <ol>
-<li>Decides the number of data elements (chosen randomly) for each for that specific sequence.</li>
-<li>Based upon the number of elements will generate random numbers for each of these.</li>
-<li>Sorts the number sequence</li>
-<li>Progresses through the sequence and counts the number of contiguous elements, the percentage of which is output</li>
+<li>**Stage 1:** Decide the number of data elements (chosen randomly) for that specific sequence.</li>
+<li>**Stage 2:** Based upon the number of elements generate random numbers for each of these.</li>
+<li>**Stage 3:** Sorts the number sequence</li>
+<li>** Stage 4:** Progresses through the sequence and counts the number of contiguous elements, the percentage of which is output</li>
 </ol>
 
-The input to the entire pipeline is the number of sequences to work on and the output of the pipeline is the percentage of contiguous numbers in that set.
+The input to the entire pipeline is the number of sequences to work on and the output of the pipeline is the percentage of contiguous numbers in that sequence.
 
 ```python
 import parallel
@@ -89,17 +89,17 @@ def pipelineStageFour():
     print chance+"% of numbers were contiguous"
 ```
 
-**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/pipeline.py">here</a>**
+**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/pipeline.py" target="_blank">here</a>**
 
-Based upon its core ID, a core will execute the appropriate function, waiting for data and once it has received this will process it and send the results onto the next stage. The *odd_even_sort* function (not shown here, but in the executable version) will perform an odd-even sort on the number sequence. It can be seen that at the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down.
+Based upon its core ID, a core will execute a specific pipeline stage function where it waits for data and, once it has received this, will process the data and send results onto the next stage. The *odd_even_sort* function (not shown here, but in the executable version) will perform an odd-even sort on the number sequence. At the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down and this is the common way in which one terminates parallel pipelines.
 
-So we now have a pipeline, passing data between the cores and each stage operates on this data. However there is a problem, namely that the amount of work per pipeline stage is very uneven. For instance stage 1 will progress very quickly, whereas stage 3 (the sorting stage) will take much longer and fast stages will be held up by the slower stages. Bear in mind though, that our current pipeline is only using 4 of the Epiphany cores, and we have 12 idle cores.... so can we take advantage of these to help address this problem?
+So, we now have a pipeline which passes data between the stages and each stage operates on this data. However there is a problem, namely that the amount of work per pipeline stage is very uneven. For instance stage 1 will progress very quickly, whereas stage 3 (the sorting stage) will take much longer and fast stages will be held up by the slower stages. Bear in mind though, that we are only mapping one stage to one Epiphany core, so our current pipeline is only using 4 of the Epiphany cores. Hence we have 12 idle cores and how can we take advantage of these to help address our work imbalance problem and improve performance?
 
 ###Splitting the pipeline
 What we are going to do here is keep stage 1 unique (i.e. on core 0), but then duplicate stages 2, 3 and 4 across all the remaining cores. This is known as a non-linear pipeline and it will look like the diagram here:
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/split_pipeline.jpg">
 
-Importantly all cores are busy and we have further parallelised the problem, as now not only will each of the four stages operate in parallel, but also multiple cores will be performing the exact same stage work.
+Importantly this approach keeps all the cores busy and we have further parallelised the problem by adopting this splitting. Not only will each of the four stages operate in parallel, but also multiple cores will be performing the exact same stage work.
 
 ```python
 .....
@@ -126,14 +126,17 @@ def pipelineStageOne(num_items):
 .....
 ```
 
-**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/split_pipeline.py">here</a>**
+**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/split_pipeline.py" target="_blank">here</a>**
 
-You can see that the code is very similar but core 1 is just maintaining a matching core ID, *matchingpid* which is sends to next.
+The code is very similar to the previous simple pipeline code,  but stage 1 (on core 0) is maintaining a matching core ID, *matchingpid* which is sends to next. This value is increased at each stage and then wrapped around once *matchingpid* reaches over 13.
 
-Time both versions (using the *-t* command line argument), you should see that this split pipeline is far quicker to run than the initial pipeline version.
+Time both the simple and split versions (using the *-t* command line argument for timing information.) You should see quite a significant performance improvement by adopting this splitting approach and taking advantage of the idle cores.
 
-### Parallelising a stage
-The sorting stage of the pipeline is the most expensive, so instead of splitting the pipeline  we could keep with 4 simple stages but just parallelise the sorting stage. Therefore 1 core will execute stages one, two and four and the rest (13 cores) will execute stage three.
+### Parallelising a specific stage
+It is quite simple really, to improve performance we want to take advantage of the simple pipeline's idle cores. As we have seen one way is by splitting and duplicating stages. The other way is by keeping the stages exactly the same, but instead to parallelise one specific stage. In our example the sorting (stage 3) is the most expensive, so we can concentrate our idle cores onto this stage. 
+<img src="https://raw.githubusercontent.com/mesham/epython/master/docs/parallel_pipeline.jpg">
+
+This is illustrated in the diagram, where *Cn* represents the *nth* Epiphany core and you can see that there are 13 cores allocated to stage three. This can work very well when another pattern can easily be adopted within the stage and here we are going to use geometric decomposition, to split the data up amongst these 13 cores and do a parallel sort on it.
 
 ```python
 .....
@@ -198,11 +201,11 @@ def pipelineStageFour():
     print chance+"% of numbers were contiguous"
 ```
 
-**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/parallel_pipeline.py">here</a>**
+**This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/parallel_pipeline.py" target="_blank">here</a>**
 
-This approach is a bit more complex as, instead of filling in the entire number sequence and passing it along, stage two will complete each subsequence needed for the different cores working on stage three. Stage three cores then receive the data, executes the *parallel_odd_even_sort* function and send their values onto stage four which assemble them and perform the calculation.
+This approach is a bit more complex as, instead of filling in the entire number sequence and passing it along, stage two of the pipeline will complete each subsequence needed for the different cores of stage three and send the specific data to its specific core. The Epiphany cores allocated to stage three then receive their subdata, perform a parallel sort on it (via the *parallel_odd_even_sort* function) and send their values onto stage four which will collate and assemble them in order to perform the final calculation.
 
 ###Summary
-In this tutorial we have looked at pipelines, where the parallelism is oriented around the data flow and as it flows through the pipeline's stages the data is refined until we get a final value. This approach is suited to many problems, and some that you might not nescesarily expect (such as <a href="https://en.wikipedia.org/wiki/Instruction_pipelining">CPU instruction pipelines</a>.) Due to the fast interconnect between the Epiphany cores this approach of streaming data between them is potentially very advantageous - but as we have seen you want each stage to be busy at all times, and if your stages have different amounts of computation then additional options need to be considered.
+In this tutorial we have looked at pipelines where the parallelism is oriented around the flow of data. As it flows through the pipeline's stages, data is refined until we get a final value that is output from the final stage. This approach is suited to many problems, and some that you might not nescesarily expect (such as <a href="https://en.wikipedia.org/wiki/Instruction_pipelining" target="_blank">CPU instruction pipelines</a>.) Due to the fast interconnect between the Epiphany cores this approach of streaming data between them is potentially very advantageous - but as we have seen it is really important that each stage is equally busy at all times. If you have an uneven distribution of compution amongst the cores, or lots of idle cores, then splitting the pipeline or parallelising a specific stage can provide a significant gain.
 
-More information about pipelines can be found <a href="http://parlab.eecs.berkeley.edu/wiki/_media/patterns/pipeline-v1.pdf" here</a>
+More information about pipelines can be found <a href="http://parlab.eecs.berkeley.edu/wiki/_media/patterns/pipeline-v1.pdf" target="_blank">here</a>. An example focussing on the ePython sequential odd-even sort algorithm that we used can be found <a href="https://github.com/mesham/epython/blob/master/examples/odd-even-sort.py" target="_blank">here</a> and the parallel version we used can be found <a href="https://github.com/mesham/epython/blob/master/examples/parallel-odd-even-sort.py" target="_blank">here</a>. 
