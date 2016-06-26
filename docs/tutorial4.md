@@ -133,7 +133,8 @@ The code is very similar to the previous simple pipeline code,  but stage 1 (on 
 Time both the simple and split versions (using the *-t* command line argument for timing information.) You should see quite a significant performance improvement by adopting this splitting approach and taking advantage of the idle cores.
 
 ### Parallelising a specific stage
-It is quite simple really, to improve performance we want to take advantage of the simple pipeline's idle cores. As we have seen one way is by splitting and duplicating stages. The other way is by keeping the stages exactly the same, but instead to parallelise one specific stage. In our example the sorting (stage 3) is the most expensive, so we can concentrate our idle cores onto this stage. 
+It is quite simple really, to improve performance we want to take advantage of the simple pipeline's idle cores. As we have seen one way is by splitting and duplicating stages. The other way is by keeping the stages exactly the same, but instead to parallelise one specific stage. In our example the sorting (stage 3) is the most expensive, so we can concentrate our idle cores onto this stage.
+
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/parallel_pipeline.jpg">
 
 This is illustrated in the diagram, where *Cn* represents the *nth* Epiphany core and you can see that there are 13 cores allocated to stage three. This can work very well when another pattern can easily be adopted within the stage and here we are going to use geometric decomposition, to split the data up amongst these 13 cores and do a parallel sort on it.
