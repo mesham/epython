@@ -260,18 +260,25 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 
 	struct memorycontainer* assignmentContainer=NULL;
 	unsigned short numArgs=(unsigned short) getStackSize(args);
+	char *isArgIdentifier=(char*) malloc(numArgs);
+	unsigned short *varIds=(unsigned short*) malloc(sizeof(unsigned short) * numArgs);
 	char * varname=(char*) malloc(strlen(functionName)+5);
 	int i;
 	for (i=0;i<numArgs;i++) {
 		struct memorycontainer* expression=getExpressionAt(args, i);
 		unsigned char command=((unsigned char*) expression->data)[0];
 		if (command != IDENTIFIER_TOKEN) {
+			isArgIdentifier[i]=0;
 			sprintf(varname,"%s#%d", functionName, i);
 			if (assignmentContainer == NULL) {
 				assignmentContainer=appendLetStatement(varname, getExpressionAt(args, i));
 			} else {
 				assignmentContainer=concatenateMemory(assignmentContainer, appendLetStatement(varname, getExpressionAt(args, i)));
 			}
+		} else {
+			isArgIdentifier[i]=1;
+			varIds[i]=*((unsigned short*) (&((char*) expression->data)[1]));
+			free(expression->data);
 		}
 	}
 	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
@@ -294,11 +301,8 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	position=appendVariable(memoryContainer, numArgs, position);
 
 	for (i=0;i<numArgs;i++) {
-		struct memorycontainer* expression=getExpressionAt(args, i);
-		unsigned char command=((unsigned char*) expression->data)[0];
-		if (command == IDENTIFIER_TOKEN) {
-			unsigned short varId=*((unsigned short*) (&((char*) expression->data)[1]));
-			position=appendVariable(memoryContainer, varId, position);
+		if (isArgIdentifier[i]) {
+			position=appendVariable(memoryContainer, varIds[i], position);
 		} else {
 			sprintf(varname,"%s#%d", functionName, i);
 			position=appendVariable(memoryContainer, getVariableId(varname, 0), position);
@@ -306,6 +310,8 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	}
 	clearStack(args);
 	free(varname);
+	free(isArgIdentifier);
+	free(varIds);
 	if (currentCall==NULL) {
 		mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls]=(char*)malloc(strlen(functionName)+1);
 		strcpy(mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls++], functionName);
