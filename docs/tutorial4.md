@@ -193,19 +193,7 @@ def pipelineStageFour():
           j+=1
       i+=1
     if num > 0:
-      num*=13
-      total_num+=num
-      cnum=data[0]
-      ccount=0
-      i=0
-      while i < num:
-        if (data[i] == cnum):
-          ccount+=1
-        else:
-          num_contig+=ccount
-          cnum=data[i]
-          ccount=0
-        i+=1
+      .....
     chance=(num_contig/total_num)*100
     print chance+"% of numbers were contiguous"
 ```
