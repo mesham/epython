@@ -202,7 +202,7 @@ def pipelineStageFour():
 
 This approach is a bit more complex as, instead of filling in the entire number sequence and passing it along, stage two will complete each subsequence needed for the different cores working on stage three. Stage three cores then receive the data, executes the *parallel_odd_even_sort* function and send their values onto stage four which assemble them and perform the calculation.
 
-***Summary
+###Summary
 In this tutorial we have looked at pipelines, where the parallelism is oriented around the data flow and as it flows through the pipeline's stages the data is refined until we get a final value. This approach is suited to many problems, and some that you might not nescesarily expect (such as <a href="https://en.wikipedia.org/wiki/Instruction_pipelining">CPU instruction pipelines</a>.) Due to the fast interconnect between the Epiphany cores this approach of streaming data between them is potentially very advantageous - but as we have seen you want each stage to be busy at all times, and if your stages have different amounts of computation then additional options need to be considered.
 
 More information about pipelines can be found <a href="http://parlab.eecs.berkeley.edu/wiki/_media/patterns/pipeline-v1.pdf" here</a>
