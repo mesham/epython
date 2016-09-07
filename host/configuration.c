@@ -52,7 +52,7 @@ struct interpreterconfiguration* readConfiguration(int argc, char *argv[]) {
 	for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=1;
 	configuration->displayStats=configuration->displayTiming=configuration->forceCodeOnCore=
 			configuration->forceCodeOnShared=configuration->forceDataOnShared=configuration->displayPPCode=0;
-	configuration->filename=configuration->compiledByteFilename=configuration->loadByteFilename=NULL;
+	configuration->filename=configuration->compiledByteFilename=configuration->loadByteFilename=configuration->pipedInContents=NULL;
 	parseCommandLineArguments(configuration, argc, argv);
 	return configuration;
 }
@@ -131,6 +131,13 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 						configuration->intentActive[j]=j<device_procs ? 1 : 0;
 					}
 				}
+			} else if (areStringsEqualIgnoreCase(argv[i], "-pipein")) {
+				if (i+1 ==argc) {
+					fprintf(stderr, "You must provide the Python code contents with the -pipein flag\n");
+					exit(0);
+				} else {
+					configuration->pipedInContents=argv[++i];
+				}
 			} else if (areStringsEqualIgnoreCase(argv[i], "-c")) {
 				if (i+1 ==argc) {
 					fprintf(stderr, "When specifying core placement you must provide arguments\n");
@@ -152,7 +159,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 				}
 			}
 		}
-		if (configuration->loadByteFilename == NULL && configuration->filename == NULL) {
+		if (configuration->loadByteFilename == NULL && configuration->filename == NULL && configuration->pipedInContents == NULL) {
 			fprintf(stderr, "You must supply a file to run as an argument, see -h for details\n");
 			exit(0);
 		}

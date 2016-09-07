@@ -88,6 +88,9 @@ int main (int argc, char *argv[]) {
 		doParse(contents);
 	} else if (configuration->loadByteFilename != NULL) {
 		loadByteCode(configuration->loadByteFilename);
+	} else if (configuration->pipedInContents != NULL) {
+		if (configuration->displayPPCode) printf("%s\n", configuration->pipedInContents);
+		doParse(configuration->pipedInContents);
 	}
 	if (configuration->displayStats) displayParsedBasicInfo();
 	if (configuration->compiledByteFilename != NULL) {
