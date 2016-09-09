@@ -73,6 +73,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		configuration->coreProcs=0;
 		configuration->loadElf=1;
 		configuration->loadSrec=0;
+		configuration->fullPythonHost=0;
 		int i, coreplacement=0;
 		for (i=1;i<argc;i++) {
 			if (areStringsEqualIgnoreCase(argv[i], "-s")) {
@@ -87,6 +88,9 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		                configuration->loadSrec=0;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-t")) {
 				configuration->displayTiming=1;
+			} else if (areStringsEqualIgnoreCase(argv[i], "-fullpython")) {
+				configuration->fullPythonHost=1;
+				configuration->hostProcs=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-datashared")) {
 				configuration->forceDataOnShared=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-codecore")) {

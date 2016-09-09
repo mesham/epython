@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Nick Brown
+ * Copyright (c) 2016, Nick Brown
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,19 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIGURATION_H_
-#define CONFIGURATION_H_
+#ifndef PYTHONINTEROPERABILITY_H_
+#define PYTHONINTEROPERABILITY_H_
 
-#define VERSION_IDENT "0.1"
+#include "../shared.h"
+#include "configuration.h"
+#include <pthread.h>
 
-// Configuration structure which is filled based upon command line arguments
-struct interpreterconfiguration {
-	char * intentActive;
-	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared, displayPPCode;
-	char * filename, *compiledByteFilename, *loadByteFilename, *pipedInContents;
-	int hostProcs, coreProcs, loadElf, loadSrec, fullPythonHost;
-};
-
-struct interpreterconfiguration* readConfiguration(int, char *[]);
+void runFullPythonInteractivityOnHost(struct interpreterconfiguration*, struct shared_basic*, pthread_t*);
 
 #endif /* CONFIGURATION_H_ */

@@ -38,6 +38,7 @@
 #include "interpreter.h"
 #include "memorymanager.h"
 #include "byteassembler.h"
+#include "python_interoperability.h"
 #ifndef HOST_STANDALONE
 #include "shared.h"
 #include "device-support.h"
@@ -103,13 +104,21 @@ int main (int argc, char *argv[]) {
 		w->configuration=configuration;
 		w->deviceState=deviceState;
 		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)w);
-		runCodeOnHost(configuration, deviceState);
+		if (configuration->fullPythonHost) {
+			runFullPythonInteractivityOnHost(configuration, deviceState, &epiphany_management_thread);
+		} else {
+			runCodeOnHost(configuration, deviceState);
+		}
 #else
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
 		standAloneState->symbol_size=getNumberEntriesInSymbolTable();
 		standAloneState->num_procs=configuration->coreProcs+configuration->hostProcs;
 		standAloneState->baseHostPid=configuration->coreProcs;
-		runCodeOnHost(configuration, standAloneState);
+		if (configuration->fullPythonHost) {
+			runFullPythonInteractivityOnHost(configuration, standAloneState, NULL);
+		} else {
+			runCodeOnHost(configuration, standAloneState);
+		}
 #endif
 		pthread_exit(NULL);
 #ifndef HOST_STANDALONE
@@ -143,6 +152,8 @@ static void* runCodeOnEpiphany(void * raw_wrapper) {
 	return NULL;
 }
 #endif
+
+
 
 /**
  * Runs the code on the host if compiled in standalone mode (helpful for development)
