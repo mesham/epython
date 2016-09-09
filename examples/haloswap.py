@@ -24,5 +24,5 @@ displaypid=bcast(random%16, 0)
 
 if coreid()==displaypid:
         for i in data:
-                print "Value is "+i
+                print "Value is "+str(i)
 

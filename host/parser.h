@@ -128,15 +128,16 @@ extern int yydebug;
     CEIL = 338,
     LOG = 339,
     LOG10 = 340,
-    LPAREN = 341,
-    RPAREN = 342,
-    SLBRACE = 343,
-    SRBRACE = 344,
-    TRUE = 345,
-    FALSE = 346,
-    LEN = 347,
-    ASSGN = 348,
-    POW = 349
+    STR = 341,
+    LPAREN = 342,
+    RPAREN = 343,
+    SLBRACE = 344,
+    SRBRACE = 345,
+    TRUE = 346,
+    FALSE = 347,
+    LEN = 348,
+    ASSGN = 349,
+    POW = 350
   };
 #endif
 /* Tokens.  */
@@ -223,15 +224,16 @@ extern int yydebug;
 #define CEIL 338
 #define LOG 339
 #define LOG10 340
-#define LPAREN 341
-#define RPAREN 342
-#define SLBRACE 343
-#define SRBRACE 344
-#define TRUE 345
-#define FALSE 346
-#define LEN 347
-#define ASSGN 348
-#define POW 349
+#define STR 341
+#define LPAREN 342
+#define RPAREN 343
+#define SLBRACE 344
+#define SRBRACE 345
+#define TRUE 346
+#define FALSE 347
+#define LEN 348
+#define ASSGN 349
+#define POW 350
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -247,7 +249,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 251 "parser.h" /* yacc.c:1909  */
+#line 253 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

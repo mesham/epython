@@ -228,6 +228,7 @@ FLOOR									return FLOOR;
 CEIL									return CEIL;
 LOG										return LOG;
 LOG10									return LOG10;
+STR										return STR;
 "#"										BEGIN(SINGLELINECOMMENT);
 
 [:.;]                                  return yytext[0];

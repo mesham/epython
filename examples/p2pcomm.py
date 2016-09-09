@@ -8,4 +8,4 @@ import parallel
 if coreid()==0:
   send(20, 1)
 elif coreid()==1:
-  print "Got value "+recv(0)+" from core 0"
+  print "Got value "+str(recv(0))+" from core 0"

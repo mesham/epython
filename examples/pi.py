@@ -24,4 +24,4 @@ while i<=rounds:
   mypi=mypi+4.0 * (score/darts)
   i+=1
 mypi=reduce(mypi, "sum")
-if coreid()==0: print "Value of PI="+(mypi/rounds)/numcores()
+if coreid()==0: print "Value of PI="+str((mypi/rounds)/numcores())

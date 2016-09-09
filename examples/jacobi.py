@@ -65,4 +65,4 @@ while norm >= 1e-4 and its < MAX_ITS:
                 i+=1
         its+=1
 
-if coreid()==0: print "Completed in "+its+" iterations, RNorm="+norm
+if coreid()==0: print "Completed in "+str(its)+" iterations, RNorm="+str(norm)

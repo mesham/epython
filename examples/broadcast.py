@@ -5,4 +5,4 @@ To run: epython broadcast.py
 
 import parallel
 a=bcast(random%100, 0)
-print "The random number from core 0 is "+a
+print "The random number from core 0 is "+str(a)

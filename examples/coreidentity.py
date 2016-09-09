@@ -5,8 +5,8 @@ To run: epython coreidentity.py
 
 import parallel
 
-print "Hello world from core "+coreid()
+print "Hello world from core "+str(coreid())
 
 if coreid()==5:
-  print "Hello only from core "+coreid()
+  print "Hello only from core "+str(coreid())
 

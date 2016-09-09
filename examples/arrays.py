@@ -9,4 +9,4 @@ while i<100:
   a[i]=i
   i+=1
 r=random%100
-print "Random index is "+r+" value is "+a[r]
+print "Random index is "+str(r)+" value is "+str(a[r])

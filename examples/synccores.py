@@ -5,6 +5,6 @@ To run: epython synccores.py
 */
 import parallel
 
-print "Hello from core "+coreid()
+print "Hello from core "+str(coreid())
 sync()
-print "After sync from core "+coreid()
+print "After sync from core "+str(coreid())
