@@ -256,6 +256,8 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
  * which is needed as the function might appear at any point
  */
 struct memorycontainer* appendCallFunctionStatement(char* functionName, struct stack_t* args) {
+	char * last_dot=strrchr(functionName,'.');
+	if (last_dot != NULL) functionName=last_dot+1;
 	if (currentFunctionName != NULL && strcmp(currentFunctionName, functionName) == 0) isFnRecursive=1;
 
 	struct memorycontainer* assignmentContainer=NULL;

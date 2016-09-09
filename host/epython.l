@@ -233,5 +233,5 @@ STR										return STR;
 
 [:.;]                                  return yytext[0];
 
-[a-zA-Z_][a-zA-Z0-9_]*           		SAVE_VALUE(IDENTIFIER);
+[a-zA-Z_][a-zA-Z0-9_.]*           		SAVE_VALUE(IDENTIFIER);
 %%

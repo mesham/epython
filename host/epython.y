@@ -233,7 +233,7 @@ value
 ;
 
 ident
-	: IDENTIFIER { $$ = malloc(strlen($1)+1); strcpy($$, $1); }
+	: IDENTIFIER { $$ = malloc(strlen($1)+1); strcpy($$, $1); }	
 ;
 
 constant
