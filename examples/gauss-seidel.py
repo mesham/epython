@@ -3,7 +3,7 @@ Red-black Gauss Seidel with SOR to solve Laplace's equation for diffusion in one
 This illustrates distributing data amongst the cores, halo swapping and reductions
 */
 
-import parallel
+from parallel import *
 
 DATA_SIZE=100
 MAX_ITS=10000

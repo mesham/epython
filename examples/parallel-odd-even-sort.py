@@ -1,5 +1,5 @@
-import util
-import parallel
+from util import *
+from parallel import *
 
 ln=25
 N=ln * numcores()

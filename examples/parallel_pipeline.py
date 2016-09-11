@@ -1,5 +1,5 @@
-import parallel
-import util
+from parallel import *
+from util import *
 
 dim data[300]
 

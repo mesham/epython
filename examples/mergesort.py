@@ -5,8 +5,8 @@ back together and core 0 will display the sorted list. Whilst the sequential (bu
 concept and could be swapped out for something better such as quicksort if desired.
 */
 
-import util
-import parallel
+from util import *
+from parallel import *
 
 na=128
 sdim data[na]

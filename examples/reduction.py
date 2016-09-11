@@ -3,7 +3,7 @@ Illustration of global reduction across all cores, here we find the maximum rand
 To run: epython reduction.py
 */
 
-import parallel
+from parallel import *
 
 a=reduce(random%100, "max")
 print "The highest random number is "+str(a)

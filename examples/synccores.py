@@ -3,7 +3,7 @@ Illustrates the synchronisation across all cores, all cores display the hello me
 caught up. Comment out the sync line and rerun to see the messages more interleaved
 To run: epython synccores.py
 */
-import parallel
+from parallel import *
 
 print "Hello from core "+str(coreid())
 sync()

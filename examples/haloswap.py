@@ -4,7 +4,7 @@ Note that there is no wrap around, therefore the left most value at core 0 and t
 most value at core 15 remains unchanged and is the core id.
 */
 
-import parallel
+from parallel import *
 
 DATA_SIZE=12
 dim data[DATA_SIZE]

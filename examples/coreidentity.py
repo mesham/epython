@@ -3,7 +3,7 @@ Illustration of printing, core id and conditional statements
 To run: epython coreidentity.py
 */
 
-import parallel
+from parallel import *
 
 print "Hello world from core "+str(coreid())
 

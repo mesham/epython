@@ -3,7 +3,7 @@ Illustration of loops
 To run: epython loops.py
 */
 
-import util
+from util import *
 
 for x in range(10):
   print "X="+str(x)

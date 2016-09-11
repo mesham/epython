@@ -2,8 +2,8 @@
 Simple mandlbrot example, based on a version by Mike Bell
 */
 
-import parallel
-import util
+from parallel import *
+from util import *
 
 outstr=""
 

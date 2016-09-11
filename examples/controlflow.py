@@ -7,7 +7,7 @@ i.e. epython -c 1:7 controlflow.py will run on cores 1 to 7 inclusive
 */
 
 
-import parallel
+from parallel import *
 
 if coreid()==0 or coreid()==1:
   print "Core id is 0 or 1"

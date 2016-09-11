@@ -2,7 +2,7 @@
 Simple odd-even sort
 */
 
-import util
+from util import *
 
 dim x[100]
 for i in range(99):

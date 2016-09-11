@@ -3,7 +3,7 @@ The dartboard method to find PI which is an example of a Monte Carlo method. Apa
 parallel.
 */
 
-import parallel
+from parallel import *
 
 darts=100
 rounds=10
