@@ -21,3 +21,23 @@ def range(a,b=none,c=none):
 
 def xrange(a,b):
 	return range(a,b)
+
+def oddSort(x, length=none):
+  l=length
+  if (length is none):
+    l=len(x)
+  sorted=true
+  while not sorted:
+    sorted=true
+    for i in range(0, l-1, 2):
+      if x[i] > x[i+1]:
+        temp= x[i]
+        x[i]=x[i+1]
+        x[i+1] = temp
+        sorted=false
+    for i in range(1, l-2, 2):
+      if x[i] > x[i+1]:
+        temp= x[i]
+        x[i]=x[i+1]
+        x[i+1] = temp
+        sorted=false
