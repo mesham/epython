@@ -270,7 +270,16 @@ static char* getIncludeFileWithPath(char * filename) {
 		strcpy(tr, filename);
 		return tr;
 	} else {
+	    char * testFilename=(char*) malloc(strlen(filename) + 10);
+	    sprintf(testFilename, "modules/%s", filename);
+	    if(access(testFilename, F_OK) != -1 ) {
+            return testFilename;
+	    } else {
+            free(testFilename);
+	    }
+
 		char * prev = getenv("PYTHONPATH");
+		if (prev == NULL) return NULL;
 		char * pch=strchr(prev, ':');
 		while (pch != NULL) {
 			char * newPath=(char*) malloc((pch-prev)+1);
@@ -280,7 +289,7 @@ static char* getIncludeFileWithPath(char * filename) {
 			} else {
 				newPath[pch-prev]='\0';
 			}
-			char * testFilename=(char*) malloc(strlen(newPath) + strlen(filename) + 2);
+			testFilename=(char*) malloc(strlen(newPath) + strlen(filename) + 2);
 			sprintf(testFilename, "%s/%s", newPath, filename);
 			free(newPath);
 			if(access(testFilename, F_OK) != -1 ) return testFilename;
@@ -291,7 +300,7 @@ static char* getIncludeFileWithPath(char * filename) {
 		if (prev[strlen(prev)-1] == '/') {
 			prev[strlen(prev)-1]='\0';
 		}
-		char * testFilename=(char*) malloc(strlen(prev) + strlen(filename) + 2);
+		testFilename=(char*) malloc(strlen(prev) + strlen(filename) + 2);
 		sprintf(testFilename, "%s/%s", prev, filename);
 		if(access(testFilename, F_OK) != -1 ) return testFilename;
 		free(testFilename);

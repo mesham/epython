@@ -33,9 +33,9 @@ clean:
 install:
 	@cp epython-host epython-device.srec epython-device.elf /usr/bin
 	@cp epython.sh /usr/bin/epython
-	@cp parallel.py /usr/include
-	@cp util.py /usr/include
-	@echo 'export PYTHONPATH=$$PYTHONPATH:/usr/include:$(shell pwd)' >> ~/.bashrc
+	@mkdir -p /usr/include/epython
+	@cp -R modules /usr/include/epython/.
+	@echo 'export PYTHONPATH=$$PYTHONPATH:/usr/include/epython/modules:$(shell pwd)' >> ~/.bashrc
 	@echo "ePython installed, start a new bash session by executing bash before running ePython"
 
 uninstall:
