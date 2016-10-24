@@ -4,6 +4,8 @@
 *.ko
 *.obj
 *.elf
+*.cbp
+*.layout
 
 # Precompiled Headers
 *.gch
