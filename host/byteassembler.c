@@ -185,36 +185,28 @@ struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendEx
 }
 
 /**
- * Appends and returns the declaration of an array into shared (parallella) memory
+ * Appends and returns the declaration of an array into either default (often core local) or shared memory statement
  */
-struct memorycontainer* appendDeclareSharedArray( char* identifier, struct memorycontainer* exp1) {
+struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* size_expressions, int shared_array) {
+    int lenOfArray=getStackSize(size_expressions);
+
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + exp1->length;
+	memoryContainer->length=sizeof(unsigned short)+(sizeof(unsigned char)*2);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	unsigned int position=0;
 
-	position=appendStatement(memoryContainer, DIMSHAREDARRAY_TOKEN, position);
+	position=appendStatement(memoryContainer, shared_array ? DIMSHAREDARRAY_TOKEN : DIMARRAY_TOKEN, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, exp1, position);
-	return memoryContainer;
-}
+	unsigned char packageNumDims=(unsigned char) lenOfArray;
+    memcpy(&memoryContainer->data[position], &packageNumDims, sizeof(unsigned char));
+    position+=sizeof(unsigned char);
 
-/**
- * Appends and returns the declaration of an array into default (often core local) memory statement
- */
-struct memorycontainer* appendDeclareArray( char* identifier, struct memorycontainer* exp1) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + exp1->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, DIMARRAY_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, exp1, position);
+    int i;
+	for (i=0;i<lenOfArray;i++) {
+        memoryContainer=concatenateMemory(memoryContainer, getExpressionAt(size_expressions, i));
+	}
 	return memoryContainer;
 }
 
@@ -581,10 +573,10 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 /**
  * Appends and returns the setting of an array element (assignment) statement
  */
-struct memorycontainer* appendArraySetStatement( char* identifier, struct memorycontainer* indexContainer,
+struct memorycontainer* appendArraySetStatement( char* identifier, struct stack_t* indexContainer,
 		struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + indexContainer->length+ expressionContainer->length;
+	memoryContainer->length=(sizeof(unsigned char)*2)+sizeof(unsigned short);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
@@ -592,8 +584,15 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct memory
 
 	position=appendStatement(memoryContainer, ARRAYSET_TOKEN, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, indexContainer, position);
-	position=appendMemory(memoryContainer, expressionContainer, position);
+
+	unsigned char numIndexes=(unsigned char) getStackSize(indexContainer);
+	memcpy(&memoryContainer->data[position], &numIndexes, sizeof(unsigned char));
+    position+=sizeof(unsigned char);
+	int i;
+	for (i=0;i<numIndexes;i++) {
+        memoryContainer=concatenateMemory(memoryContainer, getExpressionAt(indexContainer, i));
+	}
+    memoryContainer=concatenateMemory(memoryContainer, expressionContainer);
 	return memoryContainer;
 }
 
@@ -815,7 +814,7 @@ struct memorycontainer* createBooleanExpression(int booleanVal) {
 	return memoryContainer;
 }
 
-struct memorycontainer* createArrayExpression(struct stack_t* arrayVals) {
+struct memorycontainer* createArrayExpression(struct stack_t* arrayVals, struct memorycontainer* repetitionExpr) {
 	int lenOfArray=getStackSize(arrayVals);
 	struct memorycontainer* expressionContainer=NULL;
 	int i;
@@ -828,13 +827,16 @@ struct memorycontainer* createArrayExpression(struct stack_t* arrayVals) {
 	}
 
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + sizeof(int);
+	memoryContainer->length=sizeof(unsigned char)*2 + sizeof(int);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	int location=appendStatement(memoryContainer, ARRAY_TOKEN, 0);
 	memcpy(&memoryContainer->data[location], &lenOfArray, sizeof(int));
-
+    location+=sizeof(int);
+	unsigned char hasRepetitionExpr=repetitionExpr == NULL ? 0 : 1;
+	memcpy(&memoryContainer->data[location], &hasRepetitionExpr, sizeof(unsigned char));
+	if (repetitionExpr != NULL) memoryContainer=concatenateMemory(memoryContainer, repetitionExpr);
 	return concatenateMemory(memoryContainer, expressionContainer);
 }
 
@@ -879,17 +881,26 @@ struct memorycontainer* createIdentifierExpression(char * identifier) {
 /**
  * Creates an expression wrapping an identifier array access
  */
-struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, struct memorycontainer* accessExpression) {
+struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, struct stack_t* index_expressions) {
+    int lenOfIndexes=getStackSize(index_expressions);
+
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + accessExpression->length;
+	memoryContainer->length=sizeof(unsigned short)+(sizeof(unsigned char)*2);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
-	int position=0;
+	unsigned int position=0;
+
 	position=appendStatement(memoryContainer, ARRAYACCESS_TOKEN, position);
 	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	appendMemory(memoryContainer, accessExpression, position);
+	unsigned char packageNumDims=(unsigned char) lenOfIndexes;
+    memcpy(&memoryContainer->data[position], &packageNumDims, sizeof(unsigned char));
+    position+=sizeof(unsigned char);
 
+    int i;
+	for (i=0;i<lenOfIndexes;i++) {
+        memoryContainer=concatenateMemory(memoryContainer, getExpressionAt(index_expressions, i));
+	}
 	return memoryContainer;
 }
 

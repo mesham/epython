@@ -239,11 +239,11 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 /**
  * Called when running on the host, will get the memory address to store some array into
  */
-int* getHeapMemory(int size, char shared) {
-	return (int*) malloc(size);
+char* getHeapMemory(int size, char shared) {
+	return (char*) malloc(size);
 }
 
-int* getStackMemory(int size, char shared) {
+char* getStackMemory(int size, char shared) {
 	return getHeapMemory(size, shared);
 }
 

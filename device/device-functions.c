@@ -204,17 +204,17 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 /**
  * Allocates some memory in the heap
  */
-int* getHeapMemory(int size, char isShared) {
+char* getHeapMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-		int * dS= (int*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
+		char * dS= (char*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
 		sharedHeapEntries+=size;
 		if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
 		return dS;
 	} else {
-		int * dS= (int*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries);
+		char * dS= (char*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries);
 		localHeapEntries+=size;
-		if ((int) ((int*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries)) >= LOCAL_CORE_MEMORY_MAP_TOP) {
-			dS= (int*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
+		if ((int) ((char*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries)) >= LOCAL_CORE_MEMORY_MAP_TOP) {
+			dS= (char*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
 			sharedHeapEntries+=size;
 			if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
 		}
@@ -225,17 +225,17 @@ int* getHeapMemory(int size, char isShared) {
 /**
  * Allocates some memory in the stack
  */
-int* getStackMemory(int size, char isShared) {
+char* getStackMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-			int * dS= (int*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
+			char * dS= (char*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 			sharedStackEntries+=size;
 			if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of shared stack memory for data");
 			return dS;
 		} else {
-			int * dS= (int*) (sharedData->core_ctrl[myId].stack_start + localStackEntries);
+			char * dS= (char*) (sharedData->core_ctrl[myId].stack_start + localStackEntries);
 			localStackEntries+=size;
 			if (localStackEntries >= LOCAL_CORE_STACK_SIZE) {
-				dS= (int*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
+				dS= (char*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 				sharedStackEntries+=size;
 				if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of core and shared stack memory for data");
 			}

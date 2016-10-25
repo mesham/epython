@@ -36,8 +36,8 @@
 
 int checkStringEquality(struct value_defn, struct value_defn);
 struct symbol_node* initialiseSymbolTable(int);
-int* getHeapMemory(int,char);
-int* getStackMemory(int,char);
+char* getHeapMemory(int,char);
+char* getStackMemory(int,char);
 void clearFreedStackFrames(char*);
 #ifdef HOST_INTERPRETER
 struct value_defn getInputFromUser(int);

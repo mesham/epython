@@ -51,7 +51,7 @@ void yyerror (char const *msg) {
 %type <integer> unary_operator 
 %type <uchar> reductionop opassgn
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
-%type <stack> fndeclarationargs fncallargs commaseparray
+%type <stack> fndeclarationargs fncallargs commaseparray arrayaccessor
 
 %start program 
 
@@ -81,8 +81,8 @@ statement
 	| EPY_I_SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }	
 	| EPY_I_BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
 	| EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
-	| DIM ident SLBRACE expression SRBRACE { $$=appendDeclareArray($2, $4); }	
-	| SDIM ident SLBRACE expression SRBRACE { $$=appendDeclareSharedArray($2, $4); }
+	| DIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 0); }	
+	| SDIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 1); }
 	| FOR declareident IN expression COLON codeblock { $$=appendForStatement($2, $4, $6); leaveScope(); }
 	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); }	
 	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
@@ -92,9 +92,9 @@ statement
 	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }	
 	| ident ASSGN INPUT LPAREN RPAREN { $$=appendInputStatement($1); }
 	| ident ASSGN INPUT LPAREN constant RPAREN { $$=appendInputStringStatement($5, $1); }
-    | ident ASSGN expression { $$=appendLetStatement($1, $3); }
-    | ident SLBRACE expression SRBRACE ASSGN expression { $$=appendArraySetStatement($1, $3, $6); }
-    | ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
+    	| ident ASSGN expression { $$=appendLetStatement($1, $3); }
+    	| ident arrayaccessor ASSGN expression { $$=appendArraySetStatement($1, $2, $4); }
+    	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendPrintStatement($2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
@@ -102,6 +102,11 @@ statement
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
+;
+
+arrayaccessor
+	: SLBRACE expression SRBRACE { $$=getNewStack(); pushExpression($$, $2); }
+	| arrayaccessor SLBRACE expression SRBRACE { pushExpression($1, $3); }
 ;
 
 fncallargs
@@ -216,7 +221,8 @@ multiplicative_expression
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
 	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
 	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
-	| SLBRACE commaseparray SRBRACE	{ $$=createArrayExpression($2); }
+	| SLBRACE commaseparray SRBRACE { $$=createArrayExpression($2, NULL); }
+	| SLBRACE commaseparray SRBRACE MULT value { $$=createArrayExpression($2, $5); }
 ;
 
 commaseparray
@@ -228,7 +234,7 @@ value
 	: constant { $$=$1; }
 	| LPAREN expression RPAREN { $$=$2; }
 	| ident { $$=createIdentifierExpression($1); }
-	| ident SLBRACE expression SRBRACE { $$=createIdentifierArrayAccessExpression($1, $3); }
+	| ident arrayaccessor { $$=createIdentifierArrayAccessExpression($1, $2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 ;
 
@@ -243,12 +249,12 @@ constant
         | EPY_I_NUMCORES { $$=createNumCoresExpression(); }
         | RANDOM { $$=createRandomExpression(); }
         | RANDOM LPAREN RPAREN { $$=createRandomExpression(); }
-		| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
-		| unary_operator REAL { $$=createRealExpression($1 * $2); }		
-		| STRING { $$=createStringExpression($1); }	
-		| TRUE { $$=createBooleanExpression(1); }
-		| FALSE { $$=createBooleanExpression(0); }
-		| NONE { $$=createNoneExpression(); }
+	| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
+	| unary_operator REAL { $$=createRealExpression($1 * $2); }		
+	| STRING { $$=createStringExpression($1); }	
+	| TRUE { $$=createBooleanExpression(1); }
+	| FALSE { $$=createBooleanExpression(0); }
+	| NONE { $$=createNoneExpression(); }
 ;
 
 unary_operator
