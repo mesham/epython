@@ -4,6 +4,7 @@ To run: epython reduction.py
 */
 
 from parallel import *
+from random import randrange
 
-a=reduce(random%100, "max")
+a=reduce(randrange(100), "max")
 print "The highest random number is "+str(a)

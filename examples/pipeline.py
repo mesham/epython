@@ -1,5 +1,6 @@
 from parallel import *
 from util import *
+from random import randrange
 
 dim data[300]
 
@@ -14,7 +15,7 @@ elif (coreid()==3):
 
 def pipelineStageOne(num_items):
 	for i in range(num_items):
-		num=random % 295 + 5
+		num=randrange(295) + 5
 		send(num, coreid()+1)
 	send(-1,coreid()+1)
 
@@ -25,7 +26,7 @@ def pipelineStageTwo():
 		if num > 0:
 			i=0
 			while i < num:
-				data[i]=random % 1000
+				data[i]=randrange(1000)
 				i+=1
 		send(num, coreid()+1)
 		if num > 0: send(data, coreid()+1, num)

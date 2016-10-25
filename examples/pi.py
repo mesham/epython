@@ -4,6 +4,8 @@ parallel.
 */
 
 from parallel import *
+from random import random
+from math import pow
 
 darts=100
 rounds=10
@@ -15,11 +17,11 @@ while i<=rounds:
   score=0.0
   j=1
   while j<=darts:
-    x=(random % 100000) / 100000.0
-    y=(random % 100000) / 100000.0
+    x=random()
+    y=random()
 
-    if x^2 + y^2 < 1.0:
-      score=score+1
+    if (pow(x,2) + pow(y,2) < 1.0):
+      score+=1
     j+=1
   mypi=mypi+4.0 * (score/darts)
   i+=1

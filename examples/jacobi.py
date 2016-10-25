@@ -14,8 +14,8 @@ if local_size * numcores() != DATA_SIZE:
         if (coreid() < DATA_SIZE-local_size*numcores()): local_size=local_size+1
 
 # Allocate the two arrays (two as this is Jacobi) we +2 to account for halos/boundary conditions
-dim data[local_size+2]
-dim data_p1[local_size+2]
+data=[0] * (local_size+2)
+data_p1=[0]* (local_size+2)
 
 # Set the initial conditions
 i=0

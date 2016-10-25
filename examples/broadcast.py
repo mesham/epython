@@ -4,6 +4,7 @@ To run: epython broadcast.py
 */
 
 from parallel import *
+from random import randrange
 
-a=bcast(random%100, 0)
+a=bcast(randrange(100), 0)
 print "The random number from core 0 is "+str(a)

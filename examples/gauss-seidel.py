@@ -15,7 +15,7 @@ if local_size * numcores() != DATA_SIZE:
         if (coreid() < DATA_SIZE-local_size*numcores()): local_size=local_size+1
 
 # Allocate the two arrays (two as this is Jacobi) we +2 to account for halos/boundary conditions
-dim data[local_size+2]
+data=[0]*(local_size+2)
 
 # Set the initial conditions
 i=0
@@ -49,7 +49,7 @@ while norm >= 1e-4 and its < MAX_ITS:
                 i+=1
         tmpnorm=reduce(tmpnorm, "sum")
         norm=sqrt(tmpnorm)/bnorm
-        if coreid()==0 and its%1000 == 0: print "RNorm is "+norm+" at "+its+" iterations"
+        if coreid()==0 and its%1000 == 0: print "RNorm is "+str(norm)+" at "+str(its)+" iterations"
         j=0
         while j<2:
                 if (j==1):

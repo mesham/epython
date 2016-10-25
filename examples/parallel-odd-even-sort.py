@@ -1,12 +1,13 @@
 from util import *
 from parallel import *
+from random import randrange
 
 ln=25
 N=ln * numcores()
 dim x[ln]
 dim other[ln]
 for i in range(ln-1):
-	x[i]=random%100
+	x[i]=randrange(100)
 
 for i in range(numcores()-1):
 	bubblesort(x)

@@ -217,7 +217,7 @@ multiplicative_expression
 	| TANH LPAREN value RPAREN { $$=createTanHExpression($3); }
 	| FLOOR LPAREN value RPAREN { $$=createFloorExpression($3); }
 	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
-	| STR LPAREN value RPAREN { $$=$3; } 
+	| STR LPAREN expression RPAREN { $$=$3; } 
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
 	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
 	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }

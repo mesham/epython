@@ -3,10 +3,11 @@ Simple odd-even sort
 */
 
 from util import *
+from random import randrange
 
 dim x[100]
 for i in range(99):
-	x[i]=random%100
+	x[i]=randrange(100)
 
 sorted=false
 while not sorted:

@@ -7,6 +7,7 @@ concept and could be swapped out for something better such as quicksort if desir
 
 from util import *
 from parallel import *
+from random import randrange
 
 na=128
 sdim data[na]
@@ -72,7 +73,7 @@ def bubblesort(d,size):
 def populateData(d, l):
 	i=0
 	while i<l:
-		d[i]=random%1000
+		d[i]=randrange(1000)
 		i=i+1
 
 def displayData(d, l):
