@@ -215,7 +215,7 @@ PRINT                                   return PRINT;
 INPUT                                   return INPUT;
 EPY_I_COREID							return EPY_I_COREID;
 EPY_I_NUMCORES							return EPY_I_NUMCORES;
-RANDOM									return RANDOM;
+EPY_I_RANDOM							return EPY_I_RANDOM;
 SQRT									return SQRT;
 SIN										return SIN;
 COS										return COS;

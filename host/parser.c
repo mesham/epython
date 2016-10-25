@@ -145,7 +145,7 @@ extern int yydebug;
     EPY_I_NUMCORES = 283,
     EPY_I_SEND = 284,
     EPY_I_RECV = 285,
-    RANDOM = 286,
+    EPY_I_RANDOM = 286,
     EPY_I_SYNC = 287,
     EPY_I_BCAST = 288,
     EPY_I_REDUCE = 289,
@@ -243,7 +243,7 @@ extern int yydebug;
 #define EPY_I_NUMCORES 283
 #define EPY_I_SEND 284
 #define EPY_I_RECV 285
-#define RANDOM 286
+#define EPY_I_RANDOM 286
 #define EPY_I_SYNC 287
 #define EPY_I_BCAST 288
 #define EPY_I_REDUCE 289
@@ -673,7 +673,7 @@ static const char *const yytname[] =
   "IDENTIFIER", "NEWLINE", "INDENT", "OUTDENT", "DIM", "SDIM", "EXIT",
   "ELSE", "ELIF", "COMMA", "WHILE", "FOR", "TO", "FROM", "NEXT", "INTO",
   "GOTO", "PRINT", "INPUT", "IF", "THEN", "EPY_I_COREID", "EPY_I_NUMCORES",
-  "EPY_I_SEND", "EPY_I_RECV", "RANDOM", "EPY_I_SYNC", "EPY_I_BCAST",
+  "EPY_I_SEND", "EPY_I_RECV", "EPY_I_RANDOM", "EPY_I_SYNC", "EPY_I_BCAST",
   "EPY_I_REDUCE", "EPY_I_SUM", "EPY_I_MIN", "EPY_I_MAX", "EPY_I_PROD",
   "EPY_I_SENDRECV", "TOFROM", "ADD", "SUB", "EPY_I_ISHOST", "EPY_I_DIMS",
   "EPY_I_DSIZE", "EPY_I_ISDEVICE", "COLON", "DEF", "RET", "NONE",

@@ -30,6 +30,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 #include "stack.h"
 #include "ctype.h"
@@ -81,7 +82,7 @@ static void* runCodeOnEpiphany(void*);
  * Host program entry point, bootstraps reading configuration, lexing & parsing (if applicable) and running the code
  */
 int main (int argc, char *argv[]) {
-	srand(time(NULL));
+	srand((unsigned) time(NULL) * getpid());
 	struct interpreterconfiguration* configuration=readConfiguration(argc, argv);
 	if (configuration->filename != NULL) {
 		char * contents = getSourceFileContents(configuration->filename);

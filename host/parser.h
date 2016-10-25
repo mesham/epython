@@ -73,7 +73,7 @@ extern int yydebug;
     EPY_I_NUMCORES = 283,
     EPY_I_SEND = 284,
     EPY_I_RECV = 285,
-    RANDOM = 286,
+    EPY_I_RANDOM = 286,
     EPY_I_SYNC = 287,
     EPY_I_BCAST = 288,
     EPY_I_REDUCE = 289,
@@ -171,7 +171,7 @@ extern int yydebug;
 #define EPY_I_NUMCORES 283
 #define EPY_I_SEND 284
 #define EPY_I_RECV 285
-#define RANDOM 286
+#define EPY_I_RANDOM 286
 #define EPY_I_SYNC 287
 #define EPY_I_BCAST 288
 #define EPY_I_REDUCE 289
