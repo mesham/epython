@@ -844,24 +844,66 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value.dtype=SCALAR;
 	} else if (expressionId == LEN_TOKEN) {
 #ifdef HOST_INTERPRETER
-		value=getExpressionValue(assembled, currentPoint, length, threadId);
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
 #else
-		value=getExpressionValue(assembled, currentPoint, length);
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
 #endif
+		int totalSize=1;
+		if (arrayvalue.dtype == ARRAY) {
+            int i, dSize;
+            unsigned char num_dims;
+            char * ptr;
+            cpy(&ptr, arrayvalue.data, sizeof(char*));
+            cpy(&num_dims, ptr, sizeof(unsigned char));
+            ptr+=sizeof(unsigned char);
+            for (i=0;i<num_dims;i++) {
+                cpy(&dSize, ptr, sizeof(int));
+                totalSize*=dSize;
+                ptr+=sizeof(int);
+            }
+		}
 		value.type=INT_TYPE;
 		value.dtype=SCALAR;
-		char * ptr;
-		cpy(&ptr, value.data, sizeof(char*));
-		unsigned char num_dims;
-		cpy(&num_dims, ptr, sizeof(unsigned char));
-		ptr+=sizeof(unsigned char);
-		int i, dSize, totalSize=1;
-		for (i=0;i<num_dims;i++) {
-            cpy(&dSize, ptr, sizeof(int));
-            totalSize*=dSize;
-            ptr+=sizeof(int);
-		}
 		cpy(value.data, &totalSize, sizeof(int));
+    } else if (expressionId == NUMDIM_TOKEN) {
+#ifdef HOST_INTERPRETER
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
+#endif
+        int intNDims=0;
+        if (arrayvalue.dtype == ARRAY) {
+            char * ptr;
+            cpy(&ptr, arrayvalue.data, sizeof(char*));
+            unsigned char num_dims;
+            cpy(&num_dims, ptr, sizeof(unsigned char));
+            intNDims=(int) num_dims;
+        }
+        value.type=INT_TYPE;
+        value.dtype=SCALAR;
+		cpy(value.data, &intNDims, sizeof(int));
+    } else if (expressionId == DSIZE_TOKEN) {
+#ifdef HOST_INTERPRETER
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
+		struct value_defn dimvalue=getExpressionValue(assembled, currentPoint, length, threadId);
+#else
+		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
+		struct value_defn dimvalue=getExpressionValue(assembled, currentPoint, length);
+#endif
+        int dimSize=0;
+        if (arrayvalue.dtype == ARRAY) {
+            int lookupIndex=getInt(dimvalue.data);
+            char * ptr;
+            cpy(&ptr, arrayvalue.data, sizeof(char*));
+            unsigned char num_dims;
+            cpy(&num_dims, ptr, sizeof(unsigned char));
+            if (lookupIndex < num_dims) {
+                cpy(&dimSize, &ptr[(lookupIndex * sizeof(int)) + sizeof(unsigned char)], sizeof(int));
+            }
+        }
+        value.type=INT_TYPE;
+        value.dtype=SCALAR;
+		cpy(value.data, &dimSize, sizeof(int));
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0, threadId);

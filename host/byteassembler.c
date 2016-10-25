@@ -763,6 +763,31 @@ struct memorycontainer* createLenExpression(struct memorycontainer* expression) 
 	return memoryContainer;
 }
 
+struct memorycontainer* createArrayDimExpression(struct memorycontainer* expression) {
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char) + expression->length;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position;
+	position=appendStatement(memoryContainer, NUMDIM_TOKEN, 0);
+	appendMemory(memoryContainer, expression, position);
+	return memoryContainer;
+};
+
+struct memorycontainer* createArrayDsizeExpression(struct memorycontainer* expression, struct memorycontainer* dimexpression) {
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char) + expression->length + dimexpression->length;
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position;
+	position=appendStatement(memoryContainer, DSIZE_TOKEN, 0);
+	position=appendMemory(memoryContainer, expression, position);
+	appendMemory(memoryContainer, dimexpression, position);
+	return memoryContainer;
+};
+
 /**
  * Creates a coreid (integer) expression for getting the ID of a core
  */

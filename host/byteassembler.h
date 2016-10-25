@@ -134,6 +134,8 @@ struct memorycontainer* createCeilExpression(struct memorycontainer*);
 struct memorycontainer* createLogExpression(struct memorycontainer*);
 struct memorycontainer* createLog10Expression(struct memorycontainer*);
 struct memorycontainer* createLenExpression(struct memorycontainer*);
+struct memorycontainer* createArrayDimExpression(struct memorycontainer*);
+struct memorycontainer* createArrayDsizeExpression(struct memorycontainer*, struct memorycontainer*);
 void addVariableIfNeeded(char*);
 void enterScope(void);
 void leaveScope(void);
