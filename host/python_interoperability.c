@@ -33,12 +33,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 #include "python_interoperability.h"
 #include "../shared.h"
 #include "configuration.h"
 #include "interpreter.h"
 #include "host-functions.h"
 #include "functions.h"
+#include "misc.h"
 
 #define LISTENER_PIPE_NAME "toepython"
 #define WRITER_PIPE_NAME "fromepython"
@@ -85,7 +87,7 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 static void issueNumcores(struct interpreterconfiguration* configuration) {
 	char dataToWrite[20];
 	sprintf(dataToWrite, "%d", configuration->hostProcs + configuration->coreProcs);
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -95,7 +97,7 @@ static void issueNumcores(struct interpreterconfiguration* configuration) {
 static void issueCoreId(struct interpreterconfiguration* configuration) {
 	char dataToWrite[20];
 	sprintf(dataToWrite, "%d", configuration->coreProcs);
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -106,7 +108,7 @@ static void issueSync(void) {
 	syncCores(1, 0);
 	char dataToWrite[20];
 	sprintf(dataToWrite, "0");
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -137,13 +139,17 @@ static void issueBcast(struct interpreterconfiguration* configuration) {
 
 	char dataToWrite[50];
 	if (bcastedData.type==INT_TYPE || bcastedData.type==BOOLEAN_TYPE) {
-		sprintf(dataToWrite, "%d %d %d", bcastedData.type, bcastedData.dtype, *((int*) bcastedData.data));
+        int i_v;
+        memcpy(&i_v, bcastedData.data, sizeof(int));
+		sprintf(dataToWrite, "%d %d %d", bcastedData.type, bcastedData.dtype, i_v);
 	} else if (bcastedData.type==REAL_TYPE) {
-		double d=*((float*) bcastedData.data);
+	    float f_v;
+	    memcpy(&f_v, bcastedData.data, sizeof(float));
+	    double d=f_v;
 		sprintf(dataToWrite, "%d %d %f", bcastedData.type, bcastedData.dtype, d);
 	}
 
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -172,13 +178,17 @@ static void issueReduce(struct interpreterconfiguration* configuration) {
 	struct value_defn reducedData=reduceData(valueToSend, (char) operator, 0, configuration->hostProcs + configuration->coreProcs, configuration->coreProcs);
 	char dataToWrite[50];
 	if (reducedData.type==INT_TYPE || reducedData.type==BOOLEAN_TYPE) {
-		sprintf(dataToWrite, "%d %d %d", reducedData.type, reducedData.dtype, *((int*) reducedData.data));
+        int i_v;
+        memcpy(&i_v, reducedData.data, sizeof(int));
+		sprintf(dataToWrite, "%d %d %d", reducedData.type, reducedData.dtype, i_v);
 	} else if (reducedData.type==REAL_TYPE) {
-		double d=*((float*) reducedData.data);
+	    float f_v;
+	    memcpy(&f_v, reducedData.data, sizeof(float));
+		double d=f_v;
 		sprintf(dataToWrite, "%d %d %f", reducedData.type, reducedData.dtype, d);
 	}
 
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -210,13 +220,17 @@ static void issueSendRecv(struct interpreterconfiguration* configuration) {
 	struct value_defn valToReturn=sendRecvData(valueToSend, target, 0, configuration->coreProcs);
 	char dataToWrite[50];
 	if (valToReturn.type==INT_TYPE || valToReturn.type==BOOLEAN_TYPE) {
-		sprintf(dataToWrite, "%d %d %d", valToReturn.type, valToReturn.dtype, *((int*) valToReturn.data));
+        int i_v;
+        memcpy(&i_v, valToReturn.data, sizeof(int));
+		sprintf(dataToWrite, "%d %d %d", valToReturn.type, valToReturn.dtype, i_v);
 	} else if (valToReturn.type==REAL_TYPE) {
-		double d=*((float*) valToReturn.data);
+		float f_v;
+	    memcpy(&f_v, valToReturn.data, sizeof(float));
+		double d=f_v;
 		sprintf(dataToWrite, "%d %d %f", valToReturn.type, valToReturn.dtype, d);
 	}
 
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -256,13 +270,17 @@ static void issueRecv(struct interpreterconfiguration* configuration) {
 	struct value_defn valToReturn=recvData(target, 0, configuration->coreProcs);
 	char dataToWrite[50];
 	if (valToReturn.type==INT_TYPE || valToReturn.type==BOOLEAN_TYPE) {
-		sprintf(dataToWrite, "%d %d %d", valToReturn.type, valToReturn.dtype, *((int*) valToReturn.data));
+        int i_v;
+        memcpy(&i_v, valToReturn.data, sizeof(int));
+		sprintf(dataToWrite, "%d %d %d", valToReturn.type, valToReturn.dtype, i_v);
 	} else if (valToReturn.type==REAL_TYPE) {
-		double d=*((float*) valToReturn.data);
+		float f_v;
+	    memcpy(&f_v, valToReturn.data, sizeof(float));
+		double d=f_v;
 		sprintf(dataToWrite, "%d %d %f", valToReturn.type, valToReturn.dtype, d);
 	}
 
-	write(writer_pipe_handle, dataToWrite, strlen(dataToWrite));
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing recv to python pipe");
 	fsync(writer_pipe_handle);
 }
 
@@ -281,7 +299,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 		}
 	}
 	for (i = 0; i < 1024; i++) {
-		read(listener_pipe_handle, &buffered_line[i], 1);
+		errorCheck(read(listener_pipe_handle, &buffered_line[i], 1), "Reading python pipe");
 		if (buffered_line[i] == '\n') {
 			buffered_line[i] = '\0';
 			break;

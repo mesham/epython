@@ -318,9 +318,9 @@ static void performMathsOp(struct core_ctrl * core) {
 	} else {
 		float fvalue=0.0, r=0.0;
 		if (core->data[0]==1) {
-			fvalue=*((float*) &core->data[1]);
+            memcpy(&fvalue, &core->data[1], sizeof(float));
 		} else if (core->data[0]==0) {
-			fvalue=(float) *((int*) &core->data[1]);
+		    memcpy(&fvalue, &core->data[1], sizeof(float));
 		}
 		if (core->core_command-1000 == SQRT_MATHS_OP) r=sqrtf(fvalue);
 		if (core->core_command-1000 == SIN_MATHS_OP) r=sinf(fvalue);
@@ -344,7 +344,7 @@ static void performMathsOp(struct core_ctrl * core) {
 /**
  * Concatenates two strings, or a string and integer/real together with necessary conversions
  */
-static void stringConcatenate(int coreId, struct core_ctrl * core) {
+static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct core_ctrl * core) {
 	char * newString;
 	unsigned int relativeLocation;
 	if (core->data[0]==STRING_TYPE && core->data[5]==STRING_TYPE) {
@@ -477,13 +477,16 @@ static int getTypeOfInput(char * input) {
  */
 static void displayCoreMessage(int coreId, struct core_ctrl * core) {
 	if (core->data[0] == 0) {
-		int y=*((int*) &(((char*) core->data)[1]));
+		int y;
+        memcpy(&y, &(core->data[1]), sizeof(int));
 		printf("[device %d] %d\n", coreId, y);
 	} else if (core->data[0] == 1) {
-		float y=*((float*) &(((char*) core->data)[1]));
+		float y;
+        memcpy(&y, &(core->data[1]), sizeof(float));
 		printf("[device %d] %f\n", coreId, y);
 	} else if (core->data[0] == 3) {
-		int y=*((int*) &(((char*) core->data)[1]));
+		int y;
+        memcpy(&y, &(core->data[1]), sizeof(int));
 		printf("[device %d] %s\n", coreId, y> 0 ? "true" : "false");
 	} else if (core->data[0] == 4) {
 		printf("[device %d] NONE\n", coreId);

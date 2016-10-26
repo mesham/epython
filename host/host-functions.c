@@ -37,6 +37,7 @@
 #include "interpreter.h"
 #include "host-functions.h"
 #include "device-support.h"
+#include "misc.h"
 
 volatile unsigned char **sharedComm, **syncValues;
 volatile struct shared_basic * basicState;
@@ -84,11 +85,17 @@ void initHostCommunicationData(int total_number_threads, struct shared_basic * p
  */
 void displayToUser(struct value_defn value, int threadId) {
 	if (value.type == INT_TYPE) {
-		printf("[host %d] %d\n", threadId, *((int*) value.data));
+        int v;
+        cpy(&v, value.data, sizeof(int));
+		printf("[host %d] %d\n", threadId, v);
 	} else if (value.type == REAL_TYPE) {
-		printf("[host %d] %f\n", threadId, *((float*) value.data));
+	    float f;
+	    cpy(&f, value.data, sizeof(float));
+		printf("[host %d] %f\n", threadId, f);
 	} else if (value.type == BOOLEAN_TYPE) {
-		printf("[host %d] %s\n", threadId, *((int*) value.data) > 0 ? "true" : "false");
+	    int v;
+        cpy(&v, value.data, sizeof(int));
+		printf("[host %d] %s\n", threadId, v > 0 ? "true" : "false");
 	} else if (value.type == NONE_TYPE) {
 		printf("[host %d] NONE\n", threadId);
 	} else if (value.type == STRING_TYPE) {
@@ -137,14 +144,16 @@ static struct value_defn performGetInputFromUser(char * toDisplay, int threadId)
 	} else {
 		printf("host %d> ", threadId);
 	}
-	scanf("%[^\n]", inputvalue);
+	errorCheck(scanf("%[^\n]", inputvalue), "Getting user input");
 	int inputType=getTypeOfInput(inputvalue);
 	if (inputType==INT_TYPE) {
 		v.type=INT_TYPE;
-		*((int*) v.data)=atoi(inputvalue);
+		int ival=atoi(inputvalue);
+		cpy(v.data, &ival, sizeof(int));
 	} else if (inputType==REAL_TYPE) {
 		v.type=REAL_TYPE;
-		*((float*) v.data)=atof(inputvalue);
+		float fval=atof(inputvalue);
+		cpy(v.data, &fval, sizeof(float));
 	} else {
 		v.type=STRING_TYPE;
 		char * newString=(char*) malloc(strlen(inputvalue)+1);
@@ -195,15 +204,18 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		int totalLen=strlen(str1)+21;
 		char * newString=(char*) malloc(totalLen);
 		if (v2.type==INT_TYPE) {
-			int int_v=*((int*) v2.data);
+			int int_v;
+			cpy(&int_v, v2.data, sizeof(int));
 			sprintf(newString,"%s%d", str1, int_v);
 		} else if (v2.type==BOOLEAN_TYPE) {
-			int int_v=*((int*) v2.data);
+			int int_v;
+			cpy(&int_v, v2.data, sizeof(int));
 			sprintf(newString,"%s%s", str1, int_v > 0?"true":"false");
 		} else if (v2.type==NONE_TYPE) {
 			sprintf(newString,"%sNONE", str1);
 		} else if (v2.type==REAL_TYPE) {
-			float f=*((float*) v2.data);
+			float f;
+			cpy(&f, v2.data, sizeof(float));
 			sprintf(newString,"%s%f", str1, f);
 		}
 		cpy(&result.data, &newString, sizeof(char*));
@@ -213,15 +225,18 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		int totalLen=strlen(str2)+21;
 		char * newString=(char*) malloc(totalLen);
 		if (v1.type==INT_TYPE) {
-			int int_v=*((int*) v1.data);
+			int int_v;
+			cpy(&int_v, v1.data, sizeof(int));
 			sprintf(newString,"%d%s", int_v, str2);
 		} else if (v1.type==BOOLEAN_TYPE) {
-			int int_v=*((int*) v1.data);
+			int int_v;
+			cpy(&int_v, v1.data, sizeof(int));
 			sprintf(newString,"%s%s", int_v > 0?"true":"false", str2);
 		} else if (v1.type==NONE_TYPE) {
 			sprintf(newString,"NONE%s", str2);
 		} else if (v1.type==REAL_TYPE) {
-			float f=*((float*) v1.data);
+			float f;
+			cpy(&f, v1.data, sizeof(float));
 			sprintf(newString,"%f%s", f, str2);
 		}
 		cpy(&result.data, &newString, sizeof(char*));
@@ -363,8 +378,8 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
  */
 struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int threadId, int numberProcesses, int hostCoresBasePid) {
 	struct value_defn returnValue, retrieved;
-	int i, intV, tempInt;
-	float floatV, tempFloat;
+	int i, intV=0, tempInt=0;
+	float floatV=0, tempFloat=0;
 	if (to_send.type==INT_TYPE) {
 		cpy(&intV, to_send.data, sizeof(int));
 	} else {
@@ -493,11 +508,11 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 		int r=rand();
 		cpy(result.data, &r, sizeof(int));
 	} else {
-		float fvalue, r;
+		float fvalue=0, r;
 		if (value.type==REAL_TYPE) {
-			fvalue=*((float*) value.data);
+            cpy(&fvalue, value.data, sizeof(float));
 		} else if (value.type==INT_TYPE) {
-			fvalue=(float) *((int*) value.data);
+		    cpy(&fvalue, value.data, sizeof(float));
 		}
 		result.type=REAL_TYPE;
 		if (operation==SQRT_MATHS_OP) r=sqrtf(fvalue);

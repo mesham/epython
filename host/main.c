@@ -40,6 +40,7 @@
 #include "memorymanager.h"
 #include "byteassembler.h"
 #include "python_interoperability.h"
+#include "misc.h"
 #ifndef HOST_STANDALONE
 #include "shared.h"
 #include "device-support.h"
@@ -207,7 +208,7 @@ static char * getSourceFileContents(char * filename) {
 				if (importPoint_from != NULL) {
 					if (importPoint_from < importPoint) importPoint=importPoint_from;
 				}
-				int startIdx, idx=0, foundSpace=0;
+				int startIdx=0, idx=0, foundSpace=0;
 				while (importPoint[idx] != '\0' && importPoint[idx] != '\n') {
 					if (isspace(importPoint[idx]) && foundSpace==0) foundSpace=1;
 					if (!isspace(importPoint[idx]) && foundSpace==1) {
@@ -316,10 +317,10 @@ static void displayParsedBasicInfo() {
 	int memSize=getMemoryFilledSize();
 	int symbolEntries=getNumberEntriesInSymbolTable();
 #ifndef HOST_STANDALONE
-	printf("%d bytes for code, %u bytes for symbol table (%d entries), %d bytes free\n",
+	printf("%d bytes for code, %lu bytes for symbol table (%d entries), %d bytes free\n",
 			memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries, (0x8000-CORE_DATA_START)-(memSize+(symbolEntries*5)));
 #else
-	printf("%d bytes for code, %u bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
+	printf("%d bytes for code, %lu bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
 #endif
 }
 
@@ -330,13 +331,13 @@ void loadByteCode(char * loadByteFilename) {
 	FILE * byteFile=fopen(loadByteFilename, "rb");
 	if (byteFile != NULL) {
 		unsigned int len;
-		fread(&len, sizeof(unsigned int), 1, byteFile);
+		errorCheck(fread(&len, sizeof(unsigned int), 1, byteFile), "Memory filled size from byte code file");
 		setMemoryFilledSize(len);
 		unsigned short symbols;
-		fread(&symbols, sizeof(unsigned short), 1, byteFile);
+		errorCheck(fread(&symbols, sizeof(unsigned short), 1, byteFile), "Number of symbols from byte code file");
 		setNumberEntriesInSymbolTable(symbols);
 		char * code=(char*) malloc(len);
-		fread(code, sizeof(char), len, byteFile);
+		errorCheck(fread(code, sizeof(char), len, byteFile), "Byte code from file");
 		setAssembledCode(code);
 		fclose(byteFile);
 	} else {

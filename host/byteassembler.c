@@ -597,7 +597,7 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct stack_
 }
 
 struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct memorycontainer* expressionContainer, unsigned char operator) {
-	unsigned char token;
+	unsigned char token=0;
 	if (operator == 0) {
 		token=ADD_TOKEN;
 	} else if (operator == 1) {
