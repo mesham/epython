@@ -27,7 +27,7 @@
 #ifndef CONFIGURATION_H_
 #define CONFIGURATION_H_
 
-#define VERSION_IDENT "0.1"
+#define VERSION_IDENT "1.0"
 
 // Configuration structure which is filled based upon command line arguments
 struct interpreterconfiguration {
