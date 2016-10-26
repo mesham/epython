@@ -1,5 +1,5 @@
 CC=e-gcc
-CFLAGS=-I ../ -I ../interpreter -O1 -Os -fno-exceptions -freg-struct-return -fno-default-inline
+CFLAGS=-I ../ -I ../interpreter -O1 -fno-exceptions -freg-struct-return -fno-default-inline
 LDFLAGS=-T linker.ldf -Wl,--gc-sections
 
 all: clean epython-device.elf
