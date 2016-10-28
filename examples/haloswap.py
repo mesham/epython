@@ -5,6 +5,7 @@ most value at core 15 remains unchanged and is the core id.
 */
 
 from parallel import *
+from random import randrange
 
 DATA_SIZE=12
 dim data[DATA_SIZE]
@@ -20,7 +21,7 @@ if (coreid() > 0):
 if (coreid() < 15):
         data[11]=sendrecv(coreid(), coreid()+1)
 
-displaypid=bcast(random%16, 0)
+displaypid=bcast(randrange(16), 0)
 
 if coreid()==displaypid:
         for i in data:

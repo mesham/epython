@@ -388,17 +388,17 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
 		newString=(char*) malloc(totalLen);
 		if (core->data[0]==INT_TYPE) {
 			int d;
-			memcpy(&d, &core->data[6], sizeof(int));
+			memcpy(&d, &core->data[1], sizeof(int));
 			sprintf(newString,"%d%s", d, str2);
 		} else if (core->data[0]==BOOLEAN_TYPE) {
 			int d;
-			memcpy(&d, &core->data[6], sizeof(int));
+			memcpy(&d, &core->data[1], sizeof(int));
 			sprintf(newString,"%s%s", d > 0?"true":"false", str2);
-		} else if (core->data[5]==NONE_TYPE) {
+		} else if (core->data[0]==NONE_TYPE) {
 			sprintf(newString, "NONE%s", str2);
 		} else if (core->data[0]==REAL_TYPE) {
 			float f;
-			memcpy(&f, &core->data[6], sizeof(float));
+			memcpy(&f, &core->data[1], sizeof(float));
 			sprintf(newString,"%f%s", f, str2);
 		}
 	}
