@@ -262,6 +262,10 @@ char* getStackMemory(int size, char shared) {
 	return getHeapMemory(size, shared);
 }
 
+void freeMemoryInHeap(char* address) {
+    free(address);
+}
+
 void clearFreedStackFrames(char* targetPointer) {
 	// No operation here (allow stack to leak on host)
 }

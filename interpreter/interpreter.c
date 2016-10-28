@@ -82,6 +82,7 @@ static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleSync(char*, unsigned int, unsigned int, int);
+static unsigned int handleFreeMemory(char *, unsigned int, unsigned int, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
 static int getSymbolTableEntryId(int);
@@ -107,6 +108,7 @@ static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleSync(char*, unsigned int, unsigned int);
+static unsigned int handleFreeMemory(char *, unsigned int, unsigned int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
 static int getSymbolTableEntryId(void);
@@ -201,6 +203,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
+		if (command == FREE_TOKEN) i=handleFreeMemory(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
 	}
 	return empty;
@@ -245,6 +248,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
+        if (command == FREE_TOKEN) i=handleFreeMemory(assembled, i, length);
 		if (stopInterpreter) return empty;
 	}
 	return empty;
@@ -278,6 +282,24 @@ static unsigned int handleSend(char * assembled, unsigned int currentPoint, unsi
 	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
 	sendData(to_send_expression, getInt(target_expression.data));
 #endif
+	return currentPoint;
+}
+
+#ifdef HOST_INTERPRETER
+static unsigned int handleFreeMemory(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
+#else
+static unsigned int handleFreeMemory(char * assembled, unsigned int currentPoint, unsigned int length) {
+#endif
+    unsigned short varId=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+#ifdef HOST_INTERPRETER
+    struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
+#else
+    struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
+#endif
+	char * ptr;
+	cpy(&ptr, variableSymbol->value.data, sizeof(char*));
+	freeMemoryInHeap(ptr);
 	return currentPoint;
 }
 

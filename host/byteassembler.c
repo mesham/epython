@@ -718,6 +718,19 @@ struct memorycontainer* appendSyncStatement() {
 	return memoryContainer;
 }
 
+struct memorycontainer* appendFreeMemory(char* identifier) {
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, FREE_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	return memoryContainer;
+};
+
 /**
  * Creates an expression from a string
  */

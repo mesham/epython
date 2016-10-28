@@ -31,7 +31,7 @@
 #include "shared.h"
 #include <e-lib.h>
 
-volatile static unsigned int localHeapEntries=0, sharedHeapEntries=0, sharedStackEntries=0, localStackEntries=0;
+volatile static unsigned int sharedStackEntries=0, localStackEntries=0;
 volatile static unsigned char communication_data[6];
 
 static void sendDataToDeviceCore(struct value_defn, int);
@@ -44,6 +44,8 @@ static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static int copyStringToSharedMemoryAndSetLocation(char*,int);
 static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
+static void consolidateHeapChunks();
+static char * allocateChunkInHeapMemory(int, char);
 
 /**
  * Displays a message to the user and waits for the host to have done this
@@ -198,6 +200,16 @@ void raiseError(char * error) {
  * Initialises the symbol table in core memory
  */
 struct symbol_node* initialiseSymbolTable(int numberSymbols) {
+    unsigned char heapInUse=0;
+    unsigned short coreHeapChunkLength;
+    unsigned int sharedHeapChunkLength
+    coreHeapChunkLength=LOCAL_CORE_MEMORY_MAP_TOP-sharedData->core_ctrl[myId].shared_heap_start-(sizeof(unsigned short) + sizeof(unsigned char));
+    sharedHeapChunkLength=SHARED_HEAP_DATA_AREA_PER_CORE-(sizeof(unsigned int) + sizeof(unsigned char));
+    cpy(sharedData->core_ctrl[myId].shared_heap_start, &coreHeapChunkLength, sizeof(unsigned short));
+    cpy(&sharedData->core_ctrl[myId].shared_heap_start[2], &heapInUse, sizeof(unsigned char));
+    cpy(sharedData->core_ctrl[myId].shared_heap_start, &sharedHeapChunkLength, sizeof(unsigned int));
+    cpy(&sharedData->core_ctrl[myId].shared_heap_start[4], &heapInUse, sizeof(unsigned char));
+
 	return (void*) sharedData->core_ctrl[myId].symbol_table;
 }
 
@@ -206,20 +218,129 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
  */
 char* getHeapMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
-		char * dS= (char*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
-		sharedHeapEntries+=size;
-		if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of shared heap memory for data");
+		char * dS=allocateChunkInHeapMemory(size, 1);
+		if (ds == NULL) raiseError("Out of shared heap memory for data");
 		return dS;
 	} else {
-		char * dS= (char*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries);
-		localHeapEntries+=size;
-		if ((int) ((char*) (sharedData->core_ctrl[myId].heap_start + localHeapEntries)) >= LOCAL_CORE_MEMORY_MAP_TOP) {
-			dS= (char*) (sharedData->core_ctrl[myId].shared_heap_start + sharedHeapEntries);
-			sharedHeapEntries+=size;
-			if (sharedHeapEntries >= SHARED_HEAP_DATA_AREA_PER_CORE) raiseError("Out of core and shared heap memory for data");
+		char * dS=allocateChunkInHeapMemory(size, 0);
+		if (dS == NULL) {
+			dS=allocateChunkInHeapMemory(size, 1);
+			if (dS == NULL) raiseError("Out of core and shared heap memory for data");
 		}
 		return dS;
 	}
+}
+
+void freeMemoryInHeap(char * address) {
+    unsigned chunkInUse=0;
+    cpy(address-1, &chunkInUse, sizeof(unsigned char));
+    consolidateHeapChunks();
+}
+
+static void consolidateHeapChunks() {
+    unsigned char chunkInUse;
+    unsigned short coreChunkLength, nextCoreChunkLength;
+    unsigned int chunkLength, nextChunkLength;
+    size_t headersize, lenStride;
+    char * heapPtr;
+    if (inSharedMemory) {
+        heapPtr=sharedData->core_ctrl[myId].shared_heap_start;
+        headersize=sizeof(unsigned int) + sizeof(unsigned char);
+        lenStride=sizeof(unsigned int);
+    } else {
+        heapPtr=sharedData->core_ctrl[myId].heap_start;
+        headersize=sizeof(unsigned short) + sizeof(unsigned char);
+        lenStride=sizeof(unsigned short);
+    }
+    while (1==1) {
+        if (inSharedMemory) {
+            cpy(&chunkLength, heapPtr, sizeof(unsigned int));
+        } else {
+            cpy(&coreChunkLength, heapPtr, sizeof(unsigned short));
+            chunkLength=coreChunkLength;
+        }
+        cpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
+        while (!chunkInUse) {
+            cpy(&chunkInUse, &heapPtr[chunkLength + headersize +lenStride], sizeof(unsigned char));
+            if (!chunkInUse) {
+                if (inSharedMemory) {
+                    cpy(&nextChunkLength, &heapPtr[chunkLength + headersize], sizeof(unsigned int));
+                } else {
+                    cpy(&nextCoreChunkLength, &heapPtr[chunkLength + headersize], sizeof(unsigned short));
+                    nextChunkLength=nextCoreChunkLength;
+                }
+                chunkLength+=nextChunkLength+headersize;
+                if (inSharedMemory) {
+                    cpy(heapPtr, &chunkLength, sizeof(unsigned int));
+                } else {
+                    coreChunkLength=chunkLength;
+                    cpy(heapPtr, &coreChunkLength, sizeof(unsigned short));
+                }
+            }
+        }
+        heapPtr+=chunkLength + headersize;
+        if (inSharedMemory && heapPtr  >= sharedData->core_ctrl[myId].shared_heap_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+            break;
+        } else if (heapPtr  >= LOCAL_CORE_MEMORY_MAP_TOP) {
+            break;
+        }
+    }
+}
+
+static char * allocateChunkInHeapMemory(int size, char inSharedMemory) {
+    unsigned char chunkInUse;
+    unsigned short coreSplitChunkLength, coreChunkLength
+    unsigned int chunkLength, splitChunkLength;
+    char * heapPtr;
+
+    size_t headersize, lenStride;
+    if (inSharedMemory) {
+        heapPtr=sharedData->core_ctrl[myId].shared_heap_start;
+        headersize=sizeof(unsigned char) + sizeof(unsigned int);
+        lenStride=sizeof(unsigned int);
+    } else {
+        heapPtr=sharedData->core_ctrl[myId].heap_start;
+        headersize=sizeof(unsigned short) + sizeof(unsigned char);
+        lenStride=sizeof(unsigned short);
+    }
+    while (1==1) {
+        if (inSharedMemory) {
+            cpy(&chunkLength, heapPtr, sizeof(unsigned int));
+        } else {
+            cpy(&coreChunkLength, heapPtr, sizeof(unsigned short));
+            chunkLength=coreChunkLength;
+        }
+        cpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
+        if (!chunkInUse && chunkLength >= size) {
+            char * splitChunk=(char*)heapPtr + size + headersize);
+            splitChunkLength=chunkLength - size - headersize;
+            if (inSharedMemory) {
+                cpy(splitChunk, &splitChunkLength, sizeof(unsigned int));
+            } else {
+                coreSplitChunkLength=splitChunkLength;
+                cpy(splitChunk, &coreSplitChunkLength, sizeof(unsigned short));
+            }
+            cpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
+            chunkLength=size;
+            if (inSharedMemory) {
+                cpy(&heapPtr, &chunkLength, sizeof(unsigned int));
+            } else {
+                coreChunkLength=chunkLength;
+                cpy(&heapPtr, &coreChunkLength, sizeof(unsigned short));
+            }
+            chunkInUse=1;
+            cpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
+            return heapPtr + headersize;
+        } else {
+            heapPtr+=chunkLength + headersize;
+            if (inSharedMemory && heapPtr  >= sharedData->core_ctrl[myId].shared_heap_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+                break;
+            } else if (heapPtr  >= LOCAL_CORE_MEMORY_MAP_TOP) {
+                break;
+            }
+        }
+    }
+    return NULL;
 }
 
 /**

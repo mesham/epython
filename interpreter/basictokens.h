@@ -82,6 +82,7 @@
 #define NOT_TOKEN 0x036
 #define NUMDIM_TOKEN 0x37
 #define DSIZE_TOKEN 0x38
+#define FREE_TOKEN 0x39
 
 #define SQRT_MATHS_OP 0x00
 #define SIN_MATHS_OP 0x01

@@ -200,6 +200,7 @@ EPY_I_MAX								return EPY_I_MAX;
 EPY_I_PROD								return EPY_I_PROD;
 EPY_I_DIMS								return EPY_I_DIMS;
 EPY_I_DSIZE								return EPY_I_DSIZE;
+EPY_I_FREE								return EPY_I_FREE;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 WHILE									return WHILE;

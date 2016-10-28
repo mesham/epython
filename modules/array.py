@@ -21,6 +21,9 @@ def array(a,b=none,c=none,d=none,e=none,f=none,g=none):
         dim ret[a,b,c,d,e,f,g]
         return ret
 
+def freearray(arr):
+    EPY_I_FREE arr
+
 def size(arr):
     return len(arr)
 
