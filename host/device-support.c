@@ -41,6 +41,7 @@
 #include "device-support.h"
 #include "configuration.h"
 #include "shared.h"
+#include "misc.h"
 
 #define SYMBOL_TABLE_EXTRA 2
 
@@ -67,6 +68,7 @@ static void performMathsOp(struct core_ctrl*);
 static int getTypeOfInput(char*);
 static char* getEpiphanyExecutableFile(struct interpreterconfiguration*);
 static int doesFileExist(char*);
+static char * allocateChunkInSharedHeapMemory(size_t, struct core_ctrl *);
 
 /**
  * Loads up the code onto the appropriate Epiphany cores, sets up the state (Python bytecode, symbol table, data area etc)
@@ -345,12 +347,10 @@ static void performMathsOp(struct core_ctrl * core) {
  * Concatenates two strings, or a string and integer/real together with necessary conversions
  */
 static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct core_ctrl * core) {
-	char * newString;
+	char * newString, *str1, *str2;
 	unsigned int relativeLocation;
 	if (core->data[0]==STRING_TYPE && core->data[5]==STRING_TYPE) {
-		char *str1, *str2;
-
-		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+        memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
 		str1=core->host_shared_data_start+relativeLocation;
 
 		memcpy(&relativeLocation, &core->data[6], sizeof(unsigned int));
@@ -360,49 +360,83 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
 		newString=(char*) malloc(totalLen);
 		sprintf(newString,"%s%s", str1, str2);
 	} else if (core->data[0]==STRING_TYPE) {
-		char *str1;
 		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
 		str1=core->host_shared_data_start+relativeLocation;
 
 		int totalLen=strlen(str1)+21;
 		newString=(char*) malloc(totalLen);
 		if (core->data[5]==INT_TYPE) {
-			int d=*((int*) &core->data[6]);
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
 			sprintf(newString,"%s%d", str1, d);
 		} else if (core->data[5]==BOOLEAN_TYPE) {
-			int d=*((int*) &core->data[6]);
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
 			sprintf(newString,"%s%s", str1, d > 0?"true":"false");
 		} else if (core->data[5]==NONE_TYPE) {
 			sprintf(newString, "%sNONE", str1);
 		} else if (core->data[5]==REAL_TYPE) {
-			float f=*((float*) &core->data[6]);
+			float f;
+			memcpy(&f, &core->data[6], sizeof(float));
 			sprintf(newString,"%s%f", str1, f);
 		}
 	} else {
-		char *str2;
 		memcpy(&relativeLocation, &core->data[6], sizeof(unsigned int));
 		str2=core->host_shared_data_start+relativeLocation;
 
 		int totalLen=strlen(str2)+21;
 		newString=(char*) malloc(totalLen);
 		if (core->data[0]==INT_TYPE) {
-			int d=*((int*) &core->data[1]);
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
 			sprintf(newString,"%d%s", d, str2);
 		} else if (core->data[0]==BOOLEAN_TYPE) {
-			int d=*((int*) &core->data[1]);
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
 			sprintf(newString,"%s%s", d > 0?"true":"false", str2);
 		} else if (core->data[5]==NONE_TYPE) {
 			sprintf(newString, "NONE%s", str2);
 		} else if (core->data[0]==REAL_TYPE) {
-			float f=*((float*) &core->data[1]);
+			float f;
+			memcpy(&f, &core->data[6], sizeof(float));
 			sprintf(newString,"%f%s", f, str2);
 		}
 	}
-	char * target;
-	memcpy(&relativeLocation, &core->data[11], sizeof(unsigned int));
-	target=core->host_shared_data_start+relativeLocation;
+	char * target=allocateChunkInSharedHeapMemory(strlen(newString) + 1, core);
 	strcpy(target, newString);
+	relativeLocation=target-core->host_shared_data_start;
+	memcpy(&core->data[11], &relativeLocation, sizeof(unsigned int));
 	free(newString);
+}
+
+static char * allocateChunkInSharedHeapMemory(size_t size, struct core_ctrl * core) {
+    unsigned char chunkInUse;
+    unsigned int chunkLength, splitChunkLength;
+    char * heapPtr=core->host_shared_data_start;
+
+    size_t headersize=sizeof(unsigned char) + sizeof(unsigned int);
+    size_t lenStride=sizeof(unsigned int);
+    while (1==1) {
+        memcpy(&chunkLength, heapPtr, sizeof(unsigned int));
+        memcpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
+        if (!chunkInUse && chunkLength >= size) {
+            char * splitChunk=(char*) (heapPtr + size + headersize);
+            splitChunkLength=chunkLength - size - headersize;
+            memcpy(splitChunk, &splitChunkLength, sizeof(unsigned int));
+            memcpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
+            chunkLength=size;
+            memcpy(heapPtr, &chunkLength, sizeof(unsigned int));
+            chunkInUse=1;
+            memcpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
+            return heapPtr + headersize;
+        } else {
+            heapPtr+=chunkLength + headersize;
+            if (heapPtr  >= core->host_shared_data_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+                break;
+            }
+        }
+    }
+    return NULL;
 }
 
 /**
@@ -410,9 +444,8 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
  */
 static void raiseError(int coreId, struct core_ctrl * core) {
 	unsigned int relativeLocation;
-	char * errorMessage;
-	memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
-	errorMessage=core->host_shared_data_start+relativeLocation;
+    memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+    char * errorMessage=core->host_shared_data_start+relativeLocation;
 	fprintf(stderr, "Error from core %d: %s\n", coreId, errorMessage);
 }
 
@@ -421,15 +454,15 @@ static void raiseError(int coreId, struct core_ctrl * core) {
  */
 static void inputCoreMessage(int coreId, struct core_ctrl * core) {
 	char inputvalue[1000];
+	unsigned int relativeLocation;
 	if (core->data[0] == STRING_TYPE) {
-		unsigned int relativeLocation;
 		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
 		char * message=core->host_shared_data_start+relativeLocation;
 		printf("[device %d] %s", coreId, message);
 	} else {
 		printf("device %d> ", coreId);
 	}
-	scanf("%[^\n]", inputvalue);
+	errorCheck(scanf("%[^\n]", inputvalue), "Getting user input");
 	int inputType=getTypeOfInput(inputvalue);
 	// The following 2 lines cleans up the input so it is ready for the next input call
 	int c;
@@ -445,10 +478,10 @@ static void inputCoreMessage(int coreId, struct core_ctrl * core) {
 		memcpy(&core->data[1], &fv, sizeof(float));
 	} else {
 		core->data[0]=STRING_TYPE;
-		unsigned int relativeLocation;
-		memcpy(&relativeLocation, &core->data[6], sizeof(unsigned int));
-		char * target=core->host_shared_data_start+relativeLocation;
+		char * target=allocateChunkInSharedHeapMemory(strlen(inputvalue) + 1, core);
 		strcpy(target, inputvalue);
+		relativeLocation=target-core->host_shared_data_start;
+		memcpy(&core->data[1], &relativeLocation, sizeof(unsigned int));
 	}
 }
 
