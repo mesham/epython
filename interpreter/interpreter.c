@@ -473,15 +473,21 @@ static unsigned int handleFor(char * assembled, unsigned int currentPoint, unsig
 	currentPoint+=sizeof(unsigned short);
 
 	char * ptr;
-	int arrSize;
+	int singleSize, arrSize=1, i;
+	unsigned char numDims;
 	cpy(&ptr, expressionVal.data, sizeof(char*));
-	cpy(&arrSize, ptr, sizeof(int));
+	cpy(&numDims, ptr, sizeof(unsigned char));
+	for (i=0;i<numDims;i++) {
+        cpy(&singleSize, &ptr[1+(i*sizeof(unsigned int))], sizeof(unsigned int));
+        arrSize*=singleSize;
+	}
+	size_t headersize=headersize=sizeof(unsigned char) + (sizeof(unsigned int) * numDims);
 	struct value_defn varVal=getVariableValue(incrementVarSymbol, -1);
 	int incrementVal=getInt(varVal.data);
 	if (incrementVal < arrSize) {
 		struct value_defn nextElement;
 		nextElement.type=expressionVal.type;
-		cpy(&nextElement.data, ptr+((incrementVal+1)*4), sizeof(int));
+		cpy(&nextElement.data, ptr+((incrementVal*sizeof(int)) + headersize), sizeof(int));
 		setVariableValue(variantVarSymbol, nextElement, -1);
 		return currentPoint;
 	}
