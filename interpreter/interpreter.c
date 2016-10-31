@@ -477,6 +477,7 @@ static unsigned int handleFor(char * assembled, unsigned int currentPoint, unsig
 	unsigned char numDims;
 	cpy(&ptr, expressionVal.data, sizeof(char*));
 	cpy(&numDims, ptr, sizeof(unsigned char));
+	numDims=numDims & 0xF;
 	for (i=0;i<numDims;i++) {
         cpy(&singleSize, &ptr[1+(i*sizeof(unsigned int))], sizeof(unsigned int));
         arrSize*=singleSize;
@@ -584,6 +585,7 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
     struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 #endif
 	unsigned char num_dims=getUChar(&assembled[currentPoint]);
+	num_dims=num_dims & 0xF;
 	currentPoint+=sizeof(unsigned char);
 	int totalDataSize=1, i;
 
@@ -883,6 +885,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
             char * ptr;
             cpy(&ptr, arrayvalue.data, sizeof(char*));
             cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
             ptr+=sizeof(unsigned char);
             for (i=0;i<num_dims;i++) {
                 cpy(&dSize, ptr, sizeof(int));
@@ -905,6 +908,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
             cpy(&ptr, arrayvalue.data, sizeof(char*));
             unsigned char num_dims;
             cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
             intNDims=(int) num_dims;
         }
         value.type=INT_TYPE;
@@ -925,6 +929,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
             cpy(&ptr, arrayvalue.data, sizeof(char*));
             unsigned char num_dims;
             cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
             if (lookupIndex < num_dims) {
                 cpy(&dimSize, &ptr[(lookupIndex * sizeof(int)) + sizeof(unsigned char)], sizeof(int));
             }
@@ -956,6 +961,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		}
 		char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0);
 		cpy(value.data, &address, sizeof(char*));
+		ndims=ndims | (1 << 4);
 		cpy(address, &ndims, sizeof(unsigned char));
 		address+=sizeof(unsigned char);
 		cpy(address, &totalSize, sizeof(int));
@@ -968,7 +974,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
                 struct value_defn itemV=getExpressionValue(assembled, currentPoint, length);
 #endif
-            cpy(address+(i+(j*numItems)+1), itemV.data, sizeof(int));
+            cpy(address+((i+(j*numItems)+1) * sizeof(int)), itemV.data, sizeof(int));
             value.type=itemV.type;
             }
 		}
@@ -1117,12 +1123,15 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
 #endif
     struct value_defn index;
     int i, j, runningWeight, spec_weight, num_weights, specificIndex=0, provIdx;
-    unsigned char num_dims=getUChar(&assembled[*currentPoint]), array_dims;
+    unsigned int totSize=1;
+    unsigned char num_dims=getUChar(&assembled[*currentPoint]), array_dims, needsExtension=0, allowedExtension;
     *currentPoint+=sizeof(unsigned char);
 
     char * arraymemory;
     cpy(&arraymemory, variableSymbol->value.data, sizeof(char*));
     cpy(&array_dims, arraymemory, sizeof(unsigned char));
+    allowedExtension=(array_dims >> 4) & 1;
+    array_dims=array_dims&0xF;
     arraymemory+=sizeof(unsigned char);
 
     if (num_dims > array_dims) raiseError("Too many array indexes in expression");
@@ -1140,13 +1149,29 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
         index=getExpressionValue(assembled, currentPoint, length);
 #endif
         cpy(&spec_weight, &arraymemory[sizeof(int) * i], sizeof(int));
+        totSize*=spec_weight;
         provIdx=getInt(index.data);
         if (provIdx < 0) {
             raiseError("Not allowed negative array indexes");
         } else if (provIdx >= spec_weight) {
-            raiseError("Array index in expression exceeds array size in that dimension");
+            if (!allowedExtension) raiseError("Array index in expression exceeds array size in that dimension");
+            spec_weight=provIdx+1;
+            cpy(&arraymemory[sizeof(int) * i], &spec_weight, sizeof(int));
+            needsExtension=1;
         }
         specificIndex+=(runningWeight * provIdx);
+    }
+    if (needsExtension) {
+        unsigned int newSize=1;
+        for (i=0;i<num_dims;i++) {
+            cpy(&spec_weight, &arraymemory[sizeof(int) * i], sizeof(int));
+            newSize*=spec_weight;
+        }
+        char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0);
+        arraymemory-=sizeof(unsigned char);
+        cpy(newmem, arraymemory, (sizeof(int) * totSize) + (sizeof(int) * num_dims) + sizeof(unsigned char));
+        freeMemoryInHeap(arraymemory);
+        cpy(variableSymbol->value.data, &newmem, sizeof(char*));
     }
     return specificIndex;
 }
@@ -1289,6 +1314,7 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 			if (variableSymbol->value.dtype == ARRAY) {
                 unsigned char num_dims;
                 cpy(&num_dims, ptr, sizeof(unsigned char));
+                num_dims=num_dims & 0xF;
                 ptr+=((index+num_dims)*sizeof(int)) + sizeof(unsigned char);
             } else {
                 ptr+=(index+1)*sizeof(int);
@@ -1313,6 +1339,7 @@ struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index
 		if (variableSymbol->value.dtype == ARRAY) {
             unsigned char num_dims;
             cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
             ptr+=((index+num_dims)*sizeof(int)) + sizeof(unsigned char);
 		} else {
 		    ptr+=(index+1)*sizeof(int);
