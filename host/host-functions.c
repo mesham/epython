@@ -270,6 +270,7 @@ void clearFreedStackFrames(char* targetPointer) {
 	// No operation here (allow stack to leak on host)
 }
 
+__attribute__((optimize("O0")))
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 	if (target >= (int) basicState->num_procs) raiseError("Attempting to sendrecv with non-existent process");
@@ -280,6 +281,7 @@ struct value_defn sendRecvData(struct value_defn to_send, int target, int thread
 	}
 }
 
+__attribute__((optimize("O0")))
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	struct value_defn receivedData;
 	int issuedProcess=threadId+hostCoresBasePid-1;
@@ -302,6 +304,7 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
 /**
  * Called when running on the host, the function for sending and receiving data between processes
  */
+ __attribute__((optimize("O0")))
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int target, int threadId) {
 	struct value_defn receivedData;
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
@@ -323,6 +326,7 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 /**
  * Called when running on the host, the function for sending data between processes
  */
+ __attribute__((optimize("O0")))
 void sendData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
 	if (target >= (int) basicState->num_procs) raiseError("Attempting to send to non-existent process");
@@ -333,6 +337,7 @@ void sendData(struct value_defn to_send, int target, int threadId, int hostCores
 	}
 }
 
+__attribute__((optimize("O0")))
 static void sendDataToDeviceCore(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	int issuedProcess=threadId+hostCoresBasePid-1;
 	while (issuedProcess != threadId+hostCoresBasePid) {
@@ -347,6 +352,7 @@ static void sendDataToDeviceCore(struct value_defn to_send, int target, int thre
 	}
 }
 
+__attribute__((optimize("O0")))
 static void sendDataToHostProcess(struct value_defn to_send, int target, int threadId) {
 	volatile unsigned char communication_data[6];
 	communication_data[0]=to_send.type;
@@ -364,6 +370,7 @@ static void sendDataToHostProcess(struct value_defn to_send, int target, int thr
 /**
  * Called when running on the host, the function for broadcasting data between processes
  */
+ __attribute__((optimize("O0")))
 struct value_defn bcastData(struct value_defn to_send, int source, int threadId, int totalProcesses, int hostCoresBasePid) {
 	if (threadId==source-hostCoresBasePid) {
 		int i;
@@ -380,6 +387,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
 /**
  * Called when running on the host, the function for reducing data between processes
  */
+ __attribute__((optimize("O0")))
 struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int threadId, int numberProcesses, int hostCoresBasePid) {
 	struct value_defn returnValue, retrieved;
 	int i, intV=0, tempInt=0;
@@ -417,6 +425,7 @@ struct value_defn reduceData(struct value_defn to_send, unsigned char operator, 
 	return returnValue;
 }
 
+__attribute__((optimize("O0")))
 static void syncWithDevice() {
 	int i;
 	for (i=0;i<TOTAL_CORES;i++) {
@@ -432,6 +441,7 @@ static void syncWithDevice() {
 /**
  * Called when running on the host, the function for synchronising processes
  */
+ __attribute__((optimize("O0")))
 void syncCores(int global, int threadId) {
 	if (global && threadId==0 && basicState->baseHostPid > 0) {
 		// Some cores are active
@@ -458,6 +468,7 @@ void raiseError(char * error) {
 /**
  * Called when running on the host, the function for receiving data between processes
  */
+ __attribute__((optimize("O0")))
 struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
 	if (source >= (int) basicState->num_procs) raiseError("Attempting to receive from non-existent process");
 	if (source < hostCoresBasePid) {
@@ -467,6 +478,7 @@ struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
 	}
 }
 
+__attribute__((optimize("O0")))
 static struct value_defn recvDataFromDeviceCore(int target, int threadId, int hostCoresBasePid) {
 	struct value_defn to_recv;
 	int issuedProcess=threadId+hostCoresBasePid-1;
@@ -484,6 +496,7 @@ static struct value_defn recvDataFromDeviceCore(int target, int threadId, int ho
 	return to_recv;
 }
 
+__attribute__((optimize("O0")))
 static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 	struct value_defn to_recv;
 	volatile unsigned char communication_data[6];
