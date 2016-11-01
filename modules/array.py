@@ -21,6 +21,29 @@ def array(a,b=none,c=none,d=none,e=none,f=none,g=none):
         dim ret[a,b,c,d,e,f,g]
         return ret
 
+def shared_mem_array(a,b=none,c=none,d=none,e=none,f=none,g=none):
+    if (b is none):
+        sdim ret[a]
+        return ret
+    elif (c is none):
+        sdim ret[a,b]
+        return ret
+    elif (d is none):
+        sdim ret[a,b,c]
+        return ret
+    elif (e is none):
+        sdim ret[a,b,c,d]
+        return ret
+    elif (f is none):
+        sdim ret[a,b,c,d,e]
+        return ret
+    elif (g is none):
+        sdim ret[a,b,c,d,e,f]
+        return ret
+    else:
+        sdim ret[a,b,c,d,e,f,g]
+        return ret
+
 def freearray(arr):
     EPY_I_FREE arr
 
