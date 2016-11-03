@@ -39,6 +39,12 @@
 #include "device-support.h"
 #include "misc.h"
 
+struct hostHeapNodes {
+    char* ptr;
+    struct hostHeapNodes *next, *prev;
+};
+
+volatile struct hostHeapNodes ** rootHeapNode;
 volatile unsigned char **sharedComm, **syncValues;
 volatile struct shared_basic * basicState;
 int total_threads, sync_counter;
@@ -57,6 +63,9 @@ static struct value_defn recvDataFromHostProcess(int, int);
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int, int);
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int, int);
 static void syncWithDevice();
+static char removehostHeapNode(char*, int);
+static struct hostHeapNodes * findHeapNode(char*, int);
+static char isMemoryAddressFound(char*, int, struct symbol_node*);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -65,9 +74,11 @@ static void syncWithDevice();
 void initHostCommunicationData(int total_number_threads, struct shared_basic * parallelBasicState) {
 	int i, j;
 	basicState=parallelBasicState;
+	rootHeapNode=(volatile struct hostHeapNodes **) malloc(sizeof(struct hostHeapNodes*)*total_number_threads);
 	sharedComm=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
 	syncValues=(volatile unsigned char**) malloc(sizeof(unsigned char*)*total_number_threads);
 	for (i=0;i<total_number_threads;i++) {
+        rootHeapNode[i]=NULL;
 		sharedComm[i]=(unsigned char*) malloc(total_number_threads*6);
 		syncValues[i]=(unsigned char*) malloc(total_number_threads);
 		for (j=0;j<total_number_threads;j++) {
@@ -156,7 +167,7 @@ static struct value_defn performGetInputFromUser(char * toDisplay, int threadId)
 		cpy(v.data, &fval, sizeof(float));
 	} else {
 		v.type=STRING_TYPE;
-		char * newString=(char*) malloc(strlen(inputvalue)+1);
+		char * newString=getHeapMemory(strlen(inputvalue)+1, 0, threadId);
 		strcpy(newString, inputvalue);
 		cpy(&v.data, &newString, sizeof(char*));
 	}
@@ -186,7 +197,7 @@ static int getTypeOfInput(char * input) {
 /**
  * Called when running on the host, concatenates two strings (or a string with integer/real)
  */
-struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
+struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2, int threadId) {
 	struct value_defn result;
 	result.type=STRING_TYPE;
 	result.dtype=SCALAR;
@@ -195,14 +206,14 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		cpy(&str1, &v1.data, sizeof(char*));
 		cpy(&str2, &v2.data, sizeof(char*));
 		int totalLen=strlen(str1)+strlen(str2)+1;
-		char * newString=(char*) malloc(totalLen);
+		char * newString=getHeapMemory(totalLen, 0, threadId);
 		sprintf(newString,"%s%s", str1, str2);
 		cpy(&result.data, &newString, sizeof(char*));
 	} else if (v1.type==STRING_TYPE) {
 		char *str1;
 		cpy(&str1, &v1.data, sizeof(char*));
 		int totalLen=strlen(str1)+21;
-		char * newString=(char*) malloc(totalLen);
+		char * newString=getHeapMemory(totalLen, 0, threadId);
 		if (v2.type==INT_TYPE) {
 			int int_v;
 			cpy(&int_v, v2.data, sizeof(int));
@@ -223,7 +234,7 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		char *str2;
 		cpy(&str2, &v2.data, sizeof(char*));
 		int totalLen=strlen(str2)+21;
-		char * newString=(char*) malloc(totalLen);
+		char * newString=getHeapMemory(totalLen, 0, threadId);
 		if (v1.type==INT_TYPE) {
 			int int_v;
 			cpy(&int_v, v1.data, sizeof(int));
@@ -251,19 +262,74 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 	return (struct symbol_node*) malloc(sizeof(struct symbol_node) * numberSymbols);
 }
 
+void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable, int threadId) {
+    volatile struct hostHeapNodes * head=rootHeapNode[threadId];
+    char * ptr;
+    while (head != NULL) {
+        ptr=head->ptr;
+        head=head->next;
+        if (!isMemoryAddressFound(ptr, currentSymbolEntries, symbolTable)) {
+            removehostHeapNode(ptr, threadId);
+        }
+    }
+}
+
+static char isMemoryAddressFound(char * address, int currentSymbolEntries, struct symbol_node* symbolTable) {
+    int i;
+    char * ptr;
+    for (i=0;i<=currentSymbolEntries;i++) {
+        if (symbolTable[i].state==ALLOCATED && (symbolTable[i].value.dtype==ARRAY || symbolTable[i].value.type==STRING_TYPE)) {
+            cpy(&ptr, symbolTable[i].value.data, sizeof(char*));
+            if (address == ptr) return 1;
+        }
+    }
+    return 0;
+}
+
 /**
  * Called when running on the host, will get the memory address to store some array into
  */
-char* getHeapMemory(int size, char shared) {
-	return (char*) malloc(size);
+char* getHeapMemory(int size, char shared, int threadId) {
+    char * ptr=(char*) malloc(size);
+    struct hostHeapNodes * newNode=(struct hostHeapNodes*) malloc(sizeof(struct hostHeapNodes));
+    newNode->ptr=ptr;
+    newNode->next=(struct hostHeapNodes *) rootHeapNode[threadId];
+    newNode->prev=NULL;
+    rootHeapNode[threadId]=newNode;
+	return ptr;
+}
+
+static char removehostHeapNode(char* ptr, int threadId) {
+    struct hostHeapNodes * toDelete=findHeapNode(ptr, threadId);
+    if (toDelete != NULL) {
+        if (toDelete->next != NULL) toDelete->next->prev=toDelete->prev;
+        if (toDelete->prev != NULL) toDelete->prev->next=toDelete->next;
+        if (rootHeapNode[threadId] == toDelete) rootHeapNode[threadId]=toDelete->next;
+        free(toDelete);
+        return 1;
+    }
+    return 0;
+}
+
+static struct hostHeapNodes * findHeapNode(char* ptr, int threadId) {
+    volatile struct hostHeapNodes * head=rootHeapNode[threadId];
+    while (head != NULL) {
+        if (head->ptr == ptr) return (struct hostHeapNodes *) head;
+        head=head->next;
+    }
+    return NULL;
 }
 
 char* getStackMemory(int size, char shared) {
-	return getHeapMemory(size, shared);
+	return (char*) malloc(size);
 }
 
-void freeMemoryInHeap(char* address) {
-    free(address);
+void freeMemoryInHeap(char* address, int threadId) {
+    if (removehostHeapNode(address, threadId)) {
+        free(address);
+    } else {
+        raiseError("Attempting to free non allocated heap memory");
+    }
 }
 
 void clearFreedStackFrames(char* targetPointer) {

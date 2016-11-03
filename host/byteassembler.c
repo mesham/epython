@@ -718,6 +718,16 @@ struct memorycontainer* appendSyncStatement() {
 	return memoryContainer;
 }
 
+struct memorycontainer* appendGC() {
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	appendStatement(memoryContainer, GC_TOKEN, 0);
+	return memoryContainer;
+};
+
 struct memorycontainer* appendFreeMemory(char* identifier) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);

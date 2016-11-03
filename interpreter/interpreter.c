@@ -181,6 +181,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == PRINT_TOKEN) i=handlePrint(assembled, i, length, threadId);
 		if (command == STOP_TOKEN) return empty;
 		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length, threadId);
+		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length, threadId);
@@ -226,6 +227,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == PRINT_TOKEN) i=handlePrint(assembled, i, length);
 		if (command == STOP_TOKEN) return empty;
 		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length);
+		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries, symbolTable);
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length);
@@ -299,7 +301,11 @@ static unsigned int handleFreeMemory(char * assembled, unsigned int currentPoint
 #endif
 	char * ptr;
 	cpy(&ptr, variableSymbol->value.data, sizeof(char*));
+#ifdef HOST_INTERPRETER
+	freeMemoryInHeap(ptr, threadId);
+#else
 	freeMemoryInHeap(ptr);
+#endif
 	return currentPoint;
 }
 
@@ -601,7 +607,11 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
 
 	variableSymbol->value.type=INT_TYPE;
 	variableSymbol->value.dtype=ARRAY;
-	char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory);
+#ifdef HOST_INTERPRETER
+    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory, threadId);
+#else
+    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory);
+#endif
 	cpy(variableSymbol->value.data, &address, sizeof(char*));
 	cpy(address, &num_dims, sizeof(unsigned char));
 	address+=sizeof(unsigned char);
@@ -959,7 +969,11 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
             cpy(&repetitionMultiplier, repetitionV.data, sizeof(int));
             totalSize*=repetitionMultiplier;
 		}
-		char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0);
+#ifdef HOST_INTERPRETER
+        char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0, threadId);
+#else
+        char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0);
+#endif
 		cpy(value.data, &address, sizeof(char*));
 		ndims=ndims | (1 << 4);
 		cpy(address, &ndims, sizeof(unsigned char));
@@ -1104,7 +1118,11 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
 		cpy(&value.data, &result, sizeof(float));
 	} else if (value.type==STRING_TYPE) {
 		if (operator == ADD_TOKEN) {
-			return performStringConcatenation(v1, v2);
+#ifdef HOST_INTERPRETER
+        return performStringConcatenation(v1, v2, threadId);
+#else
+        return performStringConcatenation(v1, v2);
+#endif
 		} else {
 			raiseError("Can only perform addition with strings");
 		}
@@ -1167,10 +1185,18 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
             cpy(&spec_weight, &arraymemory[sizeof(int) * i], sizeof(int));
             newSize*=spec_weight;
         }
+#ifdef HOST_INTERPRETER
+        char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0, threadId);
+#else
         char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0);
+#endif
         arraymemory-=sizeof(unsigned char);
         cpy(newmem, arraymemory, (sizeof(int) * totSize) + (sizeof(int) * num_dims) + sizeof(unsigned char));
+#ifdef HOST_INTERPRETER
+        freeMemoryInHeap(arraymemory, threadId);
+#else
         freeMemoryInHeap(arraymemory);
+#endif
         cpy(variableSymbol->value.data, &newmem, sizeof(char*));
     }
     return specificIndex;

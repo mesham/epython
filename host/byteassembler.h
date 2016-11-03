@@ -88,6 +88,7 @@ struct memorycontainer* appendReturnStatementWithExpression(struct memorycontain
 struct memorycontainer* appendPrintStatement(struct memorycontainer*);
 struct memorycontainer* appendStopStatement(void);
 struct memorycontainer* appendSyncStatement(void);
+struct memorycontainer* appendGC(void);
 struct memorycontainer* appendFreeMemory(char*);
 struct memorycontainer* createStringExpression(char*);
 struct memorycontainer* createRealExpression(float);

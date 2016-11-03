@@ -36,11 +36,11 @@
 
 int checkStringEquality(struct value_defn, struct value_defn);
 struct symbol_node* initialiseSymbolTable(int);
-char* getHeapMemory(int,char);
 char* getStackMemory(int,char);
-void freeMemoryInHeap(char*);
 void clearFreedStackFrames(char*);
 #ifdef HOST_INTERPRETER
+char* getHeapMemory(int,char,int);
+void freeMemoryInHeap(char*,int);
 struct value_defn getInputFromUser(int);
 struct value_defn getInputFromUserWithString(struct value_defn, int);
 void displayToUser(struct value_defn, int);
@@ -50,7 +50,11 @@ struct value_defn sendRecvData(struct value_defn, int, int, int);
 struct value_defn bcastData(struct value_defn, int, int, int, int);
 struct value_defn reduceData(struct value_defn, unsigned char, int, int, int);
 void syncCores(int, int);
+void garbageCollect(int, struct symbol_node*, int);
+struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int);
 #else
+char* getHeapMemory(int,char);
+void freeMemoryInHeap(char*);
 struct value_defn getInputFromUser(void);
 struct value_defn getInputFromUserWithString(struct value_defn);
 void displayToUser(struct value_defn);
@@ -60,10 +64,11 @@ struct value_defn sendRecvData(struct value_defn, int);
 struct value_defn bcastData(struct value_defn, int, int);
 struct value_defn reduceData(struct value_defn, unsigned char, int);
 void syncCores(int);
+void garbageCollect(int, struct symbol_node*);
+struct value_defn performStringConcatenation(struct value_defn, struct value_defn);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);
 struct value_defn performMathsOp(unsigned short, struct value_defn);
-struct value_defn performStringConcatenation(struct value_defn, struct value_defn);
 void raiseError(char *);
 int slength(char*);
 
