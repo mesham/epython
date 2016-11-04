@@ -443,7 +443,7 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 #ifdef HOST_INTERPRETER
         struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, threadId);
 #else
-        struct value_defn * rv=returnValue=callNativeFunction(fnCode, numArgs, toPassValues);
+        struct value_defn * rv=returnValue=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
 #endif
         cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {

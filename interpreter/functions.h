@@ -54,7 +54,7 @@ void syncCores(int, int);
 void garbageCollect(int, struct symbol_node*, int);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int);
 #else
-struct value_defn * callNativeFunction(unsigned char, int, struct value_defn*);
+struct value_defn * callNativeFunction(unsigned char, int, struct value_defn*, int, struct symbol_node*);
 char* getHeapMemory(int,char,int,struct symbol_node*);
 void freeMemoryInHeap(void*);
 struct value_defn getInputFromUser(void);

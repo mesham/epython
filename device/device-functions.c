@@ -49,7 +49,7 @@ static char * allocateChunkInHeapMemory(int, char);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
 
-struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters) {
+struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters, int currentSymbolEntries, struct symbol_node* symbolTable) {
     struct value_defn * value=NULL;
     if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
@@ -60,7 +60,7 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         cpy(value->data, &v, sizeof(int));
     } else if (fnIdentifier==NATIVE_FN_RTL_PRINT) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        displayToUser(parameters[0]);
+        displayToUser(parameters[0], currentSymbolEntries, symbolTable);
     } else if (fnIdentifier==NATIVE_FN_RTL_NUMDIMS) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
