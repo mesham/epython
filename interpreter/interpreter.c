@@ -257,28 +257,6 @@ static unsigned int handleSend(char * assembled, unsigned int currentPoint, unsi
 	return currentPoint;
 }
 
-#ifdef HOST_INTERPRETER
-static unsigned int handleFreeMemory(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleFreeMemory(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-    unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-    struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-#else
-    struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-#endif
-	char * ptr;
-	cpy(&ptr, variableSymbol->value.data, sizeof(char*));
-#ifdef HOST_INTERPRETER
-	freeMemoryInHeap(ptr, threadId);
-#else
-	freeMemoryInHeap(ptr);
-#endif
-	return currentPoint;
-}
-
 /**
  * A reduction operation - collective communication between cores
  */
