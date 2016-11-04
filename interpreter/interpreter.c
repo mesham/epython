@@ -554,7 +554,7 @@ static unsigned int handleInputWithString(char * assembled, unsigned int current
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, getInputFromUserWithString(string_display), -1);
+	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, currentSymbolEntries, symbolTable), -1);
 #endif
 	return currentPoint;
 }
@@ -569,7 +569,7 @@ static unsigned int handlePrint(char * assembled, unsigned int currentPoint, uns
 #else
 static unsigned int handlePrint(char * assembled, unsigned int currentPoint, unsigned int length) {
 	struct value_defn result=getExpressionValue(assembled, &currentPoint, length);
-	displayToUser(result);
+	displayToUser(result, currentSymbolEntries, symbolTable);
 #endif
 	return currentPoint;
 }
@@ -610,7 +610,7 @@ static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, 
 #ifdef HOST_INTERPRETER
     char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory, threadId);
 #else
-    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory);
+    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory, currentSymbolEntries, symbolTable);
 #endif
 	cpy(variableSymbol->value.data, &address, sizeof(char*));
 	cpy(address, &num_dims, sizeof(unsigned char));
@@ -972,7 +972,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #ifdef HOST_INTERPRETER
         char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0, threadId);
 #else
-        char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0);
+        char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalSize+1)), 0, currentSymbolEntries, symbolTable);
 #endif
 		cpy(value.data, &address, sizeof(char*));
 		ndims=ndims | (1 << 4);
@@ -1121,7 +1121,7 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
 #ifdef HOST_INTERPRETER
         return performStringConcatenation(v1, v2, threadId);
 #else
-        return performStringConcatenation(v1, v2);
+        return performStringConcatenation(v1, v2, currentSymbolEntries, symbolTable);
 #endif
 		} else {
 			raiseError("Can only perform addition with strings");
@@ -1188,7 +1188,7 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
 #ifdef HOST_INTERPRETER
         char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0, threadId);
 #else
-        char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0);
+        char * newmem=getHeapMemory((sizeof(int) * newSize) + (sizeof(int) * num_dims) + sizeof(unsigned char), 0, currentSymbolEntries, symbolTable);
 #endif
         arraymemory-=sizeof(unsigned char);
         cpy(newmem, arraymemory, (sizeof(int) * totSize) + (sizeof(int) * num_dims) + sizeof(unsigned char));

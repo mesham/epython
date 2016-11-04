@@ -41,7 +41,7 @@ static struct value_defn recvDataFromDeviceCore(int);
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int);
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int);
 static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
-static char* copyStringToSharedMemoryAndSetLocation(char*,int);
+static char* copyStringToSharedMemoryAndSetLocation(char*, int, int, struct symbol_node*);
 static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
 static void consolidateHeapChunks(char);
@@ -52,13 +52,13 @@ static void performGC(int, struct symbol_node*, char);
 /**
  * Displays a message to the user and waits for the host to have done this
  */
-void displayToUser(struct value_defn value) {
+void displayToUser(struct value_defn value, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	sharedData->core_ctrl[myId].data[0]=value.type;
 	char* tempStr=NULL;
 	if (value.type == STRING_TYPE) {
 		char * v;
 		cpy(&v, &value.data, sizeof(char*));
-		tempStr=copyStringToSharedMemoryAndSetLocation(v, 1);
+		tempStr=copyStringToSharedMemoryAndSetLocation(v, 1, currentSymbolEntries, symbolTable);
 	} else {
 		cpy(&sharedData->core_ctrl[myId].data[1], value.data, 4);
 	}
@@ -82,14 +82,14 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 /**
  * Requests input from the host with a string to display
  */
-struct value_defn getInputFromUserWithString(struct value_defn toDisplay) {
+struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	if (toDisplay.type != STRING_TYPE) raiseError("Can only display strings with input statement");
 	sharedData->core_ctrl[myId].data[0]=toDisplay.type;
 	char * msg=NULL;
 	if (toDisplay.type == STRING_TYPE) {
 		char * v;
 		cpy(&v, &toDisplay.data, sizeof(char*));
-		msg=copyStringToSharedMemoryAndSetLocation(v, 1);
+		msg=copyStringToSharedMemoryAndSetLocation(v, 1, currentSymbolEntries, symbolTable);
 	}
 	struct value_defn inputValue=doGetInputFromUser();
 	if (msg != NULL) freeMemoryInHeap(msg);
@@ -151,7 +151,7 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 /**
  * String concatenation performed on the host (and any needed data transformations)
  */
-struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2) {
+struct value_defn performStringConcatenation(struct value_defn v1, struct value_defn v2, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	struct value_defn v;
 	v.type=STRING_TYPE;
 	v.dtype=SCALAR;
@@ -161,7 +161,7 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 	if (v1.type == STRING_TYPE) {
 		char * v;
 		cpy(&v, &v1.data, sizeof(char*));
-		tmpStr1=copyStringToSharedMemoryAndSetLocation(v, 1);
+		tmpStr1=copyStringToSharedMemoryAndSetLocation(v, 1, currentSymbolEntries, symbolTable);
 	} else {
 		cpy(&sharedData->core_ctrl[myId].data[1], v1.data, 4);
 	}
@@ -169,7 +169,7 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 	if (v2.type == STRING_TYPE) {
 		char * v;
 		cpy(&v, &v2.data, sizeof(char*));
-		tmpStr2=copyStringToSharedMemoryAndSetLocation(v, 6);
+		tmpStr2=copyStringToSharedMemoryAndSetLocation(v, 6, currentSymbolEntries, symbolTable);
 	} else {
 		cpy(&sharedData->core_ctrl[myId].data[6], v2.data, 4);
 	}
@@ -196,7 +196,7 @@ void raiseError(char * error) {
 	sharedData->core_ctrl[myId].core_command=3;
 	sharedData->core_ctrl[myId].data[0]=STRING_TYPE;
 
-	char * msg=copyStringToSharedMemoryAndSetLocation(error, 1);
+	char * msg=copyStringToSharedMemoryAndSetLocation(error, 1, -1, NULL);
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
@@ -227,16 +227,30 @@ char* getHeapMemory(int size, char isShared, int currentSymbolEntries, struct sy
 	if (sharedData->allInSharedMemory || isShared) {
 		char * dS=allocateChunkInHeapMemory(size, 1);
 		if (dS == NULL) {
-            performGC(currentSymbolEntries, symbolTable, 1);
-            dS=allocateChunkInHeapMemory(size, 1);
+            if (currentSymbolEntries >= 0 && symbolTable != NULL) {
+                performGC(currentSymbolEntries, symbolTable, 1);
+                dS=allocateChunkInHeapMemory(size, 1);
+            }
             if (dS == NULL) raiseError("Out of shared heap memory for data");
 		}
 		return dS;
 	} else {
 		char * dS=allocateChunkInHeapMemory(size, 0);
 		if (dS == NULL) {
-			dS=allocateChunkInHeapMemory(size, 1);
-			if (dS == NULL) raiseError("Out of core and shared heap memory for data");
+            if (currentSymbolEntries >= 0 && symbolTable != NULL) {
+                performGC(currentSymbolEntries, symbolTable, 0);
+                dS=allocateChunkInHeapMemory(size, 0);
+            }
+            if (dS == NULL) {
+                dS=allocateChunkInHeapMemory(size, 1);
+                if (dS == NULL) {
+                    if (currentSymbolEntries >= 0 && symbolTable != NULL) {
+                        performGC(currentSymbolEntries, symbolTable, 1);
+                        dS=allocateChunkInHeapMemory(size, 1);
+                    }
+                    if (dS == NULL) raiseError("Out of shared heap memory for data");
+                }
+            }
 		}
 		return dS;
 	}
@@ -289,7 +303,7 @@ static void performGC(int currentSymbolEntries, struct symbol_node* symbolTable,
             break;
         }
     }
-    if (freedMem) concatenateMemory(inSharedMemory);
+    if (freedMem) consolidateHeapChunks(inSharedMemory);
 }
 
 static char isMemoryAddressFound(char * address, int currentSymbolEntries, struct symbol_node* symbolTable) {
@@ -728,9 +742,9 @@ void cpy(volatile void* to, volatile void * from, unsigned int size) {
 /**
  * Copies some string into shared memory and sets the location in the data core area
  */
-static char* copyStringToSharedMemoryAndSetLocation(char * string, int start) {
+static char* copyStringToSharedMemoryAndSetLocation(char * string, int start, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	int len=slength(string)+1;
-	char* ptr=getHeapMemory(len, 1);
+	char* ptr=getHeapMemory(len, 1, currentSymbolEntries, symbolTable);
 	unsigned int relativeLocation;
 	cpy(ptr, string, len);
 	relativeLocation=ptr-sharedData->core_ctrl[myId].shared_heap_start;
