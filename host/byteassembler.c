@@ -210,39 +210,6 @@ struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* siz
 	return memoryContainer;
 }
 
-/**
- * Appends and returns an input statement
- */
-struct memorycontainer* appendInputStatement( char * identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, INPUT_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	return memoryContainer;
-}
-
-/**
- * Appends and returns an input statement that displays a user message
- */
-struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDisplay,  char* identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) +sizeof(unsigned char)+ toDisplay->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, INPUT_STRING_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	appendMemory(memoryContainer, toDisplay, position);
-	return memoryContainer;
-}
-
 struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, struct stack_t* args, struct memorycontainer* singleArg) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=(sizeof(unsigned char)*2) + sizeof(unsigned short);
@@ -262,6 +229,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMDIMS, position);
     } else if (strcmp(functionName, "rtl_dsize")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_DSIZE, position);
+    } else if (strcmp(functionName, "rtl_input")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUT, position);
+    } else if (strcmp(functionName, "rtl_inputprint")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUTPRINT, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

@@ -89,9 +89,7 @@ statement
 	| IF expression COLON codeblock ELSE COLON codeblock { $$=appendIfElseStatement($2, $4, $7); }
 	| IF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }		
 	| IF expression COLON statements { $$=appendIfStatement($2, $4); }
-	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }	
-	| ident ASSGN INPUT LPAREN RPAREN { $$=appendInputStatement($1); }
-	| ident ASSGN INPUT LPAREN constant RPAREN { $$=appendInputStringStatement($5, $1); }
+	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }		
     	| ident ASSGN expression { $$=appendLetStatement($1, $3); }
     	| ident arrayaccessor ASSGN expression { $$=appendArraySetStatement($1, $2, $4); }
     	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
@@ -224,6 +222,8 @@ multiplicative_expression
 	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
 	| SLBRACE commaseparray SRBRACE { $$=createArrayExpression($2, NULL); }
 	| SLBRACE commaseparray SRBRACE MULT value { $$=createArrayExpression($2, $5); }
+	| INPUT LPAREN RPAREN { $$=appendNativeCallFunctionStatement("rtl_input", NULL, NULL); }
+	| INPUT LPAREN expression RPAREN { $$=appendNativeCallFunctionStatement("rtl_inputprint", NULL, $3); }	
 ;
 
 commaseparray
