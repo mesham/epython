@@ -21,17 +21,13 @@ def recv(pid, n=none):
 
 def sendrecv(data, pid, n=none):
 	if (n is none):
-		retV=0
-		epy_i_sendrecv data tofrom pid into retV
-		return retV
+		return native sendrecv(data, pid)
 	else:
 		dim retV[n]
 		i=0
 		while i<n:
-			v=0
 			d=data[i]
-			epy_i_sendrecv d tofrom pid into v
-			retV[i]=v
+			retV[i]=native sendrecv(d, pid)
 			i=i+1
 		return retV
 

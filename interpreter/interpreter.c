@@ -74,7 +74,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
-static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
@@ -94,7 +93,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
-static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
@@ -184,7 +182,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
 		}
-		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
@@ -223,7 +220,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
 		}
-		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
 		if (stopInterpreter) return empty;
@@ -278,30 +274,6 @@ static unsigned int handleBcast(char * assembled, unsigned int currentPoint, uns
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), -1);
-#endif
-	return currentPoint;
-}
-
-/**
- * Handles the sendrecv call, which does both P2P in one action with 1 synchronisation
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleSendRecv(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleSendRecv(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data), threadId, hostCoresBasePid), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	struct value_defn tosend_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, sendRecvData(tosend_expression, getInt(target_expression.data)), -1);
 #endif
 	return currentPoint;
 }

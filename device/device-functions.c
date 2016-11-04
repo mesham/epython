@@ -123,6 +123,11 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
         struct value_defn vD=recvData(getInt(parameters[0].data));
         cpy(value, &vD, sizeof(struct value_defn));
+    } else if (fnIdentifier==NATIVE_FN_RTL_SENDRECV) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        struct value_defn vD=sendRecvData(parameters[0], getInt(parameters[1].data));
+        cpy(value, &vD, sizeof(struct value_defn));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

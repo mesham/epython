@@ -34,7 +34,7 @@ void yyerror (char const *msg) {
 %token NEWLINE INDENT OUTDENT
 %token DIM SDIM EXIT ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_RANDOM EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM EPY_I_FREE NATIVE
+%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_RANDOM EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD TOFROM NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
@@ -76,8 +76,7 @@ statements
 ;
 
 statement	
-	: EPY_I_SENDRECV expression TOFROM expression INTO ident { $$=appendSendRecvStatement($2, $4, $6); }	
-	| EPY_I_BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
+	: EPY_I_BCAST expression FROM expression INTO ident { $$=appendBcastStatement($2, $4, $6); }
 	| EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
 	| DIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 0); }	
 	| SDIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 1); }

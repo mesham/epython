@@ -136,23 +136,6 @@ struct memorycontainer* appendBcastStatement(struct memorycontainer* expression,
 }
 
 /**
- * Appends a sendrecv statement, which combined both p2p operations with one synchronisation
- */
-struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target, char* identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char) + toSendExpression->length+target->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, SENDRECV_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, toSendExpression, position);
-	position=appendMemory(memoryContainer, target, position);
-	return memoryContainer;
-}
-
-/**
  * Appends and returns the declaration of an array into either default (often core local) or shared memory statement
  */
 struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* size_expressions, int shared_array) {
@@ -211,6 +194,8 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND, position);
     } else if (strcmp(functionName, "rtl_recv")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_RECV, position);
+    } else if (strcmp(functionName, "rtl_sendrecv")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SENDRECV, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
