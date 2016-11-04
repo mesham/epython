@@ -1,8 +1,8 @@
 def randint(a, b):
-	return (epy_i_random % (b-a)) + a
+	return (native random() % (b-a)) + a
 
 def randrange(a):
-    return epy_i_random % a
+    return native random() % a
 
 def random():
-    return epy_i_random % 20000 / 20001.0
+    return native random() % 20000 / 20001.0
