@@ -63,65 +63,64 @@ extern int yydebug;
     TO = 273,
     FROM = 274,
     NEXT = 275,
-    INTO = 276,
-    GOTO = 277,
-    PRINT = 278,
-    INPUT = 279,
-    IF = 280,
-    NATIVE = 281,
-    ADD = 282,
-    SUB = 283,
-    COLON = 284,
-    DEF = 285,
-    RET = 286,
-    NONE = 287,
-    FILESTART = 288,
-    IN = 289,
-    ADDADD = 290,
-    SUBSUB = 291,
-    MULMUL = 292,
-    DIVDIV = 293,
-    MODMOD = 294,
-    POWPOW = 295,
-    FLOORDIVFLOORDIV = 296,
-    FLOORDIV = 297,
-    MULT = 298,
-    DIV = 299,
-    MOD = 300,
-    AND = 301,
-    OR = 302,
-    NEQ = 303,
-    LEQ = 304,
-    GEQ = 305,
-    LT = 306,
-    GT = 307,
-    EQ = 308,
-    IS = 309,
-    NOT = 310,
-    SQRT = 311,
-    SIN = 312,
-    COS = 313,
-    TAN = 314,
-    ASIN = 315,
-    ACOS = 316,
-    ATAN = 317,
-    SINH = 318,
-    COSH = 319,
-    TANH = 320,
-    FLOOR = 321,
-    CEIL = 322,
-    LOG = 323,
-    LOG10 = 324,
-    STR = 325,
-    LPAREN = 326,
-    RPAREN = 327,
-    SLBRACE = 328,
-    SRBRACE = 329,
-    TRUE = 330,
-    FALSE = 331,
-    LEN = 332,
-    ASSGN = 333,
-    POW = 334
+    GOTO = 276,
+    PRINT = 277,
+    INPUT = 278,
+    IF = 279,
+    NATIVE = 280,
+    ADD = 281,
+    SUB = 282,
+    COLON = 283,
+    DEF = 284,
+    RET = 285,
+    NONE = 286,
+    FILESTART = 287,
+    IN = 288,
+    ADDADD = 289,
+    SUBSUB = 290,
+    MULMUL = 291,
+    DIVDIV = 292,
+    MODMOD = 293,
+    POWPOW = 294,
+    FLOORDIVFLOORDIV = 295,
+    FLOORDIV = 296,
+    MULT = 297,
+    DIV = 298,
+    MOD = 299,
+    AND = 300,
+    OR = 301,
+    NEQ = 302,
+    LEQ = 303,
+    GEQ = 304,
+    LT = 305,
+    GT = 306,
+    EQ = 307,
+    IS = 308,
+    NOT = 309,
+    SQRT = 310,
+    SIN = 311,
+    COS = 312,
+    TAN = 313,
+    ASIN = 314,
+    ACOS = 315,
+    ATAN = 316,
+    SINH = 317,
+    COSH = 318,
+    TANH = 319,
+    FLOOR = 320,
+    CEIL = 321,
+    LOG = 322,
+    LOG10 = 323,
+    STR = 324,
+    LPAREN = 325,
+    RPAREN = 326,
+    SLBRACE = 327,
+    SRBRACE = 328,
+    TRUE = 329,
+    FALSE = 330,
+    LEN = 331,
+    ASSGN = 332,
+    POW = 333
   };
 #endif
 /* Tokens.  */
@@ -143,65 +142,64 @@ extern int yydebug;
 #define TO 273
 #define FROM 274
 #define NEXT 275
-#define INTO 276
-#define GOTO 277
-#define PRINT 278
-#define INPUT 279
-#define IF 280
-#define NATIVE 281
-#define ADD 282
-#define SUB 283
-#define COLON 284
-#define DEF 285
-#define RET 286
-#define NONE 287
-#define FILESTART 288
-#define IN 289
-#define ADDADD 290
-#define SUBSUB 291
-#define MULMUL 292
-#define DIVDIV 293
-#define MODMOD 294
-#define POWPOW 295
-#define FLOORDIVFLOORDIV 296
-#define FLOORDIV 297
-#define MULT 298
-#define DIV 299
-#define MOD 300
-#define AND 301
-#define OR 302
-#define NEQ 303
-#define LEQ 304
-#define GEQ 305
-#define LT 306
-#define GT 307
-#define EQ 308
-#define IS 309
-#define NOT 310
-#define SQRT 311
-#define SIN 312
-#define COS 313
-#define TAN 314
-#define ASIN 315
-#define ACOS 316
-#define ATAN 317
-#define SINH 318
-#define COSH 319
-#define TANH 320
-#define FLOOR 321
-#define CEIL 322
-#define LOG 323
-#define LOG10 324
-#define STR 325
-#define LPAREN 326
-#define RPAREN 327
-#define SLBRACE 328
-#define SRBRACE 329
-#define TRUE 330
-#define FALSE 331
-#define LEN 332
-#define ASSGN 333
-#define POW 334
+#define GOTO 276
+#define PRINT 277
+#define INPUT 278
+#define IF 279
+#define NATIVE 280
+#define ADD 281
+#define SUB 282
+#define COLON 283
+#define DEF 284
+#define RET 285
+#define NONE 286
+#define FILESTART 287
+#define IN 288
+#define ADDADD 289
+#define SUBSUB 290
+#define MULMUL 291
+#define DIVDIV 292
+#define MODMOD 293
+#define POWPOW 294
+#define FLOORDIVFLOORDIV 295
+#define FLOORDIV 296
+#define MULT 297
+#define DIV 298
+#define MOD 299
+#define AND 300
+#define OR 301
+#define NEQ 302
+#define LEQ 303
+#define GEQ 304
+#define LT 305
+#define GT 306
+#define EQ 307
+#define IS 308
+#define NOT 309
+#define SQRT 310
+#define SIN 311
+#define COS 312
+#define TAN 313
+#define ASIN 314
+#define ACOS 315
+#define ATAN 316
+#define SINH 317
+#define COSH 318
+#define TANH 319
+#define FLOOR 320
+#define CEIL 321
+#define LOG 322
+#define LOG10 323
+#define STR 324
+#define LPAREN 325
+#define RPAREN 326
+#define SLBRACE 327
+#define SRBRACE 328
+#define TRUE 329
+#define FALSE 330
+#define LEN 331
+#define ASSGN 332
+#define POW 333
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -217,7 +215,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 221 "parser.h" /* yacc.c:1909  */
+#line 219 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

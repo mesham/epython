@@ -184,7 +184,6 @@ ELIF									return ELIF;
 IN										return IN;
 IS										return IS;
 LEN										return LEN;
-INTO									return INTO;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 WHILE									return WHILE;
