@@ -68,64 +68,60 @@ extern int yydebug;
     PRINT = 278,
     INPUT = 279,
     IF = 280,
-    THEN = 281,
-    TOFROM = 282,
-    NATIVE = 283,
-    ADD = 284,
-    SUB = 285,
-    COLON = 286,
-    DEF = 287,
-    RET = 288,
-    NONE = 289,
-    FILESTART = 290,
-    IN = 291,
-    ADDADD = 292,
-    SUBSUB = 293,
-    MULMUL = 294,
-    DIVDIV = 295,
-    MODMOD = 296,
-    POWPOW = 297,
-    FLOORDIVFLOORDIV = 298,
-    FLOORDIV = 299,
-    MULT = 300,
-    DIV = 301,
-    MOD = 302,
-    AND = 303,
-    OR = 304,
-    NEQ = 305,
-    LEQ = 306,
-    GEQ = 307,
-    LT = 308,
-    GT = 309,
-    EQ = 310,
-    IS = 311,
-    NOT = 312,
-    SQRT = 313,
-    SIN = 314,
-    COS = 315,
-    TAN = 316,
-    ASIN = 317,
-    ACOS = 318,
-    ATAN = 319,
-    SINH = 320,
-    COSH = 321,
-    TANH = 322,
-    FLOOR = 323,
-    CEIL = 324,
-    LOG = 325,
-    LOG10 = 326,
-    STR = 327,
-    LPAREN = 328,
-    RPAREN = 329,
-    SLBRACE = 330,
-    SRBRACE = 331,
-    TRUE = 332,
-    FALSE = 333,
-    LEN = 334,
-    EPY_I_ISHOST = 335,
-    EPY_I_ISDEVICE = 336,
-    ASSGN = 337,
-    POW = 338
+    NATIVE = 281,
+    ADD = 282,
+    SUB = 283,
+    COLON = 284,
+    DEF = 285,
+    RET = 286,
+    NONE = 287,
+    FILESTART = 288,
+    IN = 289,
+    ADDADD = 290,
+    SUBSUB = 291,
+    MULMUL = 292,
+    DIVDIV = 293,
+    MODMOD = 294,
+    POWPOW = 295,
+    FLOORDIVFLOORDIV = 296,
+    FLOORDIV = 297,
+    MULT = 298,
+    DIV = 299,
+    MOD = 300,
+    AND = 301,
+    OR = 302,
+    NEQ = 303,
+    LEQ = 304,
+    GEQ = 305,
+    LT = 306,
+    GT = 307,
+    EQ = 308,
+    IS = 309,
+    NOT = 310,
+    SQRT = 311,
+    SIN = 312,
+    COS = 313,
+    TAN = 314,
+    ASIN = 315,
+    ACOS = 316,
+    ATAN = 317,
+    SINH = 318,
+    COSH = 319,
+    TANH = 320,
+    FLOOR = 321,
+    CEIL = 322,
+    LOG = 323,
+    LOG10 = 324,
+    STR = 325,
+    LPAREN = 326,
+    RPAREN = 327,
+    SLBRACE = 328,
+    SRBRACE = 329,
+    TRUE = 330,
+    FALSE = 331,
+    LEN = 332,
+    ASSGN = 333,
+    POW = 334
   };
 #endif
 /* Tokens.  */
@@ -152,64 +148,60 @@ extern int yydebug;
 #define PRINT 278
 #define INPUT 279
 #define IF 280
-#define THEN 281
-#define TOFROM 282
-#define NATIVE 283
-#define ADD 284
-#define SUB 285
-#define COLON 286
-#define DEF 287
-#define RET 288
-#define NONE 289
-#define FILESTART 290
-#define IN 291
-#define ADDADD 292
-#define SUBSUB 293
-#define MULMUL 294
-#define DIVDIV 295
-#define MODMOD 296
-#define POWPOW 297
-#define FLOORDIVFLOORDIV 298
-#define FLOORDIV 299
-#define MULT 300
-#define DIV 301
-#define MOD 302
-#define AND 303
-#define OR 304
-#define NEQ 305
-#define LEQ 306
-#define GEQ 307
-#define LT 308
-#define GT 309
-#define EQ 310
-#define IS 311
-#define NOT 312
-#define SQRT 313
-#define SIN 314
-#define COS 315
-#define TAN 316
-#define ASIN 317
-#define ACOS 318
-#define ATAN 319
-#define SINH 320
-#define COSH 321
-#define TANH 322
-#define FLOOR 323
-#define CEIL 324
-#define LOG 325
-#define LOG10 326
-#define STR 327
-#define LPAREN 328
-#define RPAREN 329
-#define SLBRACE 330
-#define SRBRACE 331
-#define TRUE 332
-#define FALSE 333
-#define LEN 334
-#define EPY_I_ISHOST 335
-#define EPY_I_ISDEVICE 336
-#define ASSGN 337
-#define POW 338
+#define NATIVE 281
+#define ADD 282
+#define SUB 283
+#define COLON 284
+#define DEF 285
+#define RET 286
+#define NONE 287
+#define FILESTART 288
+#define IN 289
+#define ADDADD 290
+#define SUBSUB 291
+#define MULMUL 292
+#define DIVDIV 293
+#define MODMOD 294
+#define POWPOW 295
+#define FLOORDIVFLOORDIV 296
+#define FLOORDIV 297
+#define MULT 298
+#define DIV 299
+#define MOD 300
+#define AND 301
+#define OR 302
+#define NEQ 303
+#define LEQ 304
+#define GEQ 305
+#define LT 306
+#define GT 307
+#define EQ 308
+#define IS 309
+#define NOT 310
+#define SQRT 311
+#define SIN 312
+#define COS 313
+#define TAN 314
+#define ASIN 315
+#define ACOS 316
+#define ATAN 317
+#define SINH 318
+#define COSH 319
+#define TANH 320
+#define FLOOR 321
+#define CEIL 322
+#define LOG 323
+#define LOG10 324
+#define STR 325
+#define LPAREN 326
+#define RPAREN 327
+#define SLBRACE 328
+#define SRBRACE 329
+#define TRUE 330
+#define FALSE 331
+#define LEN 332
+#define ASSGN 333
+#define POW 334
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -225,7 +217,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 229 "parser.h" /* yacc.c:1909  */
+#line 221 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
