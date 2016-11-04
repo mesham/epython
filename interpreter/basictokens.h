@@ -74,7 +74,6 @@
 #define IS_TOKEN 0x34
 #define ARRAY_TOKEN 0x35
 #define NOT_TOKEN 0x036
-#define FREE_TOKEN 0x39
 #define NATIVE_TOKEN 0x3B
 
 #define SQRT_MATHS_OP 0x00
@@ -123,5 +122,6 @@
 #define NATIVE_FN_RTL_INPUTPRINT 0x06
 #define NATIVE_FN_RTL_SYNC 0x07
 #define NATIVE_FN_RTL_GC 0x08
+#define NATIVE_FN_RTL_FREE 0x09
 
 #endif /* BASICTOKENS_H_ */

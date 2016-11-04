@@ -79,7 +79,6 @@ static unsigned int handleRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
-static unsigned int handleFreeMemory(char *, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
@@ -102,7 +101,6 @@ static unsigned int handleRecv(char*, unsigned int, unsigned int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
-static unsigned int handleFreeMemory(char *, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
@@ -195,7 +193,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
-		if (command == FREE_TOKEN) i=handleFreeMemory(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
 	}
 	return empty;
@@ -237,7 +234,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
-        if (command == FREE_TOKEN) i=handleFreeMemory(assembled, i, length);
 		if (stopInterpreter) return empty;
 	}
 	return empty;

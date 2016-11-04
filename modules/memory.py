@@ -1,5 +1,5 @@
 def free(a):
-    EPY_I_FREE a
+    native rtl_free(a)
 
 def gc():
-    native gc()
+    native rtl_gc()

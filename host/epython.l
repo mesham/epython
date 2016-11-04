@@ -195,7 +195,6 @@ EPY_I_SUM								return EPY_I_SUM;
 EPY_I_MIN								return EPY_I_MIN;
 EPY_I_MAX								return EPY_I_MAX;
 EPY_I_PROD								return EPY_I_PROD;
-EPY_I_FREE								return EPY_I_FREE;
 DIM                                     return DIM;
 SDIM                                    return SDIM;
 WHILE									return WHILE;

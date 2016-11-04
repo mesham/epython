@@ -100,7 +100,6 @@ statement
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
-	| EPY_I_FREE ident { $$=appendFreeMemory($2); }
 ;
 
 arrayaccessor

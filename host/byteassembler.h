@@ -85,7 +85,6 @@ struct memorycontainer* appendLetWithOperatorStatement(char*, struct memoryconta
 struct memorycontainer* appendReturnStatement(void);
 struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer*);
 struct memorycontainer* appendStopStatement(void);
-struct memorycontainer* appendFreeMemory(char*);
 struct memorycontainer* createStringExpression(char*);
 struct memorycontainer* createRealExpression(float);
 struct memorycontainer* createCoreIdExpression(void);
