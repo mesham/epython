@@ -674,9 +674,6 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == NONE_TOKEN) {
 		value.type=NONE_TYPE;
 		value.dtype=SCALAR;
-	} else if (expressionId == RANDOM_TOKEN) {
-		value=performMathsOp(RANDOM_MATHS_OP, value);
-		value.dtype=SCALAR;
 	} else if (expressionId == LEN_TOKEN) {
 #ifdef HOST_INTERPRETER
 		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);

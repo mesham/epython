@@ -83,7 +83,6 @@ struct memorycontainer* appendReturnStatementWithExpression(struct memorycontain
 struct memorycontainer* appendStopStatement(void);
 struct memorycontainer* createStringExpression(char*);
 struct memorycontainer* createRealExpression(float);
-struct memorycontainer* createRandomExpression(void);
 struct memorycontainer* createIntegerExpression(int);
 struct memorycontainer* createBooleanExpression(int);
 struct memorycontainer* createArrayExpression(struct stack_t*, struct memorycontainer*);

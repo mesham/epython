@@ -204,7 +204,6 @@ IF                                      return IF;
 THEN                                    return THEN;
 PRINT                                   return PRINT;
 INPUT                                   return INPUT;
-EPY_I_RANDOM							return EPY_I_RANDOM;
 NATIVE									return NATIVE;
 SQRT									return SQRT;
 SIN										return SIN;

@@ -185,6 +185,8 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMCORES, position);
     } else if (strcmp(functionName, "rtl_coreid")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_COREID, position);
+    } else if (strcmp(functionName, "rtl_random")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_RANDOM, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
@@ -667,19 +669,6 @@ struct memorycontainer* createStringExpression(char * string) {
 	char * mstring=(char*) string;
 	mstring[strlen(mstring)-1]='\0';
 	strcpy(&memoryContainer->data[location], &mstring[1]);
-	return memoryContainer;
-}
-
-/**
- * Creates a random (integer) expression for random numbers
- */
-struct memorycontainer* createRandomExpression() {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, RANDOM_TOKEN, 0);
 	return memoryContainer;
 }
 

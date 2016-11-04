@@ -240,8 +240,6 @@ ident
 constant
         : INTEGER { $$=createIntegerExpression($1); }
         | REAL { $$=createRealExpression($1); }
-        | EPY_I_RANDOM { $$=createRandomExpression(); }
-        | EPY_I_RANDOM LPAREN RPAREN { $$=createRandomExpression(); }
 	| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 	| unary_operator REAL { $$=createRealExpression($1 * $2); }		
 	| STRING { $$=createStringExpression($1); }	
