@@ -15,7 +15,6 @@ def recv(pid, n=none):
 		dim retV[n]
 		i=0
 		while i<n:
-			epy_i_recv v from pid
 			retV[i]=native rtl_recv(pid)
 			i=i+1
 		return retV
