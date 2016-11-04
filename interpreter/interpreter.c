@@ -67,8 +67,6 @@ static int hostCoresBasePid;
 
 #ifdef HOST_INTERPRETER
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int, int);
-static unsigned int handleInput(char*, unsigned int, unsigned int, int);
-static unsigned int handleInputWithString(char*, unsigned int, unsigned int, int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int, int);
@@ -93,8 +91,6 @@ static int determine_logical_expression(char*, unsigned int*,  unsigned int, int
 static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int, int);
 #else
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
-static unsigned int handleInput(char*, unsigned int, unsigned int);
-static unsigned int handleInputWithString(char*, unsigned int, unsigned int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int);
@@ -198,8 +194,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
 		}
-		if (command == INPUT_TOKEN) i=handleInput(assembled, i, length, threadId);
-		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i, length, threadId);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i, length, threadId);
 		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length, threadId);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
@@ -244,8 +238,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
 		}
-		if (command == INPUT_TOKEN) i=handleInput(assembled, i, length);
-		if (command == INPUT_STRING_TOKEN) i=handleInputWithString(assembled, i, length);
 		if (command == SEND_TOKEN) i=handleSend(assembled, i, length);
 		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
@@ -552,48 +544,6 @@ static unsigned int handleIf(char * assembled, unsigned int currentPoint, unsign
 	if (conditionalResult) return currentPoint+sizeof(unsigned short);
 	unsigned short blockLen=getUShort(&assembled[currentPoint]);
 	return currentPoint+sizeof(unsigned short)+blockLen;
-}
-
-/**
- * Input from user without string to display
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleInput(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleInput(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	setVariableValue(variableSymbol, getInputFromUser(threadId), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	setVariableValue(variableSymbol, getInputFromUser(), -1);
-#endif
-	return currentPoint;
-}
-
-/**
- * Input from user with string to display
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleInputWithString(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleInputWithString(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length, threadId);
-	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, threadId), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, currentSymbolEntries, symbolTable), -1);
-#endif
-	return currentPoint;
 }
 
 /**

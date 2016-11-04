@@ -143,6 +143,14 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         value->type=INT_TYPE;
         value->dtype=SCALAR;
 		cpy(value->data, &dimSize, sizeof(int));
+    } else if (fnIdentifier==NATIVE_FN_RTL_INPUT) {
+        if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        *value=getInputFromUser(threadId);
+    } else if (fnIdentifier==NATIVE_FN_RTL_INPUTPRINT) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        *value=getInputFromUserWithString(parameters[0], threadId);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
