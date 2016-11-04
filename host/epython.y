@@ -34,9 +34,9 @@ void yyerror (char const *msg) {
 %token NEWLINE INDENT OUTDENT
 %token DIM SDIM EXIT ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV EPY_I_RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM EPY_I_FREE EPY_I_GC
+%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_SEND EPY_I_RECV EPY_I_RANDOM EPY_I_SYNC EPY_I_BCAST EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD EPY_I_SENDRECV TOFROM EPY_I_FREE EPY_I_GC NATIVE
 
-%token ADD SUB EPY_I_ISHOST EPY_I_DIMS EPY_I_DSIZE EPY_I_ISDEVICE COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
+%token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
@@ -95,13 +95,14 @@ statement
     	| ident ASSGN expression { $$=appendLetStatement($1, $3); }
     	| ident arrayaccessor ASSGN expression { $$=appendArraySetStatement($1, $2, $4); }
     	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
-	| PRINT expression { $$=appendPrintStatement($2); }	
+	| PRINT expression { $$=appendNativeCallFunctionStatement("rtl_print", NULL, $2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
 	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| fn_entry LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($1, $3, $6); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
+	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| EPY_I_FREE ident { $$=appendFreeMemory($2); }
 	| EPY_I_GC { $$=appendGC(); }
 ;
@@ -182,8 +183,6 @@ equality_expression
 	| equality_expression EQ relational_expression { $$=createEqExpression($1, $3); }
 	| equality_expression NEQ relational_expression { $$=createNeqExpression($1, $3); }
 	| equality_expression IS relational_expression { $$=createIsExpression($1, $3); }
-	| EPY_I_ISHOST { $$=createIsHostExpression(); }
-	| EPY_I_ISDEVICE { $$=createIsDeviceExpression(); }
 ;
 
 relational_expression
@@ -223,8 +222,6 @@ multiplicative_expression
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
 	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
 	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
-	| EPY_I_DIMS LPAREN expression RPAREN { $$=createArrayDimExpression($3); }
-	| EPY_I_DSIZE LPAREN expression COMMA expression RPAREN { $$=createArrayDsizeExpression($3,$5); }
 	| SLBRACE commaseparray SRBRACE { $$=createArrayExpression($2, NULL); }
 	| SLBRACE commaseparray SRBRACE MULT value { $$=createArrayExpression($2, $5); }
 ;
@@ -240,6 +237,7 @@ value
 	| ident { $$=createIdentifierExpression($1); }
 	| ident arrayaccessor { $$=createIdentifierArrayAccessExpression($1, $2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
+	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 ;
 
 ident

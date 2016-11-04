@@ -243,6 +243,43 @@ struct memorycontainer* appendInputStringStatement(struct memorycontainer* toDis
 	return memoryContainer;
 }
 
+struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, struct stack_t* args, struct memorycontainer* singleArg) {
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=(sizeof(unsigned char)*2) + sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, NATIVE_TOKEN, position);
+    if (strcmp(functionName, "rtl_ishost")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ISHOST, position);
+    } else if (strcmp(functionName, "rtl_isdevice")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ISDEVICE, position);
+    } else if (strcmp(functionName, "rtl_print")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_PRINT, position);
+    } else if (strcmp(functionName, "rtl_numdims")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMDIMS, position);
+    } else if (strcmp(functionName, "rtl_dsize")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_DSIZE, position);
+    } else {
+        fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
+        exit(EXIT_FAILURE);
+    }
+    unsigned short numArgs=args !=NULL ? (unsigned short) getStackSize(args) : singleArg != NULL ? 1 : 0;
+    position=appendVariable(memoryContainer, numArgs, position);
+
+    if (args != NULL) {
+        int i;
+        for (i=0;i<numArgs;i++) {
+            struct memorycontainer* expression=getExpressionAt(args, i);
+            memoryContainer=concatenateMemory(memoryContainer, expression);
+        }
+    }
+    if (singleArg != NULL) memoryContainer=concatenateMemory(memoryContainer, singleArg);
+	return memoryContainer;
+}
+
 /**
  * Appends and returns a call function, this is added as a placeholder and then resolved at the end to point to the absolute byte code location
  * which is needed as the function might appear at any point
@@ -652,21 +689,6 @@ static struct memorycontainer* appendLetIfNoAliasStatement(char * identifier, st
 	return memoryContainer;
 }
 
-/**
- * Appends and returns a print statement
- */
-struct memorycontainer* appendPrintStatement(struct memorycontainer* expressionContainer) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+expressionContainer->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, PRINT_TOKEN, position);
-	appendMemory(memoryContainer, expressionContainer, position);
-	return memoryContainer;
-}
-
 struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned char)+expressionContainer->length;
@@ -785,31 +807,6 @@ struct memorycontainer* createLenExpression(struct memorycontainer* expression) 
 	appendMemory(memoryContainer, expression, position);
 	return memoryContainer;
 }
-
-struct memorycontainer* createArrayDimExpression(struct memorycontainer* expression) {
-    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + expression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position;
-	position=appendStatement(memoryContainer, NUMDIM_TOKEN, 0);
-	appendMemory(memoryContainer, expression, position);
-	return memoryContainer;
-};
-
-struct memorycontainer* createArrayDsizeExpression(struct memorycontainer* expression, struct memorycontainer* dimexpression) {
-    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + expression->length + dimexpression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position;
-	position=appendStatement(memoryContainer, DSIZE_TOKEN, 0);
-	position=appendMemory(memoryContainer, expression, position);
-	appendMemory(memoryContainer, dimexpression, position);
-	return memoryContainer;
-};
 
 /**
  * Creates a coreid (integer) expression for getting the ID of a core
@@ -949,26 +946,6 @@ struct memorycontainer* createIdentifierArrayAccessExpression(char* identifier, 
 	for (i=0;i<lenOfIndexes;i++) {
         memoryContainer=concatenateMemory(memoryContainer, getExpressionAt(index_expressions, i));
 	}
-	return memoryContainer;
-}
-
-struct memorycontainer* createIsHostExpression(void) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, ISHOST_TOKEN, 0);
-	return memoryContainer;
-}
-
-struct memorycontainer* createIsDeviceExpression(void) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, ISDEVICE_TOKEN, 0);
 	return memoryContainer;
 }
 

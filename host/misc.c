@@ -94,6 +94,12 @@ char* translateErrorCodeToMessage(unsigned char errorCode) {
     case ERR_FREE_ON_NON_HEAP:
         errorMessage="Attempting to free non allocated heap memory";
         break;
+    case ERR_INCORRECT_NUM_NATIVE_PARAMS:
+        errorMessage="Incorrect number of parameters provided to native function call";
+        break;
+    case ERR_UNKNOWN_NATIVE_COMMAND:
+        errorMessage="Unknown native command supplied to runtime library";
+        break;
     }
     if (errorMessage != NULL) {
         char * msgToRet=(char*) malloc(strlen(errorMessage) + 1);

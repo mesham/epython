@@ -4,12 +4,12 @@ def send(data, pid, n=none):
 	else:
 		i=0
 		while i<n:
-			d=data[i]			
+			d=data[i]
 			epy_i_send d to pid
 			i=i+1
 
 def recv(pid, n=none):
-	if (n is none):		
+	if (n is none):
 		retV=0
 		epy_i_recv retV from pid
 		return retV
@@ -33,7 +33,7 @@ def sendrecv(data, pid, n=none):
 		i=0
 		while i<n:
 			v=0
-			d=data[i]	
+			d=data[i]
 			epy_i_sendrecv d tofrom pid into v
 			retV[i]=v
 			i=i+1
@@ -68,13 +68,7 @@ def numcores():
 	return epy_i_numcores
 
 def ishost():
-	if epy_i_ishost:
-		return true
-	else:
-		return false
+	return native rtl_ishost()
 
 def isdevice():
-	if epy_i_isdevice:
-		return true
-	else:
-		return false
+	return native rtl_isdevice()

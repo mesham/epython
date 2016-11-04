@@ -51,7 +51,7 @@ def size(arr):
     return len(arr)
 
 def ndim(arr):
-    return EPY_I_DIMS(arr)
+    return native rtl_numdims(arr)
 
 def shape(arr):
     i=EPY_I_DIMS(arr)

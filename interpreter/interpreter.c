@@ -70,7 +70,6 @@ static unsigned int handleInput(char*, unsigned int, unsigned int, int);
 static unsigned int handleInputWithString(char*, unsigned int, unsigned int, int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
-static unsigned int handlePrint(char*, unsigned int, unsigned int, int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int, int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
@@ -83,6 +82,7 @@ static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleSync(char*, unsigned int, unsigned int, int);
 static unsigned int handleFreeMemory(char *, unsigned int, unsigned int, int);
+static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
 static int getSymbolTableEntryId(int);
@@ -96,7 +96,6 @@ static unsigned int handleInput(char*, unsigned int, unsigned int);
 static unsigned int handleInputWithString(char*, unsigned int, unsigned int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int);
-static unsigned int handlePrint(char*, unsigned int, unsigned int);
 static unsigned int handleDimArray(char*, unsigned int, char, unsigned int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
@@ -109,6 +108,7 @@ static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleSync(char*, unsigned int, unsigned int);
 static unsigned int handleFreeMemory(char *, unsigned int, unsigned int);
+static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
 static int getSymbolTableEntryId(void);
@@ -121,8 +121,8 @@ void setVariableValue(struct symbol_node*, struct value_defn, int);
 struct value_defn getVariableValue(struct symbol_node*, int);
 static unsigned short getUShort(void*);
 static unsigned char getUChar(void*);
-static int getInt(void*);
-static float getFloat(void*);
+int getInt(void*);
+float getFloat(void*);
 
 #ifdef HOST_INTERPRETER
 void initThreadedAspectsForInterpreter(int total_number_threads, int baseHostPid, struct shared_basic * basicState) {
@@ -178,7 +178,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length, threadId);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length, threadId);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length, threadId);
-		if (command == PRINT_TOKEN) i=handlePrint(assembled, i, length, threadId);
 		if (command == STOP_TOKEN) return empty;
 		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length, threadId);
 		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries[threadId], symbolTable[threadId], threadId);
@@ -193,6 +192,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 			clearVariablesToLevel(fnLevel[threadId], threadId);
 			fnLevel[threadId]--;
 		}
+		if (command == NATIVE_TOKEN) i=handleNative(assembled, i, length, NULL, threadId);
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
@@ -224,7 +224,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length);
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length);
-		if (command == PRINT_TOKEN) i=handlePrint(assembled, i, length);
 		if (command == STOP_TOKEN) return empty;
 		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length);
 		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries, symbolTable);
@@ -239,6 +238,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 			clearVariablesToLevel(fnLevel);
 			fnLevel--;
 		}
+		if (command == NATIVE_TOKEN) i=handleNative(assembled, i, length, NULL);
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
@@ -416,6 +416,51 @@ static unsigned int handleGoto(char * assembled, unsigned int currentPoint, unsi
 	return getUShort(&assembled[currentPoint]);
 }
 
+#ifdef HOST_INTERPRETER
+static unsigned int handleNative(char * assembled, unsigned int currentPoint, unsigned int length, struct value_defn * returnValue, int threadId) {
+#else
+static unsigned int handleNative(char * assembled, unsigned int currentPoint, unsigned int length, struct value_defn * returnValue) {
+#endif
+    unsigned char fnCode=getUChar(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned char);
+	unsigned short numArgs=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+
+#ifdef HOST_INTERPRETER
+	struct value_defn * toPassValues=(struct value_defn *) getHeapMemory(sizeof(struct value_defn) * numArgs, 0, threadId);
+#else
+	struct value_defn * toPassValues=(struct value_defn *) getHeapMemory(sizeof(struct value_defn) * numArgs, 0, currentSymbolEntries, symbolTable);
+#endif
+	int i;
+	for (i=0;i<numArgs;i++) {
+#ifdef HOST_INTERPRETER
+        toPassValues[i]=getExpressionValue(assembled, &currentPoint, length, threadId);
+#else
+        toPassValues[i]=getExpressionValue(assembled, &currentPoint, length);
+#endif
+	}
+	if (returnValue != NULL) {
+#ifdef HOST_INTERPRETER
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, threadId);
+#else
+        struct value_defn * rv=returnValue=callNativeFunction(fnCode, numArgs, toPassValues);
+#endif
+        cpy(returnValue, rv, sizeof(struct value_defn));
+	} else {
+#ifdef HOST_INTERPRETER
+        callNativeFunction(fnCode, numArgs, toPassValues, threadId);
+#else
+        callNativeFunction(fnCode, numArgs, toPassValues);
+#endif
+	}
+#ifdef HOST_INTERPRETER
+    freeMemoryInHeap(toPassValues, threadId);
+#else
+    freeMemoryInHeap(toPassValues);
+#endif
+	return currentPoint;
+}
+
 /**
  * Calls some function and stores the call point in the function call stack for returning from this function
  */
@@ -555,21 +600,6 @@ static unsigned int handleInputWithString(char * assembled, unsigned int current
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn string_display=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, getInputFromUserWithString(string_display, currentSymbolEntries, symbolTable), -1);
-#endif
-	return currentPoint;
-}
-
-/**
- * Print some value to the user
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handlePrint(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-	struct value_defn result=getExpressionValue(assembled, &currentPoint, length, threadId);
-	displayToUser(result, threadId);
-#else
-static unsigned int handlePrint(char * assembled, unsigned int currentPoint, unsigned int length) {
-	struct value_defn result=getExpressionValue(assembled, &currentPoint, length);
-	displayToUser(result, currentSymbolEntries, symbolTable);
 #endif
 	return currentPoint;
 }
@@ -800,18 +830,6 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 			return getInt(value.data) > 0;
 		}
 		return 0;
-	} else if (expressionId == ISHOST_TOKEN) {
-#ifdef HOST_INTERPRETER
-		return 1;
-#else
-		return 0;
-#endif
-	} else if (expressionId == ISDEVICE_TOKEN) {
-#ifdef HOST_INTERPRETER
-		return 0;
-#else
-		return 1;
-#endif
 	} else {
 		*currentPoint-=sizeof(unsigned char);
 		struct value_defn expValue;
@@ -906,47 +924,6 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value.type=INT_TYPE;
 		value.dtype=SCALAR;
 		cpy(value.data, &totalSize, sizeof(int));
-    } else if (expressionId == NUMDIM_TOKEN) {
-#ifdef HOST_INTERPRETER
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
-#else
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
-#endif
-        int intNDims=0;
-        if (arrayvalue.dtype == ARRAY) {
-            char * ptr;
-            cpy(&ptr, arrayvalue.data, sizeof(char*));
-            unsigned char num_dims;
-            cpy(&num_dims, ptr, sizeof(unsigned char));
-            num_dims=num_dims & 0xF;
-            intNDims=(int) num_dims;
-        }
-        value.type=INT_TYPE;
-        value.dtype=SCALAR;
-		cpy(value.data, &intNDims, sizeof(int));
-    } else if (expressionId == DSIZE_TOKEN) {
-#ifdef HOST_INTERPRETER
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
-		struct value_defn dimvalue=getExpressionValue(assembled, currentPoint, length, threadId);
-#else
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
-		struct value_defn dimvalue=getExpressionValue(assembled, currentPoint, length);
-#endif
-        int dimSize=0;
-        if (arrayvalue.dtype == ARRAY) {
-            int lookupIndex=getInt(dimvalue.data);
-            char * ptr;
-            cpy(&ptr, arrayvalue.data, sizeof(char*));
-            unsigned char num_dims;
-            cpy(&num_dims, ptr, sizeof(unsigned char));
-            num_dims=num_dims & 0xF;
-            if (lookupIndex < num_dims) {
-                cpy(&dimSize, &ptr[(lookupIndex * sizeof(int)) + sizeof(unsigned char)], sizeof(int));
-            }
-        }
-        value.type=INT_TYPE;
-        value.dtype=SCALAR;
-		cpy(value.data, &dimSize, sizeof(int));
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0, threadId);
@@ -1009,6 +986,13 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		clearVariablesToLevel(fnLevel);
 		fnLevel--;
 #endif
+    } else if (expressionId == NATIVE_TOKEN) {
+#ifdef HOST_INTERPRETER
+        *currentPoint=handleNative(assembled, *currentPoint, length, &value, threadId);
+#else
+        *currentPoint=handleNative(assembled, *currentPoint, length, &value);
+#endif
+
 	} else if (expressionId == MATHS_TOKEN) {
 		unsigned char maths_op=getUChar(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned char);
@@ -1050,8 +1034,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value=computeExpressionResult(expressionId, assembled, currentPoint, length);
 #endif
 	} else if (expressionId == EQ_TOKEN || expressionId == NEQ_TOKEN || expressionId == GT_TOKEN || expressionId == GEQ_TOKEN ||
-			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN || expressionId == IS_TOKEN || expressionId == ISHOST_TOKEN ||
-			expressionId == ISDEVICE_TOKEN) {
+			expressionId == LT_TOKEN || expressionId == LEQ_TOKEN || expressionId == IS_TOKEN) {
 		*currentPoint-=sizeof(unsigned char);
 #ifdef HOST_INTERPRETER
 		int retVal=determine_logical_expression(assembled, currentPoint, length, threadId);
@@ -1299,26 +1282,6 @@ static void clearVariablesToLevel(unsigned char clearLevel) {
 	}
 #endif
 	if (smallestMemoryAddress != 0) clearFreedStackFrames(smallestMemoryAddress);
-}
-
-/**
- * Helper method to get an integer from data (needed as casting to integer directly requires 4 byte alignment which we
- * do not want to enforce as it wastes memory.)
- */
-static int getInt(void* data) {
-	int v;
-	cpy(&v, data, sizeof(int));
-	return v;
-}
-
-/**
- * Helper method to get a float from data (needed as casting to integer directly requires 4 byte alignment which we
- * do not want to enforce as it wastes memory.)
- */
-static float getFloat(void* data) {
-	float v;
-	cpy(&v, data, sizeof(float));
-	return v;
 }
 
 /**

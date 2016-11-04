@@ -49,6 +49,57 @@ static char * allocateChunkInHeapMemory(int, char);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
 
+struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters) {
+    struct value_defn * value=NULL;
+    if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
+        if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        value->type=BOOLEAN_TYPE;
+        value->dtype=SCALAR;
+        int v=fnIdentifier==NATIVE_FN_RTL_ISHOST ? 0 : 1;
+        cpy(value->data, &v, sizeof(int));
+    } else if (fnIdentifier==NATIVE_FN_RTL_PRINT) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        displayToUser(parameters[0]);
+    } else if (fnIdentifier==NATIVE_FN_RTL_NUMDIMS) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        int intNDims=0;
+        if (parameters[0].dtype == ARRAY) {
+            char * ptr;
+            cpy(&ptr, parameters[0].data, sizeof(char*));
+            unsigned char num_dims;
+            cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
+            intNDims=(int) num_dims;
+        }
+        value->type=INT_TYPE;
+        value->dtype=SCALAR;
+		cpy(value->data, &intNDims, sizeof(int));
+    } else if (fnIdentifier==NATIVE_FN_RTL_DSIZE) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        int dimSize=0;
+        if (parameters[0].dtype == ARRAY) {
+            int lookupIndex=getInt(parameters[1].data);
+            char * ptr;
+            cpy(&ptr, parameters[0].data, sizeof(char*));
+            unsigned char num_dims;
+            cpy(&num_dims, ptr, sizeof(unsigned char));
+            num_dims=num_dims & 0xF;
+            if (lookupIndex < num_dims) {
+                cpy(&dimSize, &ptr[(lookupIndex * sizeof(int)) + sizeof(unsigned char)], sizeof(int));
+            }
+        }
+        value->type=INT_TYPE;
+        value->dtype=SCALAR;
+		cpy(value->data, &dimSize, sizeof(int));
+    } else {
+        raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
+    }
+    return value;
+};
+
 /**
  * Displays a message to the user and waits for the host to have done this
  */
@@ -200,7 +251,6 @@ void raiseError(unsigned char errorCode) {
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
-	freeMemoryInHeap(msg);
 }
 
 /**
@@ -256,8 +306,9 @@ char* getHeapMemory(int size, char isShared, int currentSymbolEntries, struct sy
 	}
 }
 
-void freeMemoryInHeap(char * address) {
+void freeMemoryInHeap(void * addr) {
     unsigned chunkInUse=0;
+    char * address=(char*) addr;
     cpy(address-1, &chunkInUse, sizeof(unsigned char));
     consolidateHeapChunks((int) address > LOCAL_CORE_MEMORY_MAP_TOP);
 }
@@ -764,6 +815,26 @@ int slength(char * v) {
 	int i=0;
 	while (v[i]!='\0') i++;
 	return i;
+}
+
+/**
+ * Helper method to get an integer from data (needed as casting to integer directly requires 4 byte alignment which we
+ * do not want to enforce as it wastes memory.)
+ */
+int getInt(void* data) {
+	int v;
+	cpy(&v, data, sizeof(int));
+	return v;
+}
+
+/**
+ * Helper method to get a float from data (needed as casting to integer directly requires 4 byte alignment which we
+ * do not want to enforce as it wastes memory.)
+ */
+float getFloat(void* data) {
+	float v;
+	cpy(&v, data, sizeof(float));
+	return v;
 }
 
 /**
