@@ -74,7 +74,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
-static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
@@ -92,7 +91,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
-static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
@@ -180,7 +178,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
 		}
-		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
 	}
 	return empty;
@@ -217,37 +214,11 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
 		}
-		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
 		if (stopInterpreter) return empty;
 	}
 	return empty;
 }
 #endif
-
-/**
- * A reduction operation - collective communication between cores
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleReduction(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleReduction(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned char reductionOperator=getUChar(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned char);
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	setVariableValue(variableSymbol, reduceData(broadcast_expression,
-			reductionOperator, threadId, numActiveCores[threadId], hostCoresBasePid), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, reduceData(broadcast_expression, reductionOperator, numActiveCores), -1);
-#endif
-	return currentPoint;
-}
 
 /**
  * Goto some absolute location in the byte code

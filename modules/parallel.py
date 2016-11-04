@@ -35,18 +35,18 @@ def bcast(data, root):
 	return native rtl_bcast(data, root)
 
 def reduce(data, operator):
-	retV=0
+	opVal=0
 	if operator=="sum":
-		epy_i_reduce epy_i_sum data into retV
+	    opVal=0
 	elif operator=="min":
-		epy_i_reduce epy_i_min data into retV
+		opVal=1
 	elif operator=="max":
-		epy_i_reduce epy_i_max data into retV
+		opVal=2
 	elif operator=="prod":
-		epy_i_reduce epy_i_prod data into retV
+		opVal=3
 	else:
 		print "Operator "+operator+" not found"
-	return retV
+    return native rtl_reduce(data, opVal)
 
 def sync():
 	native rtl_sync()

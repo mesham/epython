@@ -34,7 +34,7 @@ void yyerror (char const *msg) {
 %token NEWLINE INDENT OUTDENT
 %token DIM SDIM EXIT ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN EPY_I_COREID EPY_I_RANDOM EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD TOFROM NATIVE
+%token IF THEN TOFROM NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
@@ -49,7 +49,7 @@ void yyerror (char const *msg) {
 
 %type <string> ident declareident fn_entry
 %type <integer> unary_operator 
-%type <uchar> reductionop opassgn
+%type <uchar> opassgn
 %type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
 %type <stack> fndeclarationargs fncallargs commaseparray arrayaccessor
 
@@ -75,9 +75,8 @@ statements
 	| statement
 ;
 
-statement	
-	: EPY_I_REDUCE reductionop expression INTO ident { $$=appendReductionStatement($2, $3, $5); }
-	| DIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 0); }	
+statement
+	: DIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 0); }	
 	| SDIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 1); }
 	| FOR declareident IN expression COLON codeblock { $$=appendForStatement($2, $4, $6); leaveScope(); }
 	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); }	
@@ -129,13 +128,6 @@ indent_rule
 outdent_rule
 	: OUTDENT { leaveScope(); }
 	
-reductionop
-	: EPY_I_SUM { $$=0; }
-	| EPY_I_MIN { $$=1; }
-	| EPY_I_MAX { $$=2; }
-	| EPY_I_PROD { $$=3; }
-;
-
 opassgn
 	: ADDADD { $$=0; }
 	| SUBSUB { $$=1; }

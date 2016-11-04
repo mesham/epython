@@ -102,23 +102,6 @@ void setNumberEntriesInSymbolTable(unsigned short e) {
 }
 
 /**
- * Appends and returns a reduction statement
- */
-struct memorycontainer* appendReductionStatement(unsigned char op, struct memorycontainer* expression,  char* identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char)*2+ expression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, REDUCTION_TOKEN, position);
-	position=appendStatement(memoryContainer, op, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, expression, position);
-	return memoryContainer;
-}
-
-/**
  * Appends and returns the declaration of an array into either default (often core local) or shared memory statement
  */
 struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* size_expressions, int shared_array) {
@@ -187,6 +170,8 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_COREID, position);
     } else if (strcmp(functionName, "rtl_random")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_RANDOM, position);
+    } else if (strcmp(functionName, "rtl_reduce")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_REDUCE, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

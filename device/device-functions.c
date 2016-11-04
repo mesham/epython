@@ -147,6 +147,11 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         struct value_defn vD;
         vD=performMathsOp(RANDOM_MATHS_OP, vD);
         cpy(value, &vD, sizeof(struct value_defn));
+    } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
+        struct value_defn vD=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
+        cpy(value, &vD, sizeof(struct value_defn));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
@@ -797,7 +802,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int totalProc
 /**
  * Reduction of data amongst the cores with some operator
  */
-struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int totalProcesses) {
+struct value_defn reduceData(struct value_defn to_send, int rop, int totalProcesses) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt, totalActioned=0;
 	float floatV, tempFloat;
@@ -814,16 +819,16 @@ struct value_defn reduceData(struct value_defn to_send, unsigned char operator, 
 			retrieved=sendRecvData(to_send, i);
 			if (to_send.type==INT_TYPE) {
 				cpy(&tempInt, retrieved.data, sizeof(int));
-				if (operator==0) intV+=tempInt;
-				if (operator==1 && tempInt < intV) intV=tempInt;
-				if (operator==2 && tempInt > intV) intV=tempInt;
-				if (operator==3) intV*=tempInt;
+				if (rop==0) intV+=tempInt;
+				if (rop==1 && tempInt < intV) intV=tempInt;
+				if (rop==2 && tempInt > intV) intV=tempInt;
+				if (rop==3) intV*=tempInt;
 			} else {
 				cpy(&tempFloat, retrieved.data, sizeof(float));
-				if (operator==0) floatV+=tempFloat;
-				if (operator==1 && tempFloat < floatV) floatV=tempFloat;
-				if (operator==2 && tempFloat > floatV) floatV=tempFloat;
-				if (operator==3) floatV*=tempFloat;
+				if (rop==0) floatV+=tempFloat;
+				if (rop==1 && tempFloat < floatV) floatV=tempFloat;
+				if (rop==2 && tempFloat > floatV) floatV=tempFloat;
+				if (rop==3) floatV*=tempFloat;
 			}
 		}
 	}

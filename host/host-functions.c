@@ -190,6 +190,10 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
         *value=performMathsOp(RANDOM_MATHS_OP, *value);
+    } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
+        *value=reduceData(parameters[0], getInt(parameters[1].data), threadId, numActiveCores, hostCoresBasePid);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
@@ -560,7 +564,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
  * Called when running on the host, the function for reducing data between processes
  */
  __attribute__((optimize("O0")))
-struct value_defn reduceData(struct value_defn to_send, unsigned char operator, int threadId, int numberProcesses, int hostCoresBasePid) {
+struct value_defn reduceData(struct value_defn to_send, int rop, int threadId, int numberProcesses, int hostCoresBasePid) {
 	struct value_defn returnValue, retrieved;
 	int i, intV=0, tempInt=0;
 	float floatV=0, tempFloat=0;
@@ -575,16 +579,16 @@ struct value_defn reduceData(struct value_defn to_send, unsigned char operator, 
 		retrieved=sendRecvData(to_send, i, threadId, hostCoresBasePid);
 		if (to_send.type==INT_TYPE) {
 			cpy(&tempInt, retrieved.data, sizeof(int));
-			if (operator==0) intV+=tempInt;
-			if (operator==1 && tempInt < intV) intV=tempInt;
-			if (operator==2 && tempInt > intV) intV=tempInt;
-			if (operator==3) intV*=tempInt;
+			if (rop==0) intV+=tempInt;
+			if (rop==1 && tempInt < intV) intV=tempInt;
+			if (rop==2 && tempInt > intV) intV=tempInt;
+			if (rop==3) intV*=tempInt;
 		} else {
 			cpy(&tempFloat, retrieved.data, sizeof(float));
-			if (operator==0) floatV+=tempFloat;
-			if (operator==1 && tempFloat < floatV) floatV=tempFloat;
-			if (operator==2 && tempFloat > floatV) floatV=tempFloat;
-			if (operator==3) floatV*=tempFloat;
+			if (rop==0) floatV+=tempFloat;
+			if (rop==1 && tempFloat < floatV) floatV=tempFloat;
+			if (rop==2 && tempFloat > floatV) floatV=tempFloat;
+			if (rop==3) floatV*=tempFloat;
 		}
 	}
 	returnValue.type=to_send.type;

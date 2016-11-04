@@ -157,7 +157,7 @@ static void issueBcast(struct interpreterconfiguration* configuration) {
  * Issues a reduce and sends the results back over
  */
 static void issueReduce(struct interpreterconfiguration* configuration) {
-	int operator=atoi(strtok(NULL, " "));
+	int rop=atoi(strtok(NULL, " "));
 	int type=atoi(strtok(NULL, " "));
 	int dtype=atoi(strtok(NULL, " "));
 	struct value_defn valueToSend;
@@ -175,7 +175,7 @@ static void issueReduce(struct interpreterconfiguration* configuration) {
 		int data=atoi(strtok(NULL, " "));
 		memcpy(&valueToSend.data, &data, sizeof(int));
 	}
-	struct value_defn reducedData=reduceData(valueToSend, (char) operator, 0, configuration->hostProcs + configuration->coreProcs, configuration->coreProcs);
+	struct value_defn reducedData=reduceData(valueToSend, rop, 0, configuration->hostProcs + configuration->coreProcs, configuration->coreProcs);
 	char dataToWrite[50];
 	if (reducedData.type==INT_TYPE || reducedData.type==BOOLEAN_TYPE) {
         int i_v;
