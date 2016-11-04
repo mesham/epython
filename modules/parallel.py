@@ -1,25 +1,22 @@
 def send(data, pid, n=none):
 	if (n is none):
-		epy_i_send data to pid
+		native rtl_send(data,pid)
 	else:
 		i=0
 		while i<n:
 			d=data[i]
-			epy_i_send d to pid
+			native rtl_send(d,pid)
 			i=i+1
 
 def recv(pid, n=none):
 	if (n is none):
-		retV=0
-		epy_i_recv retV from pid
-		return retV
+		return native rtl_recv(pid)
 	else:
 		dim retV[n]
 		i=0
 		while i<n:
-			v=0
 			epy_i_recv v from pid
-			retV[i]=v
+			retV[i]=native rtl_recv(pid)
 			i=i+1
 		return retV
 

@@ -68,8 +68,6 @@ void appendNewFunctionStatement(char*, struct stack_t*, struct memorycontainer*)
 void appendArgument(char*);
 struct memorycontainer* appendReductionStatement(unsigned char, struct memorycontainer*, char*);
 struct memorycontainer* appendBcastStatement(struct memorycontainer*, struct memorycontainer*, char*);
-struct memorycontainer* appendRecvStatement(char*, struct memorycontainer*);
-struct memorycontainer* appendSendStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendSendRecvStatement(struct memorycontainer*, struct memorycontainer*, char*);
 struct memorycontainer* appendDeclareArray(char*, struct stack_t*, int);
 struct memorycontainer* appendCallFunctionStatement(char*, struct stack_t*);

@@ -47,7 +47,7 @@ struct hostHeapNodes {
 volatile struct hostHeapNodes ** rootHeapNode;
 volatile unsigned char **sharedComm, **syncValues;
 volatile struct shared_basic * basicState;
-int total_threads, sync_counter;
+int total_threads, sync_counter, hostCoresBasePid;
 pthread_mutex_t barrier_mutex;
 
 #ifdef HOST_STANDALONE
@@ -71,7 +71,7 @@ static char isMemoryAddressFound(char*, int, struct symbol_node*);
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
  * set up the state & memory for each thread to use
  */
-void initHostCommunicationData(int total_number_threads, struct shared_basic * parallelBasicState) {
+void initHostCommunicationData(int total_number_threads, struct shared_basic * parallelBasicState, int ahostCoresBasePid) {
 	int i, j;
 	basicState=parallelBasicState;
 	rootHeapNode=(volatile struct hostHeapNodes **) malloc(sizeof(struct hostHeapNodes*)*total_number_threads);
@@ -89,6 +89,7 @@ void initHostCommunicationData(int total_number_threads, struct shared_basic * p
 	pthread_mutex_init(&barrier_mutex, NULL);
 	total_threads=total_number_threads;
 	sync_counter=0;
+	hostCoresBasePid=ahostCoresBasePid;
 }
 
 struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
@@ -163,6 +164,13 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         char * ptr;
         cpy(&ptr, parameters[0].data, sizeof(char*));
         freeMemoryInHeap(ptr, threadId);
+    } else if (fnIdentifier==NATIVE_FN_RTL_SEND) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        sendData(parameters[0], getInt(parameters[1].data), threadId, hostCoresBasePid);
+    } else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        *value=recvData(getInt(parameters[0].data), threadId, hostCoresBasePid);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

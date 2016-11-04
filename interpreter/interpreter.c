@@ -74,8 +74,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
-static unsigned int handleSend(char*, unsigned int, unsigned int, int);
-static unsigned int handleRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
@@ -96,8 +94,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
-static unsigned int handleSend(char*, unsigned int, unsigned int);
-static unsigned int handleRecv(char*, unsigned int, unsigned int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
@@ -125,7 +121,7 @@ void initThreadedAspectsForInterpreter(int total_number_threads, int baseHostPid
 	localCoreId=(int*) malloc(sizeof(int) * total_number_threads);
 	numActiveCores=(int*) malloc(sizeof(int) * total_number_threads);
 	fnLevel=(unsigned char*) malloc(sizeof(unsigned char) * total_number_threads);
-	initHostCommunicationData(total_number_threads, basicState);
+	initHostCommunicationData(total_number_threads, basicState, baseHostPid);
 	hostCoresBasePid=baseHostPid;
 }
 #endif
@@ -188,8 +184,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
 		}
-		if (command == SEND_TOKEN) i=handleSend(assembled, i, length, threadId);
-		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length, threadId);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length, threadId);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
@@ -229,8 +223,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
 		}
-		if (command == SEND_TOKEN) i=handleSend(assembled, i, length);
-		if (command == RECV_TOKEN) i=handleRecv(assembled, i, length);
 		if (command == SENDRECV_TOKEN) i=handleSendRecv(assembled, i, length);
 		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
@@ -239,23 +231,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	return empty;
 }
 #endif
-
-/**
- * Sending of data from one core to another
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleSend(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-	struct value_defn to_send_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	sendData(to_send_expression, getInt(target_expression.data), threadId, hostCoresBasePid);
-#else
-static unsigned int handleSend(char * assembled, unsigned int currentPoint, unsigned int length) {
-	struct value_defn to_send_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn target_expression=getExpressionValue(assembled, &currentPoint, length);
-	sendData(to_send_expression, getInt(target_expression.data));
-#endif
-	return currentPoint;
-}
 
 /**
  * A reduction operation - collective communication between cores
@@ -303,28 +278,6 @@ static unsigned int handleBcast(char * assembled, unsigned int currentPoint, uns
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
 	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), -1);
-#endif
-	return currentPoint;
-}
-
-/**
- * Receiving some data from another core
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleRecv(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleRecv(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	setVariableValue(variableSymbol, recvData(getInt(source_expression.data), threadId, hostCoresBasePid), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, recvData(getInt(source_expression.data)), -1);
 #endif
 	return currentPoint;
 }

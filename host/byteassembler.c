@@ -136,38 +136,6 @@ struct memorycontainer* appendBcastStatement(struct memorycontainer* expression,
 }
 
 /**
- * Appends and returns a P2P receive statement
- */
-struct memorycontainer* appendRecvStatement(char* identifier, struct memorycontainer* source) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+sizeof(unsigned char)+ source->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, RECV_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, source, position);
-	return memoryContainer;
-}
-
-/**
- * Appends and returns a P2P send statement
- */
-struct memorycontainer* appendSendStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + toSendExpression->length+target->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, SEND_TOKEN, position);
-	position=appendMemory(memoryContainer, toSendExpression, position);
-	position=appendMemory(memoryContainer, target, position);
-	return memoryContainer;
-}
-
-/**
  * Appends a sendrecv statement, which combined both p2p operations with one synchronisation
  */
 struct memorycontainer* appendSendRecvStatement(struct memorycontainer* toSendExpression, struct memorycontainer* target, char* identifier) {
@@ -239,6 +207,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_GC, position);
     } else if (strcmp(functionName, "rtl_free")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_FREE, position);
+    } else if (strcmp(functionName, "rtl_send")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND, position);
+    } else if (strcmp(functionName, "rtl_recv")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_RECV, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

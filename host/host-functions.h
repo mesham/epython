@@ -10,6 +10,6 @@
 
 #include "../shared.h"
 
-void initHostCommunicationData(int, struct shared_basic*);
+void initHostCommunicationData(int, struct shared_basic*, int);
 
 #endif /* HOST_FUNCTIONS_H_ */

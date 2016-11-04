@@ -114,7 +114,15 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         char * ptr;
         cpy(&ptr, parameters[0].data, sizeof(char*));
-        freeMemoryInHeap(ptr, threadId);
+        freeMemoryInHeap(ptr);
+    } else if (fnIdentifier==NATIVE_FN_RTL_SEND) {
+        if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        sendData(parameters[0], getInt(parameters[1].data));
+    } else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        struct value_defn vD=recvData(getInt(parameters[0].data));
+        cpy(value, &vD, sizeof(struct value_defn));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

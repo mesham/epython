@@ -66,7 +66,7 @@ static void issueSendRecv(struct interpreterconfiguration*);
  */
 void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configuration, struct shared_basic * basicState, pthread_t* emanagementThread) {
 	initialise_namedPipes();
-	initHostCommunicationData(1, basicState);
+	initHostCommunicationData(1, basicState, configuration->coreProcs);
 	while (1==1) {
 		enum command cmd=blockOnCommand(emanagementThread);
 		if (cmd == SEND) issueSend(configuration);

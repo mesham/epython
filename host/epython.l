@@ -181,8 +181,6 @@ RETURN									return RET;
 NONE									return NONE;
 ELSE                                    return ELSE;
 ELIF									return ELIF;
-EPY_I_SEND								return EPY_I_SEND;
-EPY_I_RECV								return EPY_I_RECV;
 EPY_I_SENDRECV							return EPY_I_SENDRECV;
 TOFROM									return TOFROM;
 EPY_I_BCAST								return EPY_I_BCAST;
