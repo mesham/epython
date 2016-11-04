@@ -247,7 +247,7 @@ void raiseError(unsigned char errorCode) {
 	sharedData->core_ctrl[myId].core_command=3;
 	sharedData->core_ctrl[myId].data[0]=NONE_TYPE;
 
-    cpy(&errorCode, &sharedData->core_ctrl[myId].data[1], sizeof(unsigned char));
+    cpy(&sharedData->core_ctrl[myId].data[1], &errorCode, sizeof(unsigned char));
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }

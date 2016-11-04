@@ -48,6 +48,7 @@ static volatile int * numActiveCores;
 // Function call level
 unsigned volatile char * fnLevel;
 #else
+#define NULL ((void *)0)
 // Whether we should stop the interpreter or not (due to error raised)
 char stopInterpreter;
 // The symbol table
@@ -426,11 +427,7 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 	unsigned short numArgs=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 
-#ifdef HOST_INTERPRETER
-	struct value_defn * toPassValues=(struct value_defn *) getHeapMemory(sizeof(struct value_defn) * numArgs, 0, threadId);
-#else
-	struct value_defn * toPassValues=(struct value_defn *) getHeapMemory(sizeof(struct value_defn) * numArgs, 0, currentSymbolEntries, symbolTable);
-#endif
+    struct value_defn toPassValues[numArgs];
 	int i;
 	for (i=0;i<numArgs;i++) {
 #ifdef HOST_INTERPRETER
@@ -443,21 +440,16 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 #ifdef HOST_INTERPRETER
         struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, threadId);
 #else
-        struct value_defn * rv=returnValue=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
 #endif
         cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {
 #ifdef HOST_INTERPRETER
         callNativeFunction(fnCode, numArgs, toPassValues, threadId);
 #else
-        callNativeFunction(fnCode, numArgs, toPassValues);
+        callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
 #endif
 	}
-#ifdef HOST_INTERPRETER
-    freeMemoryInHeap(toPassValues, threadId);
-#else
-    freeMemoryInHeap(toPassValues);
-#endif
 	return currentPoint;
 }
 
