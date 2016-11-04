@@ -39,7 +39,7 @@ struct symbol_node* initialiseSymbolTable(int);
 char* getStackMemory(int,char);
 void clearFreedStackFrames(char*);
 #ifdef HOST_INTERPRETER
-struct value_defn * callNativeFunction(unsigned char, int, struct value_defn*,int);
+struct value_defn * callNativeFunction(unsigned char, int, struct value_defn*,int,struct symbol_node*,int);
 char* getHeapMemory(int,char,int);
 void freeMemoryInHeap(void*,int);
 struct value_defn getInputFromUser(int);

@@ -91,7 +91,8 @@ void initHostCommunicationData(int total_number_threads, struct shared_basic * p
 	sync_counter=0;
 }
 
-struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters, int threadId) {
+struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
+                                       int currentSymbolEntries, struct symbol_node* symbolTable, int threadId) {
     struct value_defn * value=NULL;
     if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
@@ -152,7 +153,7 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
         *value=getInputFromUserWithString(parameters[0], threadId);
     } else if (fnIdentifier==NATIVE_FN_RTL_SYNC) {
-        syncCores(1);
+        syncCores(1, threadId);
     } else if (fnIdentifier==NATIVE_FN_RTL_GC) {
         garbageCollect(currentSymbolEntries, symbolTable, threadId);
     } else {

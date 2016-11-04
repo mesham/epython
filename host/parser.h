@@ -74,73 +74,71 @@ extern int yydebug;
     EPY_I_SEND = 284,
     EPY_I_RECV = 285,
     EPY_I_RANDOM = 286,
-    EPY_I_SYNC = 287,
-    EPY_I_BCAST = 288,
-    EPY_I_REDUCE = 289,
-    EPY_I_SUM = 290,
-    EPY_I_MIN = 291,
-    EPY_I_MAX = 292,
-    EPY_I_PROD = 293,
-    EPY_I_SENDRECV = 294,
-    TOFROM = 295,
-    EPY_I_FREE = 296,
-    EPY_I_GC = 297,
-    NATIVE = 298,
-    ADD = 299,
-    SUB = 300,
-    COLON = 301,
-    DEF = 302,
-    RET = 303,
-    NONE = 304,
-    FILESTART = 305,
-    IN = 306,
-    ADDADD = 307,
-    SUBSUB = 308,
-    MULMUL = 309,
-    DIVDIV = 310,
-    MODMOD = 311,
-    POWPOW = 312,
-    FLOORDIVFLOORDIV = 313,
-    FLOORDIV = 314,
-    MULT = 315,
-    DIV = 316,
-    MOD = 317,
-    AND = 318,
-    OR = 319,
-    NEQ = 320,
-    LEQ = 321,
-    GEQ = 322,
-    LT = 323,
-    GT = 324,
-    EQ = 325,
-    IS = 326,
-    NOT = 327,
-    SQRT = 328,
-    SIN = 329,
-    COS = 330,
-    TAN = 331,
-    ASIN = 332,
-    ACOS = 333,
-    ATAN = 334,
-    SINH = 335,
-    COSH = 336,
-    TANH = 337,
-    FLOOR = 338,
-    CEIL = 339,
-    LOG = 340,
-    LOG10 = 341,
-    STR = 342,
-    LPAREN = 343,
-    RPAREN = 344,
-    SLBRACE = 345,
-    SRBRACE = 346,
-    TRUE = 347,
-    FALSE = 348,
-    LEN = 349,
-    EPY_I_ISHOST = 350,
-    EPY_I_ISDEVICE = 351,
-    ASSGN = 352,
-    POW = 353
+    EPY_I_BCAST = 287,
+    EPY_I_REDUCE = 288,
+    EPY_I_SUM = 289,
+    EPY_I_MIN = 290,
+    EPY_I_MAX = 291,
+    EPY_I_PROD = 292,
+    EPY_I_SENDRECV = 293,
+    TOFROM = 294,
+    EPY_I_FREE = 295,
+    NATIVE = 296,
+    ADD = 297,
+    SUB = 298,
+    COLON = 299,
+    DEF = 300,
+    RET = 301,
+    NONE = 302,
+    FILESTART = 303,
+    IN = 304,
+    ADDADD = 305,
+    SUBSUB = 306,
+    MULMUL = 307,
+    DIVDIV = 308,
+    MODMOD = 309,
+    POWPOW = 310,
+    FLOORDIVFLOORDIV = 311,
+    FLOORDIV = 312,
+    MULT = 313,
+    DIV = 314,
+    MOD = 315,
+    AND = 316,
+    OR = 317,
+    NEQ = 318,
+    LEQ = 319,
+    GEQ = 320,
+    LT = 321,
+    GT = 322,
+    EQ = 323,
+    IS = 324,
+    NOT = 325,
+    SQRT = 326,
+    SIN = 327,
+    COS = 328,
+    TAN = 329,
+    ASIN = 330,
+    ACOS = 331,
+    ATAN = 332,
+    SINH = 333,
+    COSH = 334,
+    TANH = 335,
+    FLOOR = 336,
+    CEIL = 337,
+    LOG = 338,
+    LOG10 = 339,
+    STR = 340,
+    LPAREN = 341,
+    RPAREN = 342,
+    SLBRACE = 343,
+    SRBRACE = 344,
+    TRUE = 345,
+    FALSE = 346,
+    LEN = 347,
+    EPY_I_ISHOST = 348,
+    EPY_I_ISDEVICE = 349,
+    ASSGN = 350,
+    POW = 351
   };
 #endif
 /* Tokens.  */
@@ -173,73 +171,71 @@ extern int yydebug;
 #define EPY_I_SEND 284
 #define EPY_I_RECV 285
 #define EPY_I_RANDOM 286
-#define EPY_I_SYNC 287
-#define EPY_I_BCAST 288
-#define EPY_I_REDUCE 289
-#define EPY_I_SUM 290
-#define EPY_I_MIN 291
-#define EPY_I_MAX 292
-#define EPY_I_PROD 293
-#define EPY_I_SENDRECV 294
-#define TOFROM 295
-#define EPY_I_FREE 296
-#define EPY_I_GC 297
-#define NATIVE 298
-#define ADD 299
-#define SUB 300
-#define COLON 301
-#define DEF 302
-#define RET 303
-#define NONE 304
-#define FILESTART 305
-#define IN 306
-#define ADDADD 307
-#define SUBSUB 308
-#define MULMUL 309
-#define DIVDIV 310
-#define MODMOD 311
-#define POWPOW 312
-#define FLOORDIVFLOORDIV 313
-#define FLOORDIV 314
-#define MULT 315
-#define DIV 316
-#define MOD 317
-#define AND 318
-#define OR 319
-#define NEQ 320
-#define LEQ 321
-#define GEQ 322
-#define LT 323
-#define GT 324
-#define EQ 325
-#define IS 326
-#define NOT 327
-#define SQRT 328
-#define SIN 329
-#define COS 330
-#define TAN 331
-#define ASIN 332
-#define ACOS 333
-#define ATAN 334
-#define SINH 335
-#define COSH 336
-#define TANH 337
-#define FLOOR 338
-#define CEIL 339
-#define LOG 340
-#define LOG10 341
-#define STR 342
-#define LPAREN 343
-#define RPAREN 344
-#define SLBRACE 345
-#define SRBRACE 346
-#define TRUE 347
-#define FALSE 348
-#define LEN 349
-#define EPY_I_ISHOST 350
-#define EPY_I_ISDEVICE 351
-#define ASSGN 352
-#define POW 353
+#define EPY_I_BCAST 287
+#define EPY_I_REDUCE 288
+#define EPY_I_SUM 289
+#define EPY_I_MIN 290
+#define EPY_I_MAX 291
+#define EPY_I_PROD 292
+#define EPY_I_SENDRECV 293
+#define TOFROM 294
+#define EPY_I_FREE 295
+#define NATIVE 296
+#define ADD 297
+#define SUB 298
+#define COLON 299
+#define DEF 300
+#define RET 301
+#define NONE 302
+#define FILESTART 303
+#define IN 304
+#define ADDADD 305
+#define SUBSUB 306
+#define MULMUL 307
+#define DIVDIV 308
+#define MODMOD 309
+#define POWPOW 310
+#define FLOORDIVFLOORDIV 311
+#define FLOORDIV 312
+#define MULT 313
+#define DIV 314
+#define MOD 315
+#define AND 316
+#define OR 317
+#define NEQ 318
+#define LEQ 319
+#define GEQ 320
+#define LT 321
+#define GT 322
+#define EQ 323
+#define IS 324
+#define NOT 325
+#define SQRT 326
+#define SIN 327
+#define COS 328
+#define TAN 329
+#define ASIN 330
+#define ACOS 331
+#define ATAN 332
+#define SINH 333
+#define COSH 334
+#define TANH 335
+#define FLOOR 336
+#define CEIL 337
+#define LOG 338
+#define LOG10 339
+#define STR 340
+#define LPAREN 341
+#define RPAREN 342
+#define SLBRACE 343
+#define SRBRACE 344
+#define TRUE 345
+#define FALSE 346
+#define LEN 347
+#define EPY_I_ISHOST 348
+#define EPY_I_ISDEVICE 349
+#define ASSGN 350
+#define POW 351
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -255,7 +251,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 259 "parser.h" /* yacc.c:1909  */
+#line 255 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

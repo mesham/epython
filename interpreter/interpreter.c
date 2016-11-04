@@ -411,14 +411,14 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 	}
 	if (returnValue != NULL) {
 #ifdef HOST_INTERPRETER
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, threadId);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
         struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
 #endif
         cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {
 #ifdef HOST_INTERPRETER
-        callNativeFunction(fnCode, numArgs, toPassValues, threadId);
+        callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
         callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
 #endif

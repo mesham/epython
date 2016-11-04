@@ -95,7 +95,6 @@ statement
     	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendNativeCallFunctionStatement("rtl_print", NULL, $2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
-	| EPY_I_SYNC { $$=appendSyncStatement(); }
 	| fn_entry LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($1, $3, $6); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
