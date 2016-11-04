@@ -455,7 +455,7 @@ static void raiseError(int coreId, struct core_ctrl * core) {
 /**
  * Inputs a message from the user, with some optional displayed message.
  */
-static void inputCoreMessage(int coreId, struct core_ctrl * core) {
+static void __attribute__((optimize("O0"))) inputCoreMessage(int coreId, struct core_ctrl * core) {
 	char inputvalue[1000];
 	unsigned int relativeLocation;
 	if (core->data[0] == STRING_TYPE) {
