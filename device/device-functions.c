@@ -342,6 +342,11 @@ static void consolidateHeapChunks(char inSharedMemory) {
         }
         cpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
         while (!chunkInUse) {
+            if (inSharedMemory && heapPtr + chunkLength + headersize +lenStride >= sharedData->core_ctrl[myId].shared_heap_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+                break;
+            } else if ((int) heapPtr + chunkLength + headersize +lenStride >= LOCAL_CORE_MEMORY_MAP_TOP) {
+                break;
+            }
             cpy(&chunkInUse, &heapPtr[chunkLength + headersize +lenStride], sizeof(unsigned char));
             if (!chunkInUse) {
                 if (inSharedMemory) {
