@@ -28,5 +28,6 @@
 #define MISC_H_
 
 void errorCheck(int, char*);
+char* translateErrorCodeToMessage(unsigned char);
 
 #endif /* CONFIGURATION_H_ */

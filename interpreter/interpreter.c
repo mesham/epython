@@ -762,7 +762,7 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 			} else if (expressionId == NEQ_TOKEN) {
 				return !checkStringEquality(expression1, expression2);
 			} else {
-				raiseError("Can only test for equality with strings");
+				raiseError(ERR_STR_ONLYTEST_EQ);
 			}
 		} else if (expression1.type == expression2.type && expression1.type == NONE_TYPE) {
 			if (expressionId == EQ_TOKEN || expressionId == IS_TOKEN) {
@@ -770,7 +770,7 @@ static int determine_logical_expression(char * assembled, unsigned int * current
 			} else if (expressionId == NEQ_TOKEN) {
 				return 0;
 			} else {
-				raiseError("Can only test for equality with none");
+				raiseError(ERR_NONE_ONLYTEST_EQ);
 			}
 		}
 	} else if (expressionId == BOOLEAN_TOKEN) {
@@ -1124,7 +1124,7 @@ static struct value_defn computeExpressionResult(unsigned char operator, char * 
         return performStringConcatenation(v1, v2, currentSymbolEntries, symbolTable);
 #endif
 		} else {
-			raiseError("Can only perform addition with strings");
+			raiseError(ERR_ONLY_ADDITION_STR);
 		}
 	}
 	return value;
@@ -1152,7 +1152,7 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
     array_dims=array_dims&0xF;
     arraymemory+=sizeof(unsigned char);
 
-    if (num_dims > array_dims) raiseError("Too many array indexes in expression");
+    if (num_dims > array_dims) raiseError(ERR_TOO_MANY_ARR_INDEX);
 
     for (i=0;i<num_dims;i++) {
         num_weights=array_dims-(i+1);
@@ -1170,9 +1170,9 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
         totSize*=spec_weight;
         provIdx=getInt(index.data);
         if (provIdx < 0) {
-            raiseError("Not allowed negative array indexes");
+            raiseError(ERR_NEG_ARR_INDEX);
         } else if (provIdx >= spec_weight) {
-            if (!allowedExtension) raiseError("Array index in expression exceeds array size in that dimension");
+            if (!allowedExtension) raiseError(ERR_ARR_INDEX_EXCEED_SIZE);
             spec_weight=provIdx+1;
             cpy(&arraymemory[sizeof(int) * i], &spec_weight, sizeof(int));
             needsExtension=1;

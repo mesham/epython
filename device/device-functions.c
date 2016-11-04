@@ -83,7 +83,7 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
  * Requests input from the host with a string to display
  */
 struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int currentSymbolEntries, struct symbol_node* symbolTable) {
-	if (toDisplay.type != STRING_TYPE) raiseError("Can only display strings with input statement");
+	if (toDisplay.type != STRING_TYPE) raiseError(ERR_ONLY_DISPLAY_STR_WITH_INPUT);
 	sharedData->core_ctrl[myId].data[0]=toDisplay.type;
 	char * msg=NULL;
 	if (toDisplay.type == STRING_TYPE) {
@@ -191,12 +191,12 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 /**
  * Raises an error to the host and quits
  */
-void raiseError(char * error) {
+void raiseError(unsigned char errorCode) {
 	stopInterpreter=1;
 	sharedData->core_ctrl[myId].core_command=3;
-	sharedData->core_ctrl[myId].data[0]=STRING_TYPE;
+	sharedData->core_ctrl[myId].data[0]=NONE_TYPE;
 
-	char * msg=copyStringToSharedMemoryAndSetLocation(error, 1, -1, NULL);
+    cpy(&errorCode, &sharedData->core_ctrl[myId].data[1], sizeof(unsigned char));
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
@@ -231,7 +231,7 @@ char* getHeapMemory(int size, char isShared, int currentSymbolEntries, struct sy
                 performGC(currentSymbolEntries, symbolTable, 1);
                 dS=allocateChunkInHeapMemory(size, 1);
             }
-            if (dS == NULL) raiseError("Out of shared heap memory for data");
+            if (dS == NULL) raiseError(ERR_OUT_OF_SHARED_HEAP_MEM);
 		}
 		return dS;
 	} else {
@@ -248,7 +248,7 @@ char* getHeapMemory(int size, char isShared, int currentSymbolEntries, struct sy
                         performGC(currentSymbolEntries, symbolTable, 1);
                         dS=allocateChunkInHeapMemory(size, 1);
                     }
-                    if (dS == NULL) raiseError("Out of shared heap memory for data");
+                    if (dS == NULL) raiseError(ERR_OUT_OF_CORE_SHARED_HEAP_MEM);
                 }
             }
 		}
@@ -436,7 +436,7 @@ char* getStackMemory(int size, char isShared) {
 	if (sharedData->allInSharedMemory || isShared) {
 			char * dS= (char*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 			sharedStackEntries+=size;
-			if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of shared stack memory for data");
+			if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError(ERR_OUT_OF_SHARED_STACK_MEM);
 			return dS;
 		} else {
 			char * dS= (char*) (sharedData->core_ctrl[myId].stack_start + localStackEntries);
@@ -444,7 +444,7 @@ char* getStackMemory(int size, char isShared) {
 			if (localStackEntries >= LOCAL_CORE_STACK_SIZE) {
 				dS= (char*) (sharedData->core_ctrl[myId].shared_stack_start + sharedStackEntries);
 				sharedStackEntries+=size;
-				if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError("Out of core and shared stack memory for data");
+				if (sharedStackEntries >= SHARED_STACK_DATA_AREA_PER_CORE) raiseError(ERR_OUT_OF_CORE_SHARED_STACK_MEM);
 			}
 			return dS;
 		}
@@ -467,7 +467,7 @@ void clearFreedStackFrames(char* targetPointer) {
  */
 void sendData(struct value_defn to_send, int target) {
 	int largestCoreId=sharedData->baseHostPid;
-	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
 	if (target >= sharedData->num_procs) {
 		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
 			int i;
@@ -475,7 +475,7 @@ void sendData(struct value_defn to_send, int target) {
 				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
 			}
 		} else {
-			raiseError("Attempting to send to non-existent or inactive process");
+			raiseError(ERR_SEND_TO_UNKNOWN_CORE);
 		}
 	}
 	if (target < largestCoreId) {
@@ -497,7 +497,7 @@ static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarg
 
 static void sendDataToDeviceCore(struct value_defn to_send, int target) {
 	if (!sharedData->core_ctrl[target].active) {
-		raiseError("Attempting to send to inactive core");
+		raiseError(ERR_SEND_TO_INACTIVE_CORE);
 	} else {
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);
@@ -523,7 +523,7 @@ struct value_defn recvData(int source) {
 				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
 			}
 		} else {
-			raiseError("Attempting to receive from non-existent or inactive process");
+			raiseError(ERR_RECV_FROM_UNKNOWN_CORE);
 		}
 	}
 	if (source < largestCoreId) {
@@ -552,7 +552,7 @@ static struct value_defn recvDataFromHostProcess(int hostSource) {
 static struct value_defn recvDataFromDeviceCore(int source) {
 	struct value_defn to_recv;
 	if (!sharedData->core_ctrl[source].active) {
-		raiseError("Attempting to receive from inactive core");
+		raiseError(ERR_RECV_FROM_INACTIVE_CORE);
 	} else {
 		cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
 		syncValues[source]=syncValues[source]==255 ? 0 : syncValues[source]+1;
@@ -576,7 +576,7 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  */
 struct value_defn sendRecvData(struct value_defn to_send, int target) {
 	int largestCoreId=sharedData->baseHostPid;
-	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
 	if (target >= sharedData->num_procs) {
 		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
 			int i;
@@ -584,7 +584,7 @@ struct value_defn sendRecvData(struct value_defn to_send, int target) {
 				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
 			}
 		} else {
-			raiseError("Attempting to sendrecv with non-existent or inactive process");
+			raiseError(ERR_SENDRECV_WITH_UNKNOWN_CORE);
 		}
 	}
 	if (target < largestCoreId) {
@@ -612,7 +612,7 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target) {
 	struct value_defn receivedData;
 	if (!sharedData->core_ctrl[target].active) {
-		raiseError("Attempting to send to inactive core");
+		raiseError(ERR_SEND_TO_INACTIVE_CORE);
 	} else {
 		communication_data[0]=to_send.type;
 		cpy(&communication_data[1], to_send.data, 4);

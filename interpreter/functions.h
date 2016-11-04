@@ -69,7 +69,7 @@ struct value_defn performStringConcatenation(struct value_defn, struct value_def
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);
 struct value_defn performMathsOp(unsigned short, struct value_defn);
-void raiseError(char *);
+void raiseError(unsigned char);
 int slength(char*);
 
 #endif /* FUNCTIONS_H_ */

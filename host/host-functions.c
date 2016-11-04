@@ -130,7 +130,7 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
  * Called when running on the host, will get input from user displaying a message string
  */
 struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int threadId) {
-	if (toDisplay.type != STRING_TYPE) raiseError("Can only display strings with input statement");
+	if (toDisplay.type != STRING_TYPE) raiseError(ERR_ONLY_DISPLAY_STR_WITH_INPUT);
 	char *c;
 	cpy(&c, &toDisplay.data, sizeof(char*));
 	return performGetInputFromUser(c, threadId);
@@ -328,7 +328,7 @@ void freeMemoryInHeap(char* address, int threadId) {
     if (removehostHeapNode(address, threadId)) {
         free(address);
     } else {
-        raiseError("Attempting to free non allocated heap memory");
+        raiseError(ERR_FREE_ON_NON_HEAP);
     }
 }
 
@@ -338,8 +338,8 @@ void clearFreedStackFrames(char* targetPointer) {
 
 __attribute__((optimize("O0")))
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
-	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
-	if (target >= (int) basicState->num_procs) raiseError("Attempting to sendrecv with non-existent process");
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
+	if (target >= (int) basicState->num_procs) raiseError(ERR_SENDRECV_WITH_UNKNOWN_CORE);
 	if (target < hostCoresBasePid) {
 		return sendRecvDataWithDeviceCore(to_send, target, threadId, hostCoresBasePid);
 	} else {
@@ -373,7 +373,7 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
  __attribute__((optimize("O0")))
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int target, int threadId) {
 	struct value_defn receivedData;
-	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
 	volatile unsigned char communication_data[6];
 	communication_data[0]=to_send.type;
 	cpy(&communication_data[1], to_send.data, 4);
@@ -394,8 +394,8 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
  */
  __attribute__((optimize("O0")))
 void sendData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
-	if (to_send.type == STRING_TYPE) raiseError("Can only send integers and reals between cores");
-	if (target >= (int) basicState->num_procs) raiseError("Attempting to send to non-existent process");
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
+	if (target >= (int) basicState->num_procs) raiseError(ERR_SEND_TO_UNKNOWN_CORE);
 	if (target < hostCoresBasePid) {
 		sendDataToDeviceCore(to_send, target, threadId, hostCoresBasePid);
 	} else {
@@ -526,8 +526,12 @@ void syncCores(int global, int threadId) {
 /**
  * Called when running on the host, this raises an error
  */
-void raiseError(char * error) {
-	fprintf(stderr, "%s\n", error);
+void raiseError(unsigned char errorCode) {
+    char* errorMessage=translateErrorCodeToMessage(errorCode);
+	if (errorMessage != NULL) {
+        fprintf(stderr, "Error from host virtual core %s\n", errorMessage);
+        free(errorMessage);
+	}
 	exit(0);
 }
 
@@ -536,7 +540,7 @@ void raiseError(char * error) {
  */
  __attribute__((optimize("O0")))
 struct value_defn recvData(int source, int threadId, int hostCoresBasePid) {
-	if (source >= (int) basicState->num_procs) raiseError("Attempting to receive from non-existent process");
+	if (source >= (int) basicState->num_procs) raiseError(ERR_RECV_FROM_UNKNOWN_CORE);
 	if (source < hostCoresBasePid) {
 		return recvDataFromDeviceCore(source, threadId, hostCoresBasePid);
 	} else {

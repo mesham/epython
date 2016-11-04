@@ -443,10 +443,13 @@ static char * allocateChunkInSharedHeapMemory(size_t size, struct core_ctrl * co
  * The core has raised an error
  */
 static void raiseError(int coreId, struct core_ctrl * core) {
-	unsigned int relativeLocation;
-    memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
-    char * errorMessage=core->host_shared_data_start+relativeLocation;
-	fprintf(stderr, "Error from core %d: %s\n", coreId, errorMessage);
+	unsigned char errorCode;
+    memcpy(&errorCode, &core->data[1], sizeof(unsigned char));
+    char* errorMessage=translateErrorCodeToMessage(errorCode);
+	if (errorMessage != NULL) {
+        fprintf(stderr, "Error from core %d: %s\n", coreId, errorMessage);
+        free(errorMessage);
+	}
 }
 
 /**
