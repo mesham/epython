@@ -67,7 +67,6 @@ void setNumberEntriesInSymbolTable(unsigned short);
 void appendNewFunctionStatement(char*, struct stack_t*, struct memorycontainer*);
 void appendArgument(char*);
 struct memorycontainer* appendReductionStatement(unsigned char, struct memorycontainer*, char*);
-struct memorycontainer* appendBcastStatement(struct memorycontainer*, struct memorycontainer*, char*);
 struct memorycontainer* appendDeclareArray(char*, struct stack_t*, int);
 struct memorycontainer* appendCallFunctionStatement(char*, struct stack_t*);
 struct memorycontainer* appendNativeCallFunctionStatement(char*, struct stack_t*, struct memorycontainer*);

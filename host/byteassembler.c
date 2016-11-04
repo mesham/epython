@@ -119,23 +119,6 @@ struct memorycontainer* appendReductionStatement(unsigned char op, struct memory
 }
 
 /**
- * Appends and returns a broadcast statement
- */
-struct memorycontainer* appendBcastStatement(struct memorycontainer* expression, struct memorycontainer* source,  char* identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short) + sizeof(unsigned char) + source->length+ expression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-	position=appendStatement(memoryContainer, BCAST_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	position=appendMemory(memoryContainer, expression, position);
-	position=appendMemory(memoryContainer, source, position);
-	return memoryContainer;
-}
-
-/**
  * Appends and returns the declaration of an array into either default (often core local) or shared memory statement
  */
 struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* size_expressions, int shared_array) {
@@ -196,6 +179,8 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_RECV, position);
     } else if (strcmp(functionName, "rtl_sendrecv")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SENDRECV, position);
+    } else if (strcmp(functionName, "rtl_bcast")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_BCAST, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

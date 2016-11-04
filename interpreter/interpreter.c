@@ -74,7 +74,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
-static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
@@ -93,7 +92,6 @@ static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
-static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
@@ -182,7 +180,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
 		}
-		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length, threadId);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length, threadId);
 		if (stopInterpreter[threadId]) return empty;
 	}
@@ -220,7 +217,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
 		}
-		if (command == BCAST_TOKEN) i=handleBcast(assembled, i, length);
 		if (command == REDUCTION_TOKEN) i=handleReduction(assembled, i, length);
 		if (stopInterpreter) return empty;
 	}
@@ -249,31 +245,6 @@ static unsigned int handleReduction(char * assembled, unsigned int currentPoint,
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
 	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
 	setVariableValue(variableSymbol, reduceData(broadcast_expression, reductionOperator, numActiveCores), -1);
-#endif
-	return currentPoint;
-}
-
-/**
- * Broadcast collective communication
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleBcast(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleBcast(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length, threadId);
-	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data),
-			threadId, numActiveCores[threadId], hostCoresBasePid), -1);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	struct value_defn broadcast_expression=getExpressionValue(assembled, &currentPoint, length);
-	struct value_defn source_expression=getExpressionValue(assembled, &currentPoint, length);
-	setVariableValue(variableSymbol, bcastData(broadcast_expression, getInt(source_expression.data), numActiveCores), -1);
 #endif
 	return currentPoint;
 }
@@ -310,16 +281,16 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 	}
 	if (returnValue != NULL) {
 #ifdef HOST_INTERPRETER
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, currentSymbolEntries, symbolTable);
 #endif
         cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {
 #ifdef HOST_INTERPRETER
-        callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        callNativeFunction(fnCode, numArgs, toPassValues, currentSymbolEntries, symbolTable);
+        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, currentSymbolEntries, symbolTable);
 #endif
 	}
 	return currentPoint;

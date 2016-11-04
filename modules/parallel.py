@@ -32,9 +32,7 @@ def sendrecv(data, pid, n=none):
 		return retV
 
 def bcast(data, root):
-	retV=0
-	epy_i_bcast data from root into retV
-	return retV
+	return native rtl_bcast(data, root)
 
 def reduce(data, operator):
 	retV=0

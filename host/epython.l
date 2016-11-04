@@ -182,7 +182,6 @@ NONE									return NONE;
 ELSE                                    return ELSE;
 ELIF									return ELIF;
 TOFROM									return TOFROM;
-EPY_I_BCAST								return EPY_I_BCAST;
 EPY_I_REDUCE							return EPY_I_REDUCE;
 IN										return IN;
 IS										return IS;
