@@ -52,10 +52,10 @@ def sync():
 	native rtl_sync()
 
 def coreid():
-	return epy_i_coreid
+	return native rtl_coreid()
 
 def numcores():
-	return epy_i_numcores
+	return native rtl_numcores()
 
 def ishost():
 	return native rtl_ishost()

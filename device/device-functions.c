@@ -50,7 +50,7 @@ static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
 
 struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
-                                       int numActiveCores, int currentSymbolEntries, struct symbol_node* symbolTable) {
+                                       int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
     struct value_defn * value=NULL;
     if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
@@ -134,6 +134,13 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
         struct value_defn vD=bcastData(parameters[0], getInt(parameters[1].data), numActiveCores);
         cpy(value, &vD, sizeof(struct value_defn));
+    } else if (fnIdentifier==NATIVE_FN_RTL_NUMCORES || fnIdentifier==NATIVE_FN_RTL_COREID) {
+        if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
+        value->type=INT_TYPE;
+		value->dtype=SCALAR;
+        if (fnIdentifier==NATIVE_FN_RTL_NUMCORES) cpy(value->data, &numActiveCores, sizeof(int));
+        if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

@@ -204,8 +204,6 @@ IF                                      return IF;
 THEN                                    return THEN;
 PRINT                                   return PRINT;
 INPUT                                   return INPUT;
-EPY_I_COREID							return EPY_I_COREID;
-EPY_I_NUMCORES							return EPY_I_NUMCORES;
 EPY_I_RANDOM							return EPY_I_RANDOM;
 NATIVE									return NATIVE;
 SQRT									return SQRT;

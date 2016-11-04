@@ -281,16 +281,16 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 	}
 	if (returnValue != NULL) {
 #ifdef HOST_INTERPRETER
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, currentSymbolEntries, symbolTable);
+        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
 #endif
         cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {
 #ifdef HOST_INTERPRETER
-        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, currentSymbolEntries, symbolTable);
+        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
 #endif
 	}
 	return currentPoint;
@@ -674,22 +674,6 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == NONE_TOKEN) {
 		value.type=NONE_TYPE;
 		value.dtype=SCALAR;
-	} else if (expressionId == COREID_TOKEN) {
-		value.type=INT_TYPE;
-		value.dtype=SCALAR;
-#ifdef HOST_INTERPRETER
-		cpy(value.data, &localCoreId[threadId], sizeof(int));
-#else
-		cpy(value.data, &localCoreId, sizeof(int));
-#endif
-	} else if (expressionId == NUMCORES_TOKEN) {
-		value.type=INT_TYPE;
-		value.dtype=SCALAR;
-#ifdef HOST_INTERPRETER
-		cpy(value.data, &numActiveCores[threadId], sizeof(int));
-#else
-		cpy(value.data, &numActiveCores, sizeof(int));
-#endif
 	} else if (expressionId == RANDOM_TOKEN) {
 		value=performMathsOp(RANDOM_MATHS_OP, value);
 		value.dtype=SCALAR;

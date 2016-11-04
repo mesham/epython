@@ -181,6 +181,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SENDRECV, position);
     } else if (strcmp(functionName, "rtl_bcast")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_BCAST, position);
+    } else if (strcmp(functionName, "rtl_numcores")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMCORES, position);
+    } else if (strcmp(functionName, "rtl_coreid")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_COREID, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
@@ -688,32 +692,6 @@ struct memorycontainer* createLenExpression(struct memorycontainer* expression) 
 	unsigned int position;
 	position=appendStatement(memoryContainer, LEN_TOKEN, 0);
 	appendMemory(memoryContainer, expression, position);
-	return memoryContainer;
-}
-
-/**
- * Creates a coreid (integer) expression for getting the ID of a core
- */
-struct memorycontainer* createCoreIdExpression() {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, COREID_TOKEN, 0);
-	return memoryContainer;
-}
-
-/**
- * Creates a number of cores (integer) expression for getting the number of active cores
- */
-struct memorycontainer* createNumCoresExpression() {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, NUMCORES_TOKEN, 0);
 	return memoryContainer;
 }
 

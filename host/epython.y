@@ -34,7 +34,7 @@ void yyerror (char const *msg) {
 %token NEWLINE INDENT OUTDENT
 %token DIM SDIM EXIT ELSE ELIF COMMA WHILE
 %token FOR TO FROM NEXT INTO GOTO PRINT INPUT
-%token IF THEN EPY_I_COREID EPY_I_NUMCORES EPY_I_RANDOM EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD TOFROM NATIVE
+%token IF THEN EPY_I_COREID EPY_I_RANDOM EPY_I_REDUCE EPY_I_SUM EPY_I_MIN EPY_I_MAX EPY_I_PROD TOFROM NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
@@ -240,8 +240,6 @@ ident
 constant
         : INTEGER { $$=createIntegerExpression($1); }
         | REAL { $$=createRealExpression($1); }
-        | EPY_I_COREID { $$=createCoreIdExpression(); }
-        | EPY_I_NUMCORES { $$=createNumCoresExpression(); }
         | EPY_I_RANDOM { $$=createRandomExpression(); }
         | EPY_I_RANDOM LPAREN RPAREN { $$=createRandomExpression(); }
 	| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
