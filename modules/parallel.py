@@ -21,13 +21,13 @@ def recv(pid, n=none):
 
 def sendrecv(data, pid, n=none):
 	if (n is none):
-		return native sendrecv(data, pid)
+		return native rtl_sendrecv(data, pid)
 	else:
 		dim retV[n]
 		i=0
 		while i<n:
 			d=data[i]
-			retV[i]=native sendrecv(d, pid)
+			retV[i]=native rtl_sendrecv(d, pid)
 			i=i+1
 		return retV
 
