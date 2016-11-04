@@ -53,7 +53,7 @@ void syncCores(int, int);
 void garbageCollect(int, struct symbol_node*, int);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int);
 #else
-char* getHeapMemory(int,char);
+char* getHeapMemory(int,char,int,struct symbol_node*);
 void freeMemoryInHeap(char*);
 struct value_defn getInputFromUser(void);
 struct value_defn getInputFromUserWithString(struct value_defn);

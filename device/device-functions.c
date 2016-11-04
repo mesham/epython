@@ -46,6 +46,8 @@ static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
 static void consolidateHeapChunks(char);
 static char * allocateChunkInHeapMemory(int, char);
+static char isMemoryAddressFound(char*, int, struct symbol_node*);
+static void performGC(int, struct symbol_node*, char);
 
 /**
  * Displays a message to the user and waits for the host to have done this
@@ -221,10 +223,14 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 /**
  * Allocates some memory in the heap
  */
-char* getHeapMemory(int size, char isShared) {
+char* getHeapMemory(int size, char isShared, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	if (sharedData->allInSharedMemory || isShared) {
 		char * dS=allocateChunkInHeapMemory(size, 1);
-		if (dS == NULL) raiseError("Out of shared heap memory for data");
+		if (dS == NULL) {
+            performGC(currentSymbolEntries, symbolTable, 1);
+            dS=allocateChunkInHeapMemory(size, 1);
+            if (dS == NULL) raiseError("Out of shared heap memory for data");
+		}
 		return dS;
 	} else {
 		char * dS=allocateChunkInHeapMemory(size, 0);
@@ -240,6 +246,62 @@ void freeMemoryInHeap(char * address) {
     unsigned chunkInUse=0;
     cpy(address-1, &chunkInUse, sizeof(unsigned char));
     consolidateHeapChunks((int) address > LOCAL_CORE_MEMORY_MAP_TOP);
+}
+
+void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable) {
+    performGC(currentSymbolEntries, symbolTable, 0);
+    performGC(currentSymbolEntries, symbolTable, 1);
+}
+
+static void performGC(int currentSymbolEntries, struct symbol_node* symbolTable, char inSharedMemory) {
+    unsigned char chunkInUse, freedMem=0;
+    unsigned short coreChunkLength;
+    unsigned int chunkLength;
+    char * heapPtr;
+
+    size_t headersize, lenStride;
+    if (inSharedMemory) {
+        heapPtr=sharedData->core_ctrl[myId].shared_heap_start;
+        headersize=sizeof(unsigned char) + sizeof(unsigned int);
+        lenStride=sizeof(unsigned int);
+    } else {
+        heapPtr=sharedData->core_ctrl[myId].heap_start;
+        headersize=sizeof(unsigned short) + sizeof(unsigned char);
+        lenStride=sizeof(unsigned short);
+    }
+    while (1==1) {
+        if (inSharedMemory) {
+            cpy(&chunkLength, heapPtr, sizeof(unsigned int));
+        } else {
+            cpy(&coreChunkLength, heapPtr, sizeof(unsigned short));
+            chunkLength=coreChunkLength;
+        }
+        cpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
+        if (chunkInUse && !isMemoryAddressFound(&heapPtr[headersize], currentSymbolEntries, symbolTable)) {
+            chunkInUse=0;
+            cpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
+            freedMem=1;
+        }
+        heapPtr+=chunkLength + headersize;
+        if (inSharedMemory && heapPtr  >= sharedData->core_ctrl[myId].shared_heap_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+            break;
+        } else if ((int) heapPtr  >= LOCAL_CORE_MEMORY_MAP_TOP) {
+            break;
+        }
+    }
+    if (freedMem) concatenateMemory(inSharedMemory);
+}
+
+static char isMemoryAddressFound(char * address, int currentSymbolEntries, struct symbol_node* symbolTable) {
+    int i;
+    char * ptr;
+    for (i=0;i<=currentSymbolEntries;i++) {
+        if (symbolTable[i].state==ALLOCATED && (symbolTable[i].value.dtype==ARRAY || symbolTable[i].value.type==STRING_TYPE)) {
+            cpy(&ptr, symbolTable[i].value.data, sizeof(char*));
+            if (address == ptr) return 1;
+        }
+    }
+    return 0;
 }
 
 static void consolidateHeapChunks(char inSharedMemory) {
