@@ -59,7 +59,7 @@ def reduce(data, operator):
 	return retV
 
 def sync():
-	epy_i_sync
+	native rtl_sync();
 
 def coreid():
 	return epy_i_coreid

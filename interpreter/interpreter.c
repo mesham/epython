@@ -79,7 +79,6 @@ static unsigned int handleRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int, int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int, int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int, int);
-static unsigned int handleSync(char*, unsigned int, unsigned int, int);
 static unsigned int handleFreeMemory(char *, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
@@ -103,7 +102,6 @@ static unsigned int handleRecv(char*, unsigned int, unsigned int);
 static unsigned int handleSendRecv(char*, unsigned int, unsigned int);
 static unsigned int handleBcast(char*, unsigned int, unsigned int);
 static unsigned int handleReduction(char*, unsigned int, unsigned int);
-static unsigned int handleSync(char*, unsigned int, unsigned int);
 static unsigned int handleFreeMemory(char *, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
@@ -176,8 +174,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length, threadId);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length, threadId);
 		if (command == STOP_TOKEN) return empty;
-		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length, threadId);
-		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length, threadId);
@@ -220,8 +216,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length);
 		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length);
 		if (command == STOP_TOKEN) return empty;
-		if (command == SYNC_TOKEN) i=handleSync(assembled, i, length);
-		if (command == GC_TOKEN) garbageCollect(currentSymbolEntries, symbolTable);
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length);
@@ -249,19 +243,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 	return empty;
 }
 #endif
-
-/**
- * Synchronisation between the cores
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleSync(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-	syncCores(1, threadId);
-#else
-static unsigned int handleSync(char * assembled, unsigned int currentPoint, unsigned int length) {
-	syncCores(1);
-#endif
-	return currentPoint;
-}
 
 /**
  * Sending of data from one core to another

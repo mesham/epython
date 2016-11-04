@@ -104,6 +104,10 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
         struct value_defn vD=getInputFromUserWithString(parameters[0], currentSymbolEntries, symbolTable);
         cpy(value, &vD, sizeof(struct value_defn));
+    } else if (fnIdentifier==NATIVE_FN_RTL_SYNC) {
+        syncCores(1);
+    } else if (fnIdentifier==NATIVE_FN_RTL_GC) {
+        garbageCollect(currentSymbolEntries, symbolTable);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

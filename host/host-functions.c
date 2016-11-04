@@ -151,6 +151,10 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         value=(struct value_defn* )getStackMemory(sizeof(struct value_defn), 0);
         *value=getInputFromUserWithString(parameters[0], threadId);
+    } else if (fnIdentifier==NATIVE_FN_RTL_SYNC) {
+        syncCores(1);
+    } else if (fnIdentifier==NATIVE_FN_RTL_GC) {
+        garbageCollect(currentSymbolEntries, symbolTable, threadId);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }

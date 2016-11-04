@@ -233,6 +233,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUT, position);
     } else if (strcmp(functionName, "rtl_inputprint")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUTPRINT, position);
+    } else if (strcmp(functionName, "rtl_sync")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SYNC, position);
+    } else if (strcmp(functionName, "rtl_gc")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GC, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
@@ -697,29 +701,6 @@ struct memorycontainer* appendStopStatement() {
 	appendStatement(memoryContainer, STOP_TOKEN, 0);
 	return memoryContainer;
 }
-
-/**
- * Appends and returns a synchronisation statement
- */
-struct memorycontainer* appendSyncStatement() {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, SYNC_TOKEN, 0);
-	return memoryContainer;
-}
-
-struct memorycontainer* appendGC() {
-    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	appendStatement(memoryContainer, GC_TOKEN, 0);
-	return memoryContainer;
-};
 
 struct memorycontainer* appendFreeMemory(char* identifier) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
