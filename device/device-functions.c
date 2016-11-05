@@ -49,12 +49,10 @@ static char * allocateChunkInHeapMemory(int, char);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
 
-struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
+void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
-    struct value_defn * value=NULL;
     if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
         value->type=BOOLEAN_TYPE;
         value->dtype=SCALAR;
         int v=fnIdentifier==NATIVE_FN_RTL_ISHOST ? 0 : 1;
@@ -64,7 +62,6 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         displayToUser(parameters[0], currentSymbolEntries, symbolTable);
     } else if (fnIdentifier==NATIVE_FN_RTL_NUMDIMS) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
         int intNDims=0;
         if (parameters[0].dtype == ARRAY) {
             char * ptr;
@@ -79,7 +76,6 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
 		cpy(value->data, &intNDims, sizeof(int));
     } else if (fnIdentifier==NATIVE_FN_RTL_DSIZE) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
         int dimSize=0;
         if (parameters[0].dtype == ARRAY) {
             int lookupIndex=getInt(parameters[1].data);
@@ -97,14 +93,10 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
 		cpy(value->data, &dimSize, sizeof(int));
     } else if (fnIdentifier==NATIVE_FN_RTL_INPUT) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=getInputFromUser();
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=getInputFromUser();
     } else if (fnIdentifier==NATIVE_FN_RTL_INPUTPRINT) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=getInputFromUserWithString(parameters[0], currentSymbolEntries, symbolTable);
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=getInputFromUserWithString(parameters[0], currentSymbolEntries, symbolTable);
     } else if (fnIdentifier==NATIVE_FN_RTL_SYNC) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         syncCores(1);
@@ -121,41 +113,28 @@ struct value_defn * callNativeFunction(unsigned char fnIdentifier, int numArgs, 
         sendData(parameters[0], getInt(parameters[1].data));
     } else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=recvData(getInt(parameters[0].data));
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=recvData(getInt(parameters[0].data));
     } else if (fnIdentifier==NATIVE_FN_RTL_SENDRECV) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=sendRecvData(parameters[0], getInt(parameters[1].data));
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=sendRecvData(parameters[0], getInt(parameters[1].data));
     } else if (fnIdentifier==NATIVE_FN_RTL_BCAST) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=bcastData(parameters[0], getInt(parameters[1].data), numActiveCores);
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=bcastData(parameters[0], getInt(parameters[1].data), numActiveCores);
     } else if (fnIdentifier==NATIVE_FN_RTL_NUMCORES || fnIdentifier==NATIVE_FN_RTL_COREID) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
         value->type=INT_TYPE;
 		value->dtype=SCALAR;
         if (fnIdentifier==NATIVE_FN_RTL_NUMCORES) cpy(value->data, &numActiveCores, sizeof(int));
         if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
     } else if (fnIdentifier==NATIVE_FN_RTL_RANDOM) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD;
-        vD=performMathsOp(RANDOM_MATHS_OP, vD);
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=performMathsOp(RANDOM_MATHS_OP, vD);
     } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        value=(struct value_defn*) getStackMemory(sizeof(struct value_defn), 0);
-        struct value_defn vD=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
-        cpy(value, &vD, sizeof(struct value_defn));
+        *value=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
-    return value;
 };
 
 /**

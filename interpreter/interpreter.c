@@ -252,16 +252,16 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
 	}
 	if (returnValue != NULL) {
 #ifdef HOST_INTERPRETER
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        callNativeFunction(returnValue, fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        struct value_defn * rv=callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
+        callNativeFunction(returnValue, fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
 #endif
-        cpy(returnValue, rv, sizeof(struct value_defn));
 	} else {
+	    struct value_defn dummy;
 #ifdef HOST_INTERPRETER
-        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
+        callNativeFunction(&dummy, fnCode, numArgs, toPassValues, numActiveCores[threadId], localCoreId[threadId], currentSymbolEntries[threadId], symbolTable[threadId], threadId);
 #else
-        callNativeFunction(fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
+        callNativeFunction(&dummy, fnCode, numArgs, toPassValues, numActiveCores, localCoreId, currentSymbolEntries, symbolTable);
 #endif
 	}
 	return currentPoint;
