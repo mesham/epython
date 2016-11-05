@@ -101,32 +101,6 @@ void setNumberEntriesInSymbolTable(unsigned short e) {
 	current_var_id=e;
 }
 
-/**
- * Appends and returns the declaration of an array into either default (often core local) or shared memory statement
- */
-struct memorycontainer* appendDeclareArray(char* identifier, struct stack_t* size_expressions, int shared_array) {
-    int lenOfArray=getStackSize(size_expressions);
-
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned short)+(sizeof(unsigned char)*2);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, shared_array ? DIMSHAREDARRAY_TOKEN : DIMARRAY_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	unsigned char packageNumDims=(unsigned char) lenOfArray;
-    memcpy(&memoryContainer->data[position], &packageNumDims, sizeof(unsigned char));
-    position+=sizeof(unsigned char);
-
-    int i;
-	for (i=0;i<lenOfArray;i++) {
-        memoryContainer=concatenateMemory(memoryContainer, getExpressionAt(size_expressions, i));
-	}
-	return memoryContainer;
-}
-
 struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, struct stack_t* args, struct memorycontainer* singleArg) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=(sizeof(unsigned char)*2) + sizeof(unsigned short);
@@ -172,6 +146,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_RANDOM, position);
     } else if (strcmp(functionName, "rtl_reduce")==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_REDUCE, position);
+    } else if (strcmp(functionName, "rtl_allocatearray")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCARRAY, position);
+    } else if (strcmp(functionName, "rtl_allocatesharedarray")==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCSHAREDARRAY, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

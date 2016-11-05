@@ -183,8 +183,6 @@ ELSE                                    return ELSE;
 ELIF									return ELIF;
 IN										return IN;
 IS										return IS;
-DIM                                     return DIM;
-SDIM                                    return SDIM;
 WHILE									return WHILE;
 EXIT                                    return EXIT;
 FOR                                     return FOR;

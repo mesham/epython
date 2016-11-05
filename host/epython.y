@@ -75,10 +75,8 @@ statements
 	| statement
 ;
 
-statement
-	: DIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 0); }	
-	| SDIM ident SLBRACE commaseparray SRBRACE { $$=appendDeclareArray($2, $4, 1); }
-	| FOR declareident IN expression COLON codeblock { $$=appendForStatement($2, $4, $6); leaveScope(); }
+statement	
+	: FOR declareident IN expression COLON codeblock { $$=appendForStatement($2, $4, $6); leaveScope(); }
 	| WHILE expression COLON codeblock { $$=appendWhileStatement($2, $4); }	
 	| IF expression COLON codeblock { $$=appendIfStatement($2, $4); }
 	| IF expression COLON codeblock ELSE COLON codeblock { $$=appendIfElseStatement($2, $4, $7); }

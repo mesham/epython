@@ -1,48 +1,34 @@
 def array(a,b=none,c=none,d=none,e=none,f=none,g=none):
     if (b is none):
-        dim ret[a]
-        return ret
+        return native rtl_allocatearray(a)
     elif (c is none):
-        dim ret[a,b]
-        return ret
+        return native rtl_allocatearray(a,b)
     elif (d is none):
-        dim ret[a,b,c]
-        return ret
+        return native rtl_allocatearray(a,b,c)
     elif (e is none):
-        dim ret[a,b,c,d]
-        return ret
+        return native rtl_allocatearray(a,b,c,d)
     elif (f is none):
-        dim ret[a,b,c,d,e]
-        return ret
+        return native rtl_allocatearray(a,b,c,d,e)
     elif (g is none):
-        dim ret[a,b,c,d,e,f]
-        return ret
+        return native rtl_allocatearray(a,b,c,d,e,f)
     else:
-        dim ret[a,b,c,d,e,f,g]
-        return ret
+        return native rtl_allocatearray(a,b,c,d,e,f,g)
 
 def shared_mem_array(a,b=none,c=none,d=none,e=none,f=none,g=none):
     if (b is none):
-        sdim ret[a]
-        return ret
+        return native rtl_allocatesharedarray(a)
     elif (c is none):
-        sdim ret[a,b]
-        return ret
+        return native rtl_allocatesharedarray(a,b)
     elif (d is none):
-        sdim ret[a,b,c]
-        return ret
+        return native rtl_allocatesharedarray(a,b,c)
     elif (e is none):
-        sdim ret[a,b,c,d]
-        return ret
+        return native rtl_allocatesharedarray(a,b,c,d)
     elif (f is none):
-        sdim ret[a,b,c,d,e]
-        return ret
+        return native rtl_allocatesharedarray(a,b,c,d,e)
     elif (g is none):
-        sdim ret[a,b,c,d,e,f]
-        return ret
+        return native rtl_allocatesharedarray(a,b,c,d,e,f)
     else:
-        sdim ret[a,b,c,d,e,f,g]
-        return ret
+        return native rtl_allocatesharedarray(a,b,c,d,e,f,g)
 
 def size(arr):
     dims=ndim(arr)

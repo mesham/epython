@@ -69,7 +69,6 @@ static int hostCoresBasePid;
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int, int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
-static unsigned int handleDimArray(char*, unsigned int, char, unsigned int, int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
@@ -86,7 +85,6 @@ static struct value_defn computeExpressionResult(unsigned char, char*, unsigned 
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int);
-static unsigned int handleDimArray(char*, unsigned int, char, unsigned int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
@@ -159,8 +157,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0, threadId);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1, threadId);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length, threadId);
-		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length, threadId);
-		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length, threadId);
 		if (command == STOP_TOKEN) return empty;
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
@@ -195,8 +191,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1);
 		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length);
-		if (command == DIMARRAY_TOKEN) i=handleDimArray(assembled, i, 0, length);
-		if (command == DIMSHAREDARRAY_TOKEN) i=handleDimArray(assembled, i, 1, length);
 		if (command == STOP_TOKEN) return empty;
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
@@ -366,60 +360,6 @@ static unsigned int handleIf(char * assembled, unsigned int currentPoint, unsign
 	if (conditionalResult) return currentPoint+sizeof(unsigned short);
 	unsigned short blockLen=getUShort(&assembled[currentPoint]);
 	return currentPoint+sizeof(unsigned short)+blockLen;
-}
-
-/**
- * Declaration of an array and whether it is to be in default (core local) or shared memory
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, char inSharedMemory, unsigned int length, int threadId) {
-#else
-static unsigned int handleDimArray(char * assembled, unsigned int currentPoint, char inSharedMemory, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-#else
-    struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-#endif
-	unsigned char num_dims=getUChar(&assembled[currentPoint]);
-	num_dims=num_dims & 0xF;
-	currentPoint+=sizeof(unsigned char);
-	int totalDataSize=1, i;
-
-	unsigned int startingCp=currentPoint;
-	for (i=0;i<num_dims;i++) {
-#ifdef HOST_INTERPRETER
-        struct value_defn size=getExpressionValue(assembled, &currentPoint, length, threadId);
-#else
-        struct value_defn size=getExpressionValue(assembled, &currentPoint, length);
-#endif
-        totalDataSize*=getInt(size.data);
-	}
-
-	variableSymbol->value.type=INT_TYPE;
-	variableSymbol->value.dtype=ARRAY;
-#ifdef HOST_INTERPRETER
-    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory, threadId);
-#else
-    char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+num_dims)), inSharedMemory, currentSymbolEntries, symbolTable);
-#endif
-	cpy(variableSymbol->value.data, &address, sizeof(char*));
-	cpy(address, &num_dims, sizeof(unsigned char));
-	address+=sizeof(unsigned char);
-	currentPoint=startingCp;
-	for (i=0;i<num_dims;i++) {
-#ifdef HOST_INTERPRETER
-        struct value_defn size=getExpressionValue(assembled, &currentPoint, length, threadId);
-#else
-        struct value_defn size=getExpressionValue(assembled, &currentPoint, length);
-#endif
-        cpy(address, size.data, sizeof(int));
-        address+=sizeof(int);
-	}
-	return currentPoint;
 }
 
 /**

@@ -128,10 +128,28 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
     } else if (fnIdentifier==NATIVE_FN_RTL_RANDOM) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        *value=performMathsOp(RANDOM_MATHS_OP, vD);
+        *value=performMathsOp(RANDOM_MATHS_OP, *value);
     } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
+    } else if (fnIdentifier==NATIVE_FN_RTL_ALLOCARRAY || fnIdentifier==NATIVE_FN_RTL_ALLOCSHAREDARRAY) {
+        int totalDataSize=1, i;
+        for (i=0;i<numArgs;i++) {
+            totalDataSize*=getInt(parameters[i].data);
+        }
+        char * address=getHeapMemory(sizeof(unsigned char) + (sizeof(int)*(totalDataSize+numArgs)),
+                                     fnIdentifier==NATIVE_FN_RTL_ALLOCSHAREDARRAY, currentSymbolEntries, symbolTable);
+        value->type=INT_TYPE;
+        value->dtype=ARRAY;
+        cpy(value->data, &address, sizeof(char*));
+
+        unsigned char num_dims=numArgs & 0xF;
+        cpy(address, &num_dims, sizeof(unsigned char));
+        address+=sizeof(unsigned char);
+        for (i=0;i<numArgs;i++) {
+            cpy(address, parameters[i].data, sizeof(int));
+            address+=sizeof(int);
+        }
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
