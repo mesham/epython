@@ -1,6 +1,7 @@
 from util import *
 from parallel import *
 from random import randrange
+from array import len
 
 ln=25
 N=ln * numcores()

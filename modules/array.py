@@ -44,21 +44,34 @@ def shared_mem_array(a,b=none,c=none,d=none,e=none,f=none,g=none):
         sdim ret[a,b,c,d,e,f,g]
         return ret
 
-def freearray(arr):
-    EPY_I_FREE arr
-
 def size(arr):
-    return len(arr)
+    dims=ndim(arr)
+    if dims > 0:
+        s=shape(arr)
+        arraylength=1
+        i=0
+        while i<dims:
+            arraylength*=s[i]
+            i+=1
+        return arraylength
+    else:
+        return 0
+
+def freearray(arr):
+    native rtl_free(arr)
+
+def len(arr):
+    return size(arr)
 
 def ndim(arr):
     return native rtl_numdims(arr)
 
 def shape(arr):
-    i=EPY_I_DIMS(arr)
+    i=ndim(arr)
     shape_val=[0]*i
     j=0
     while j<i:
-        shape_val[j]=EPY_I_DSIZE(arr, j)
+        shape_val[j]=native rtl_dsize(arr, j)
         j+=1
     return shape_val
 

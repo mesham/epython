@@ -1,6 +1,7 @@
 from parallel import *
 from util import *
 from random import randrange
+from array import len
 
 dim data[300]
 

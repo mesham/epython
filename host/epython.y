@@ -40,7 +40,7 @@ void yyerror (char const *msg) {
 %token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
-%left ADD SUB LEN ADDADD SUBSUB
+%left ADD SUB ADDADD SUBSUB
 %left MULT DIV MOD MULMUL DIVDIV MODMOD
 %left AND OR
 %left NEQ LEQ GEQ LT GT EQ IS ASSGN
@@ -203,8 +203,7 @@ multiplicative_expression
 	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
 	| STR LPAREN expression RPAREN { $$=$3; } 
 	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
-	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }
-	| LEN LPAREN expression RPAREN { $$=createLenExpression($3); }
+	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }	
 	| SLBRACE commaseparray SRBRACE { $$=createArrayExpression($2, NULL); }
 	| SLBRACE commaseparray SRBRACE MULT value { $$=createArrayExpression($2, $5); }
 	| INPUT LPAREN RPAREN { $$=appendNativeCallFunctionStatement("rtl_input", NULL, NULL); }

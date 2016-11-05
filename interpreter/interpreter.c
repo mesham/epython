@@ -645,30 +645,6 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == NONE_TOKEN) {
 		value.type=NONE_TYPE;
 		value.dtype=SCALAR;
-	} else if (expressionId == LEN_TOKEN) {
-#ifdef HOST_INTERPRETER
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length, threadId);
-#else
-		struct value_defn arrayvalue=getExpressionValue(assembled, currentPoint, length);
-#endif
-		int totalSize=1;
-		if (arrayvalue.dtype == ARRAY) {
-            int i, dSize;
-            unsigned char num_dims;
-            char * ptr;
-            cpy(&ptr, arrayvalue.data, sizeof(char*));
-            cpy(&num_dims, ptr, sizeof(unsigned char));
-            num_dims=num_dims & 0xF;
-            ptr+=sizeof(unsigned char);
-            for (i=0;i<num_dims;i++) {
-                cpy(&dSize, ptr, sizeof(int));
-                totalSize*=dSize;
-                ptr+=sizeof(int);
-            }
-		}
-		value.type=INT_TYPE;
-		value.dtype=SCALAR;
-		cpy(value.data, &totalSize, sizeof(int));
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0, threadId);

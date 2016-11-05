@@ -4,6 +4,7 @@ Simple odd-even sort
 
 from util import *
 from random import randrange
+from array import len
 
 dim x[100]
 for i in range(99):

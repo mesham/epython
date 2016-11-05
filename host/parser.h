@@ -118,9 +118,8 @@ extern int yydebug;
     SRBRACE = 328,
     TRUE = 329,
     FALSE = 330,
-    LEN = 331,
-    ASSGN = 332,
-    POW = 333
+    ASSGN = 331,
+    POW = 332
   };
 #endif
 /* Tokens.  */
@@ -197,9 +196,8 @@ extern int yydebug;
 #define SRBRACE 328
 #define TRUE 329
 #define FALSE 330
-#define LEN 331
-#define ASSGN 332
-#define POW 333
+#define ASSGN 331
+#define POW 332
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -215,7 +213,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 219 "parser.h" /* yacc.c:1909  */
+#line 217 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

@@ -60,7 +60,6 @@
 #define FNCALL_TOKEN 0x2E
 #define RETURN_EXP_TOKEN 0x2F
 #define BOOLEAN_TOKEN 0x30
-#define LEN_TOKEN 0x31
 #define LETNOALIAS_TOKEN 0x32
 #define NONE_TOKEN 0x33
 #define IS_TOKEN 0x34

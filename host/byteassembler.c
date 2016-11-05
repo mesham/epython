@@ -657,18 +657,6 @@ struct memorycontainer* createStringExpression(char * string) {
 	return memoryContainer;
 }
 
-struct memorycontainer* createLenExpression(struct memorycontainer* expression) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + expression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position;
-	position=appendStatement(memoryContainer, LEN_TOKEN, 0);
-	appendMemory(memoryContainer, expression, position);
-	return memoryContainer;
-}
-
 /**
  * Creates an expression containing an integer
  */
