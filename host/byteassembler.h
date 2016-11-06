@@ -30,6 +30,27 @@
 #include <stddef.h>
 #include "stack.h"
 
+#define NATIVE_RTL_ISHOST_STR "rtl_ishost"
+#define NATIVE_RTL_ISDEVICE_STR "rtl_isdevice"
+#define NATIVE_RTL_PRINT_STR "rtl_print"
+#define NATIVE_RTL_NUMDIMS_STR "rtl_numdims"
+#define NATIVE_RTL_DSIZE_STR "rtl_dsize"
+#define NATIVE_RTL_INPUT_STR "rtl_input"
+#define NATIVE_RTL_INPUTPRINT_STR "rtl_inputprint"
+#define NATIVE_RTL_SYNC_STR "rtl_sync"
+#define NATIVE_RTL_GC_STR "rtl_gc"
+#define NATIVE_RTL_FREE_STR "rtl_free"
+#define NATIVE_RTL_SEND_STR "rtl_send"
+#define NATIVE_RTL_RECV_STR "rtl_recv"
+#define NATIVE_RTL_SENDRECV_STR "rtl_sendrecv"
+#define NATIVE_RTL_BCAST_STR "rtl_bcast"
+#define NATIVE_RTL_NUMCORES_STR "rtl_numcores"
+#define NATIVE_RTL_COREID_STR "rtl_coreid"
+#define NATIVE_RTL_REDUCE_STR "rtl_reduce"
+#define NATIVE_RTL_ALLOCATEARRAY_STR "rtl_allocatearray"
+#define NATIVE_RTL_ALLOCATESHAREDARRAY_STR "rtl_allocatesharedarray"
+#define NATIVE_RTL_MATH_STR "rtl_math"
+
 extern int line_num;
 
 // Used for tracking gotos and line numberings (which are resolved once the byte code is assembled)
@@ -105,20 +126,6 @@ struct memorycontainer* createDivExpression(struct memorycontainer*, struct memo
 struct memorycontainer* createFloorDivExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createModExpression(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* createPowExpression(struct memorycontainer*, struct memorycontainer*);
-struct memorycontainer* createSqrtExpression(struct memorycontainer*);
-struct memorycontainer* createSinExpression(struct memorycontainer*);
-struct memorycontainer* createCosExpression(struct memorycontainer*);
-struct memorycontainer* createTanExpression(struct memorycontainer*);
-struct memorycontainer* createASinExpression(struct memorycontainer*);
-struct memorycontainer* createACosExpression(struct memorycontainer*);
-struct memorycontainer* createATanExpression(struct memorycontainer*);
-struct memorycontainer* createSinHExpression(struct memorycontainer*);
-struct memorycontainer* createCosHExpression(struct memorycontainer*);
-struct memorycontainer* createTanHExpression(struct memorycontainer*);
-struct memorycontainer* createFloorExpression(struct memorycontainer*);
-struct memorycontainer* createCeilExpression(struct memorycontainer*);
-struct memorycontainer* createLogExpression(struct memorycontainer*);
-struct memorycontainer* createLog10Expression(struct memorycontainer*);
 void addVariableIfNeeded(char*);
 void enterScope(void);
 void leaveScope(void);

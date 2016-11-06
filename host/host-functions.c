@@ -66,6 +66,7 @@ static void syncWithDevice();
 static char removehostHeapNode(char*, int);
 static struct hostHeapNodes * findHeapNode(char*, int);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
+static struct value_defn performMathsOp(int, struct value_defn);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -175,9 +176,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		value->dtype=SCALAR;
         if (fnIdentifier==NATIVE_FN_RTL_NUMCORES) cpy(value->data, &numActiveCores, sizeof(int));
         if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
-    } else if (fnIdentifier==NATIVE_FN_RTL_RANDOM) {
-        if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        *value=performMathsOp(RANDOM_MATHS_OP, *value);
     } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=reduceData(parameters[0], getInt(parameters[1].data), threadId, numActiveCores, hostCoresBasePid);
@@ -198,6 +196,14 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         for (i=0;i<numArgs;i++) {
             cpy(address, parameters[i].data, sizeof(int));
             address+=sizeof(int);
+        }
+    } else if (fnIdentifier==NATIVE_FN_RTL_MATH) {
+        if (numArgs == 2) {
+            *value=performMathsOp(getInt(parameters[0].data), parameters[1]);
+        } else if (numArgs == 1) {
+            *value=performMathsOp(getInt(parameters[0].data), *value);
+        } else {
+            raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         }
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
@@ -701,7 +707,7 @@ static struct value_defn recvDataFromHostProcess(int source, int threadId) {
 /**
  * Called when running on the host, this performs some maths operation
  */
-struct value_defn performMathsOp(unsigned short operation, struct value_defn value) {
+static struct value_defn performMathsOp(int operation, struct value_defn value) {
 	struct value_defn result;
 	result.dtype=SCALAR;
 	if (operation== RANDOM_MATHS_OP) {
@@ -710,10 +716,12 @@ struct value_defn performMathsOp(unsigned short operation, struct value_defn val
 		cpy(result.data, &r, sizeof(int));
 	} else {
 		float fvalue=0, r;
+		int ivalue;
 		if (value.type==REAL_TYPE) {
             cpy(&fvalue, value.data, sizeof(float));
 		} else if (value.type==INT_TYPE) {
-		    cpy(&fvalue, value.data, sizeof(float));
+		    cpy(&ivalue, value.data, sizeof(int));
+		    fvalue=(float) ivalue;
 		}
 		result.type=REAL_TYPE;
 		if (operation==SQRT_MATHS_OP) r=sqrtf(fvalue);

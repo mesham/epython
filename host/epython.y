@@ -37,7 +37,7 @@ void yyerror (char const *msg) {
 %token IF NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
-%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT SQRT SIN COS TAN ASIN ACOS ATAN SINH COSH TANH FLOOR CEIL LOG LOG10 STR
+%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT STR
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
 %left ADD SUB ADDADD SUBSUB
@@ -187,21 +187,7 @@ multiplicative_expression
 	| multiplicative_expression FLOORDIV value { $$=createFloorDivExpression($1, $3); }
 	| multiplicative_expression MOD value { $$=createModExpression($1, $3); }
 	| multiplicative_expression POW value { $$=createPowExpression($1, $3); }
-	| SQRT LPAREN value RPAREN { $$=createSqrtExpression($3); }
-	| SIN LPAREN value RPAREN { $$=createSinExpression($3); }
-	| COS LPAREN value RPAREN { $$=createCosExpression($3); }
-	| TAN LPAREN value RPAREN { $$=createTanExpression($3); }
-	| ASIN LPAREN value RPAREN { $$=createASinExpression($3); }
-	| ACOS LPAREN value RPAREN { $$=createACosExpression($3); }
-	| ATAN LPAREN value RPAREN { $$=createATanExpression($3); }
-	| SINH LPAREN value RPAREN { $$=createSinHExpression($3); }
-	| COSH LPAREN value RPAREN { $$=createCosHExpression($3); }
-	| TANH LPAREN value RPAREN { $$=createTanHExpression($3); }
-	| FLOOR LPAREN value RPAREN { $$=createFloorExpression($3); }
-	| CEIL LPAREN value RPAREN { $$=createCeilExpression($3); }
-	| STR LPAREN expression RPAREN { $$=$3; } 
-	| LOG LPAREN value RPAREN { $$=createLogExpression($3); }
-	| LOG10 LPAREN value RPAREN { $$=createLog10Expression($3); }	
+	| STR LPAREN expression RPAREN { $$=$3; } 	
 	| SLBRACE commaseparray SRBRACE { $$=createArrayExpression($2, NULL); }
 	| SLBRACE commaseparray SRBRACE MULT value { $$=createArrayExpression($2, $5); }
 	| INPUT LPAREN RPAREN { $$=appendNativeCallFunctionStatement("rtl_input", NULL, NULL); }

@@ -653,16 +653,6 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
         *currentPoint=handleNative(assembled, *currentPoint, length, &value);
 #endif
-
-	} else if (expressionId == MATHS_TOKEN) {
-		unsigned char maths_op=getUChar(&assembled[*currentPoint]);
-		*currentPoint+=sizeof(unsigned char);
-#ifdef HOST_INTERPRETER
-		value=performMathsOp(maths_op, getExpressionValue(assembled, currentPoint, length, threadId));
-#else
-		value=performMathsOp(maths_op, getExpressionValue(assembled, currentPoint, length));
-#endif
-		value.dtype=SCALAR;
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);

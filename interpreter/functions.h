@@ -70,7 +70,6 @@ void garbageCollect(int, struct symbol_node*);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int, struct symbol_node*);
 #endif
 void cpy(volatile void*, volatile void *, unsigned int);
-struct value_defn performMathsOp(unsigned short, struct value_defn);
 void raiseError(unsigned char);
 int slength(char*);
 int getInt(void*);

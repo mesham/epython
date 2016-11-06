@@ -97,29 +97,15 @@ extern int yydebug;
     EQ = 307,
     IS = 308,
     NOT = 309,
-    SQRT = 310,
-    SIN = 311,
-    COS = 312,
-    TAN = 313,
-    ASIN = 314,
-    ACOS = 315,
-    ATAN = 316,
-    SINH = 317,
-    COSH = 318,
-    TANH = 319,
-    FLOOR = 320,
-    CEIL = 321,
-    LOG = 322,
-    LOG10 = 323,
-    STR = 324,
-    LPAREN = 325,
-    RPAREN = 326,
-    SLBRACE = 327,
-    SRBRACE = 328,
-    TRUE = 329,
-    FALSE = 330,
-    ASSGN = 331,
-    POW = 332
+    STR = 310,
+    LPAREN = 311,
+    RPAREN = 312,
+    SLBRACE = 313,
+    SRBRACE = 314,
+    TRUE = 315,
+    FALSE = 316,
+    ASSGN = 317,
+    POW = 318
   };
 #endif
 /* Tokens.  */
@@ -175,29 +161,15 @@ extern int yydebug;
 #define EQ 307
 #define IS 308
 #define NOT 309
-#define SQRT 310
-#define SIN 311
-#define COS 312
-#define TAN 313
-#define ASIN 314
-#define ACOS 315
-#define ATAN 316
-#define SINH 317
-#define COSH 318
-#define TANH 319
-#define FLOOR 320
-#define CEIL 321
-#define LOG 322
-#define LOG10 323
-#define STR 324
-#define LPAREN 325
-#define RPAREN 326
-#define SLBRACE 327
-#define SRBRACE 328
-#define TRUE 329
-#define FALSE 330
-#define ASSGN 331
-#define POW 332
+#define STR 310
+#define LPAREN 311
+#define RPAREN 312
+#define SLBRACE 313
+#define SRBRACE 314
+#define TRUE 315
+#define FALSE 316
+#define ASSGN 317
+#define POW 318
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -213,7 +185,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 217 "parser.h" /* yacc.c:1909  */
+#line 189 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

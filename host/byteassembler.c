@@ -32,6 +32,7 @@
 #include "memorymanager.h"
 #include "basictokens.h"
 #include "byteassembler.h"
+#include "misc.h"
 
 #define RECURSION_VAR_DEPTH 10
 
@@ -71,7 +72,6 @@ static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
 static struct memorycontainer* createUnaryExpression(unsigned char token, struct memorycontainer*);
 static struct memorycontainer* createExpression(unsigned char, struct memorycontainer*, struct memorycontainer*);
-static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer*, unsigned char);
 static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
 
 /**
@@ -110,46 +110,46 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
 	unsigned int position=0;
 
 	position=appendStatement(memoryContainer, NATIVE_TOKEN, position);
-    if (strcmp(functionName, "rtl_ishost")==0) {
+    if (strcmp(functionName, NATIVE_RTL_ISHOST_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ISHOST, position);
-    } else if (strcmp(functionName, "rtl_isdevice")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_ISDEVICE_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ISDEVICE, position);
-    } else if (strcmp(functionName, "rtl_print")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_PRINT_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_PRINT, position);
-    } else if (strcmp(functionName, "rtl_numdims")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_NUMDIMS_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMDIMS, position);
-    } else if (strcmp(functionName, "rtl_dsize")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_DSIZE_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_DSIZE, position);
-    } else if (strcmp(functionName, "rtl_input")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_INPUT_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUT, position);
-    } else if (strcmp(functionName, "rtl_inputprint")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_INPUTPRINT_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUTPRINT, position);
-    } else if (strcmp(functionName, "rtl_sync")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_SYNC_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SYNC, position);
-    } else if (strcmp(functionName, "rtl_gc")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_GC_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_GC, position);
-    } else if (strcmp(functionName, "rtl_free")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_FREE_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_FREE, position);
-    } else if (strcmp(functionName, "rtl_send")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_SEND_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND, position);
-    } else if (strcmp(functionName, "rtl_recv")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_RECV_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_RECV, position);
-    } else if (strcmp(functionName, "rtl_sendrecv")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_SENDRECV_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SENDRECV, position);
-    } else if (strcmp(functionName, "rtl_bcast")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_BCAST_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_BCAST, position);
-    } else if (strcmp(functionName, "rtl_numcores")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_NUMCORES_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMCORES, position);
-    } else if (strcmp(functionName, "rtl_coreid")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_COREID_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_COREID, position);
-    } else if (strcmp(functionName, "rtl_random")==0) {
-        position=appendStatement(memoryContainer, NATIVE_FN_RTL_RANDOM, position);
-    } else if (strcmp(functionName, "rtl_reduce")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_REDUCE_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_REDUCE, position);
-    } else if (strcmp(functionName, "rtl_allocatearray")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_ALLOCATEARRAY_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCARRAY, position);
-    } else if (strcmp(functionName, "rtl_allocatesharedarray")==0) {
+    } else if (strcmp(functionName, NATIVE_RTL_ALLOCATESHAREDARRAY_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCSHAREDARRAY, position);
+    } else if (strcmp(functionName, NATIVE_RTL_MATH_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_MATH, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
@@ -541,7 +541,11 @@ struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct
 	struct memorycontainer* rhs=createExpression(token, createIdentifierExpression(identifier), expressionContainer);
 	if (operator == 6) {
 		// Floor
-		rhs=createUnaryGeneralMathsExpression(rhs, FLOOR_MATHS_OP);
+		struct memorycontainer* mathCommand=createIntegerExpression(FLOOR_MATHS_OP);
+		struct stack_t * argStack=getNewStack();
+		pushExpression(argStack, mathCommand);
+		pushExpression(argStack, rhs);
+		rhs=appendNativeCallFunctionStatement(NATIVE_RTL_MATH_STR, argStack, NULL);
 	}
 	return appendLetStatement(identifier, rhs);
 }
@@ -814,84 +818,17 @@ struct memorycontainer* createDivExpression(struct memorycontainer* expression1,
 }
 
 struct memorycontainer* createFloorDivExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
-	return createUnaryGeneralMathsExpression(createExpression(DIV_TOKEN, expression1, expression2), FLOOR_MATHS_OP);
+    struct memorycontainer* divExpr=createExpression(DIV_TOKEN, expression1, expression2);
+    struct memorycontainer* mathCommand=createIntegerExpression(FLOOR_MATHS_OP);
+    struct stack_t * argStack=getNewStack();
+    pushExpression(argStack, mathCommand);
+    pushExpression(argStack, divExpr);
+    divExpr=appendNativeCallFunctionStatement(NATIVE_RTL_MATH_STR, argStack, NULL);
+	return divExpr;
 }
 
 struct memorycontainer* createModExpression(struct memorycontainer* expression1, struct memorycontainer* expression2) {
 	return createExpression(MOD_TOKEN, expression1, expression2);
-}
-
-struct memorycontainer* createSqrtExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, SQRT_MATHS_OP);
-}
-
-struct memorycontainer* createSinExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, SIN_MATHS_OP);
-}
-
-struct memorycontainer* createCosExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, COS_MATHS_OP);
-}
-
-struct memorycontainer* createTanExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, TAN_MATHS_OP);
-}
-
-struct memorycontainer* createASinExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, ASIN_MATHS_OP);
-}
-
-struct memorycontainer* createACosExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, ACOS_MATHS_OP);
-}
-
-struct memorycontainer* createATanExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, ATAN_MATHS_OP);
-}
-
-struct memorycontainer* createSinHExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, SINH_MATHS_OP);
-}
-
-struct memorycontainer* createCosHExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, COSH_MATHS_OP);
-}
-
-struct memorycontainer* createTanHExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, TANH_MATHS_OP);
-}
-
-struct memorycontainer* createFloorExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, FLOOR_MATHS_OP);
-}
-
-struct memorycontainer* createCeilExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, CEIL_MATHS_OP);
-}
-
-struct memorycontainer* createLogExpression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, LOG_MATHS_OP);
-}
-
-struct memorycontainer* createLog10Expression(struct memorycontainer* expression) {
-	return createUnaryGeneralMathsExpression(expression, LOG10_MATHS_OP);
-}
-
-/**
- * Creates unary maths expression which is a operator (such as sin, cos etc) and some value
- */
-static struct memorycontainer* createUnaryGeneralMathsExpression(struct memorycontainer* expression, unsigned char maths_op) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)*2 + expression->length;
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	int position=0;
-
-	position=appendStatement(memoryContainer, MATHS_TOKEN, position);
-	position=appendStatement(memoryContainer, maths_op, position);
-	appendMemory(memoryContainer, expression, position);
-	return memoryContainer;
 }
 
 /**

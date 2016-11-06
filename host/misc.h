@@ -27,6 +27,22 @@
 #ifndef MISC_H_
 #define MISC_H_
 
+#define SQRT_MATHS_OP 0
+#define SIN_MATHS_OP 1
+#define COS_MATHS_OP 2
+#define TAN_MATHS_OP 3
+#define ASIN_MATHS_OP 4
+#define ACOS_MATHS_OP 5
+#define ATAN_MATHS_OP 6
+#define SINH_MATHS_OP 7
+#define COSH_MATHS_OP 8
+#define TANH_MATHS_OP 9
+#define FLOOR_MATHS_OP 10
+#define CEIL_MATHS_OP 11
+#define LOG_MATHS_OP 12
+#define LOG10_MATHS_OP 13
+#define RANDOM_MATHS_OP 14
+
 void errorCheck(int, char*);
 char* translateErrorCodeToMessage(unsigned char);
 

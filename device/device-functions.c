@@ -48,6 +48,7 @@ static void consolidateHeapChunks(char);
 static char * allocateChunkInHeapMemory(int, char);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
+static struct value_defn performMathsOp(int, struct value_defn);
 
 void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
@@ -126,9 +127,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		value->dtype=SCALAR;
         if (fnIdentifier==NATIVE_FN_RTL_NUMCORES) cpy(value->data, &numActiveCores, sizeof(int));
         if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
-    } else if (fnIdentifier==NATIVE_FN_RTL_RANDOM) {
-        if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        *value=performMathsOp(RANDOM_MATHS_OP, *value);
     } else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
@@ -150,6 +148,8 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
             cpy(address, parameters[i].data, sizeof(int));
             address+=sizeof(int);
         }
+    } else if (fnIdentifier==NATIVE_FN_RTL_MATH) {
+        *value=performMathsOp(getInt(parameters[0].data), parameters[1]);
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
@@ -236,14 +236,14 @@ static struct value_defn doGetInputFromUser() {
 /**
  * Requests the host to perform some maths operation and blocks on this
  */
-struct value_defn performMathsOp(unsigned short operation, struct value_defn value) {
+static struct value_defn performMathsOp(int operation, struct value_defn value) {
 	struct value_defn v;
 	if (operation != RANDOM_MATHS_OP) {
 		sharedData->core_ctrl[myId].data[0]=value.type;
 		cpy(&sharedData->core_ctrl[myId].data[1], value.data, 4);
 	}
 
-	sharedData->core_ctrl[myId].core_command=1000+(unsigned int) operation;
+	sharedData->core_ctrl[myId].core_command=1000+operation;
 
 	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
 	sharedData->core_ctrl[myId].core_busy=0;

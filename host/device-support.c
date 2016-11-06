@@ -319,10 +319,12 @@ static void performMathsOp(struct core_ctrl * core) {
 		memcpy(&core->data[1], &r, sizeof(int));
 	} else {
 		float fvalue=0.0, r=0.0;
-		if (core->data[0]==1) {
+		int ivalue;
+		if (core->data[0]==REAL_TYPE) {
             memcpy(&fvalue, &core->data[1], sizeof(float));
-		} else if (core->data[0]==0) {
-		    memcpy(&fvalue, &core->data[1], sizeof(float));
+		} else if (core->data[0]==INT_TYPE) {
+		    memcpy(&ivalue, &core->data[1], sizeof(int));
+		    fvalue=(float) ivalue;
 		}
 		if (core->core_command-1000 == SQRT_MATHS_OP) r=sqrtf(fvalue);
 		if (core->core_command-1000 == SIN_MATHS_OP) r=sinf(fvalue);
