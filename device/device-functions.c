@@ -316,7 +316,7 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
     unsigned char heapInUse=0;
     unsigned short coreHeapChunkLength;
     unsigned int sharedHeapChunkLength;
-    coreHeapChunkLength=LOCAL_CORE_MEMORY_MAP_TOP-((int) sharedData->core_ctrl[myId].shared_heap_start)-(sizeof(unsigned short) + sizeof(unsigned char));
+    coreHeapChunkLength=LOCAL_CORE_MEMORY_MAP_TOP-((int) sharedData->core_ctrl[myId].heap_start)-(sizeof(unsigned short) + sizeof(unsigned char));
     sharedHeapChunkLength=SHARED_HEAP_DATA_AREA_PER_CORE-(sizeof(unsigned int) + sizeof(unsigned char));
     cpy(sharedData->core_ctrl[myId].heap_start, &coreHeapChunkLength, sizeof(unsigned short));
     cpy(&sharedData->core_ctrl[myId].heap_start[2], &heapInUse, sizeof(unsigned char));
@@ -482,8 +482,8 @@ static void consolidateHeapChunks(char inSharedMemory) {
 
 static char * allocateChunkInHeapMemory(int size, char inSharedMemory) {
     unsigned char chunkInUse;
-    unsigned short coreSplitChunkLength, coreChunkLength;
-    unsigned int chunkLength, splitChunkLength;
+    unsigned short coreChunkLength;
+    unsigned int chunkLength;
     char * heapPtr;
 
     size_t headersize, lenStride;
@@ -504,26 +504,28 @@ static char * allocateChunkInHeapMemory(int size, char inSharedMemory) {
             chunkLength=coreChunkLength;
         }
         cpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
-        if (!chunkInUse && chunkLength >= size) {
-            char * splitChunk=(char*) (heapPtr + size + headersize);
-            splitChunkLength=chunkLength - size - headersize;
-            if (inSharedMemory) {
-                cpy(splitChunk, &splitChunkLength, sizeof(unsigned int));
-            } else {
-                coreSplitChunkLength=splitChunkLength;
-                cpy(splitChunk, &coreSplitChunkLength, sizeof(unsigned short));
-            }
-            cpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
-            chunkLength=size;
+        if (!chunkInUse && chunkLength >= (size + headersize)) {
+            char * splitChunk=(char*) (heapPtr + ((chunkLength + headersize) - (size + headersize)));
+
+            chunkLength=chunkLength - size - headersize;
             if (inSharedMemory) {
                 cpy(heapPtr, &chunkLength, sizeof(unsigned int));
             } else {
                 coreChunkLength=chunkLength;
                 cpy(heapPtr, &coreChunkLength, sizeof(unsigned short));
             }
+
+            chunkLength=size;
+            if (inSharedMemory) {
+                cpy(splitChunk, &chunkLength, sizeof(unsigned int));
+            } else {
+                coreChunkLength=chunkLength;
+                cpy(splitChunk, &coreChunkLength, sizeof(unsigned short));
+            }
             chunkInUse=1;
-            cpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
-            return heapPtr + headersize;
+            cpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
+
+            return splitChunk + headersize;
         } else {
             heapPtr+=chunkLength + headersize;
             if (inSharedMemory && heapPtr  >= sharedData->core_ctrl[myId].shared_heap_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
