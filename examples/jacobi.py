@@ -4,6 +4,7 @@ This illustrates distributing data amongst the cores, halo swapping and reductio
 */
 
 from parallel import *
+from math import sqrt
 
 DATA_SIZE=100
 MAX_ITS=10000

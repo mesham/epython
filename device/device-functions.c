@@ -238,7 +238,8 @@ static struct value_defn doGetInputFromUser() {
  */
 static struct value_defn performMathsOp(int operation, struct value_defn value) {
 	struct value_defn v;
-	if (operation != RANDOM_MATHS_OP) {
+	if (operation != 14) {
+        // This is random maths operation, just constant here to reduce executable size
 		sharedData->core_ctrl[myId].data[0]=value.type;
 		cpy(&sharedData->core_ctrl[myId].data[1], value.data, 4);
 	}
