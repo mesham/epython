@@ -149,7 +149,13 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
             address+=sizeof(int);
         }
     } else if (fnIdentifier==NATIVE_FN_RTL_MATH) {
-        *value=performMathsOp(getInt(parameters[0].data), parameters[1]);
+        if (numArgs == 2) {
+            *value=performMathsOp(getInt(parameters[0].data), parameters[1]);
+        } else if (numArgs == 1) {
+            *value=performMathsOp(getInt(parameters[0].data), *value);
+        } else {
+            raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        }
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
