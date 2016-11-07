@@ -975,7 +975,7 @@ struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index
 		cpy(&val.data, &variableSymbol->value.data, sizeof(int*));
 	} else {
 		char * ptr;
-		cpy(&ptr, variableSymbol->value.data, sizeof(int*));
+		cpy(&ptr, variableSymbol->value.data, sizeof(char*));
 		if (variableSymbol->value.dtype == ARRAY) {
             unsigned char num_dims;
             cpy(&num_dims, ptr, sizeof(unsigned char));
@@ -984,7 +984,7 @@ struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index
 		} else {
 		    ptr+=(index+1)*sizeof(int);
 		}
-		cpy(val.data, ptr, sizeof(int));
+		cpy(val.data, ptr, sizeof(char*));
 	}
 	return val;
 }
