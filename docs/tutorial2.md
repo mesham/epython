@@ -36,11 +36,12 @@ In this example the root (core 0) will broadcast the number of cores (determined
 
 ```python
 import parallel
+from random import randrange
 
 rootcore=2
 a=0
 if coreid()==rootcore:
-  a=bcast(random%100, rootcore)
+  a=bcast(randrange(100), rootcore)
 else:
   a=bcast(none, rootcore)
 print "The random number from core "+rootcore+" is "+a
@@ -54,8 +55,9 @@ As well as broadcasting values from one process to all others, it is often usefu
 
 ```python
 import parallel
+from random import randrange
 
-a=reduce(random%100, "max")
+a=reduce(randrange(100), "max")
 print "The highest random number is "+a
 ```
 
@@ -77,7 +79,7 @@ In this example every core will display an initial message, then stop and wait f
 
 ###Putting it all together - a parallel code to estimate PI
 
-<img src="http://zenit.senecac.on.ca/wiki/imgs/Dart.gif" width="250" align="left">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Darts_in_a_dartboard.jpg/283px-Darts_in_a_dartboard.jpg" width="250" align="left">
 We are going to estimate the value of PI via the dartboard method, which is an example of a Monte Carlo method (https://en.wikipedia.org/wiki/Monte_Carlo_method.) Basically, imagine we have a dartboard mounted on a wooden backing and the dartboard fits perfectly within this wooden backing as per the diagram.
 
 If the radius of the dartboard is one, then the area of the board will be PI, as the dartboard fits snugly on the wooden backing then the area of the wood is 4 (2 by 2.) Therefore this means the ratio of the area of the circle to that of the wood is pi/4. If we throw lots of darts at the board then randomly some will land on the board and some on the wooden backing, but by probability the ratio of the number landing on the dartboard vs the number that is thrown will be pi/4. 
@@ -86,6 +88,8 @@ Each Epiphany core will simulate the throwing of lots of darts at this dartboard
 
 ```python
 import parallel
+from random import random
+from math import pow
 
 darts=100
 rounds=0
@@ -101,10 +105,10 @@ while i<=rounds:
   score=0.0
   j=1
   while j<=darts:
-    x=(random % 100000) / 100000.0
-    y=(random % 100000) / 100000.0
+    x=random()
+    y=random()
 
-    if x^2 + y^2 < 1.0:
+    if (pow(x,2) + pow(y,2) < 1.0):
       score=score+1
     j+=1
   mypi=mypi+4.0 * (score/darts)

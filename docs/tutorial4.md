@@ -25,8 +25,9 @@ The input to the entire pipeline is the number of sequences to work on and the o
 ```python
 import parallel
 import util
+from random import randrange
 
-dim data[510]
+data=[0]*510
 
 if (coreid()==0):
   pipelineStageOne(100)
@@ -39,7 +40,7 @@ elif (coreid()==3):
 
 def pipelineStageOne(num_items):
   for i in range(num_items):
-    num=random % 500 + 5
+    num=randrange(500) + 5
     send(num, coreid()+1)
   send(-1,coreid()+1)
 
@@ -50,7 +51,7 @@ def pipelineStageTwo():
     if num > 0:
       i=0
       while i < num:
-        data[i]=random % 10
+        data[i]=randrange(10)
         i+=1
     send(num, coreid()+1)
     if num > 0: send(data, coreid()+1, num)
@@ -61,7 +62,7 @@ def pipelineStageThree():
     num=recv(coreid()-1)
     if num > 0:
       data=recv(coreid()-1, num)
-      odd_even_sort(data, num)
+      oddSort(data, num)
     send(num, coreid()+1)
     if num > 0: send(data, coreid()+1, num)
     
@@ -116,7 +117,7 @@ else:
 def pipelineStageOne(num_items):
   matchingpid=1
   for i in range(num_items):
-    num=random % 500 + 5
+    num=randrange(500) + 5
     send(num, matchingpid)
     matchingpid+=3
     if matchingpid > 13: matchingpid=1
@@ -162,7 +163,7 @@ def pipelineStageTwo():
       if num > 0:
         i=0
         while i < num/13:
-          data[i]=random % 1000
+          data[i]=randrange(1000)
           i+=1
         send(num/13, j)
         send(data, j, num/13)
