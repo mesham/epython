@@ -47,8 +47,9 @@ struct hostHeapNodes {
 volatile struct hostHeapNodes ** rootHeapNode;
 volatile unsigned char **sharedComm, **syncValues;
 volatile struct shared_basic * basicState;
-int total_threads, sync_counter, hostCoresBasePid;
+volatile int total_threads, hostCoresBasePid;
 pthread_mutex_t barrier_mutex;
+volatile int * flip_barrier_array, * flop_barrier_array;
 
 #ifdef HOST_STANDALONE
 volatile unsigned int * pb;
@@ -94,8 +95,12 @@ void initHostCommunicationData(int total_number_threads, struct shared_basic * p
 		}
 	}
 	pthread_mutex_init(&barrier_mutex, NULL);
+	flip_barrier_array=(int*) malloc(sizeof(int) * total_number_threads);
+	flop_barrier_array=(int*) malloc(sizeof(int) * total_number_threads);
+	for (i=0; i<total_threads; i++) {
+        flip_barrier_array[i] = flop_barrier_array[i] =0;
+    }
 	total_threads=total_number_threads;
-	sync_counter=0;
 	hostCoresBasePid=ahostCoresBasePid;
 }
 
@@ -674,14 +679,33 @@ void syncCores(int global, int threadId) {
 		// Some cores are active
 		syncWithDevice();
 	}
-	pthread_mutex_lock(&barrier_mutex);
-	if (sync_counter == total_threads) {
-		sync_counter=1;
+	if (threadId == basicState->baseHostPid) {
+		int i;
+		pthread_mutex_lock(&barrier_mutex);
+		flip_barrier_array[threadId] = 1;
+		pthread_mutex_unlock(&barrier_mutex);
+		// poll on all slots
+		for (i=0; i<total_threads; i++) {
+			while (flip_barrier_array[i] != 1) {};
+		}
+		pthread_mutex_lock(&barrier_mutex);
+		for (i=0; i<total_threads; i++) {
+			flip_barrier_array[i] = 0;
+		}
+		// set remote slots
+		for (i=0; i<total_threads; i++) {
+			flop_barrier_array[i] = 1;
+		}
+		pthread_mutex_unlock(&barrier_mutex);
 	} else {
-		sync_counter++;
+	    pthread_mutex_lock(&barrier_mutex);
+		flip_barrier_array[threadId] = 1;
+		pthread_mutex_unlock(&barrier_mutex);
+		while (flop_barrier_array[threadId] != 1) {};
+		pthread_mutex_lock(&barrier_mutex);
+		flop_barrier_array[threadId] = 0;
+		pthread_mutex_unlock(&barrier_mutex);
 	}
-	pthread_mutex_unlock(&barrier_mutex);
-	while (sync_counter < total_threads) { }
 }
 
 /**
