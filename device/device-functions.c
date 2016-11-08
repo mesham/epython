@@ -60,7 +60,7 @@ static void performGC(int, struct symbol_node*, char);
 static struct value_defn performMathsOp(int, struct value_defn);
 static int getLargestCoreId(int);
 static struct value_defn probeForMessage(int);
-static struct test_or_wait_for_sent_message(int, char);
+static struct value_defn test_or_wait_for_sent_message(int, char);
 
 void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
@@ -600,10 +600,10 @@ void clearFreedStackFrames(char* targetPointer) {
  */
 static void sendData(struct value_defn to_send, int target, char blocking) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
-	if (target < getLargestCoreId(source)) {
+	if (target < getLargestCoreId(target)) {
 		sendDataToDeviceCore(to_send, target, blocking);
 	} else {
-	    if (!blocking) raiseError(ERR_NBSEND_NOT_SUPPORTED)
+	    if (!blocking) raiseError(ERR_NBSEND_NOT_SUPPORTED);
 		sendDataToHostProcess(to_send, target);
 	}
 }
@@ -643,7 +643,7 @@ static struct value_defn test_or_wait_for_sent_message(int target, char is_wait)
     struct value_defn toreturn;
     toreturn.type=BOOLEAN_TYPE;
     toreturn.dtype=SCALAR;
-    if (source < getLargestCoreId(target)) {
+    if (target < getLargestCoreId(target)) {
         int row=target/e_group_config.group_cols;
 		int col=target-(row*e_group_config.group_cols);
 		int boolVal;
@@ -746,7 +746,7 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  */
 static struct value_defn sendRecvData(struct value_defn to_send, int target) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
-	if (target < getLargestCoreId(source)) {
+	if (target < getLargestCoreId(target)) {
 		return sendRecvDataWithDeviceCore(to_send, target);
 	} else {
 		return sendRecvDataWithHostProcess(to_send, target);
@@ -840,7 +840,7 @@ static struct value_defn bcastData(struct value_defn to_send, int source, int to
 			if (sharedData->core_ctrl[i].active) {
 				totalActioned++;
 				if (i == myId) continue;
-				sendData(to_send, i);
+				sendData(to_send, i, 1);
 			}
 		}
 		return to_send;

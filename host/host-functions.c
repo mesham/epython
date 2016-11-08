@@ -603,7 +603,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
 		int i;
 		for (i=0;i<totalProcesses;i++) {
 			if (i == threadId) continue;
-			sendData(to_send, i, 0, threadId, hostCoresBasePid);
+			sendData(to_send, i, 1, threadId, hostCoresBasePid);
 		}
 		return to_send;
 	} else {

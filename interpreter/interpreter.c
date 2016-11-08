@@ -82,9 +82,9 @@ static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int, 
 static int determine_logical_expression(char*, unsigned int*,  unsigned int, int);
 static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int, int);
 #else
-struct value_defn processAssembledCode(char*, unsigned int, unsigned int, char);
+struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
-static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
+static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, char);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
