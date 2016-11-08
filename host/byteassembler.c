@@ -67,6 +67,7 @@ static struct scope_info * scope=NULL; // Scope stack
 struct function_call_tree_node *currentCall=NULL; // The current function call tree state
 
 static unsigned short addVariable(char*);
+static int doesVariableExist(char*);
 static unsigned short findVariable(struct variable_node*,  char*);
 static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
@@ -200,23 +201,29 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 			free(expression->data);
 		}
 	}
-	struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned short)*(2+numArgs)+sizeof(unsigned char);
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
+    unsigned int position=0;
 
-	defn->next=NULL;
-	defn->type=3;
-	defn->name=(char*) malloc(strlen(functionName)+1);
-	strcpy(defn->name, functionName);
-	defn->currentpoint=sizeof(unsigned char);
+	if (doesVariableExist(functionName)) {
+        memoryContainer->lineDefns=NULL;
+        position=appendStatement(memoryContainer, FNCALL_BY_VAR_TOKEN, position);
+        position=appendVariable(memoryContainer, getVariableId(functionName, 0), position);
+	} else {
+        struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+        defn->next=NULL;
+        defn->type=3;
+        defn->linenumber=line_num;
+        defn->name=(char*) malloc(strlen(functionName)+1);
+        strcpy(defn->name, functionName);
+        defn->currentpoint=sizeof(unsigned char);
 
-	memoryContainer->lineDefns=defn;
+        memoryContainer->lineDefns=defn;
 
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, FNCALL_TOKEN, position);
-	position+=sizeof(unsigned short);
+        position=appendStatement(memoryContainer, FNCALL_TOKEN, position);
+        position+=sizeof(unsigned short);
+	}
 	position=appendVariable(memoryContainer, numArgs, position);
 
 	for (i=0;i<numArgs;i++) {
@@ -243,6 +250,7 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 	} else {
 		return memoryContainer;
 	}
+
 }
 
 /**
@@ -718,13 +726,38 @@ struct memorycontainer* createRealExpression(float number) {
  * Creates an expression wrapping an identifier
  */
 struct memorycontainer* createIdentifierExpression(char * identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
+    struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+    if (doesVariableExist(identifier)) {
+        memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
+        memoryContainer->data=(char*) malloc(memoryContainer->length);
+        memoryContainer->lineDefns=NULL;
 
-	int location=appendStatement(memoryContainer, IDENTIFIER_TOKEN, 0);
-	appendVariable(memoryContainer, getVariableId(identifier, 0), location);
+        int location=appendStatement(memoryContainer, IDENTIFIER_TOKEN, 0);
+        appendVariable(memoryContainer, getVariableId(identifier, 0), location);
+    } else {
+        memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
+        memoryContainer->data=(char*) malloc(memoryContainer->length);
+        appendStatement(memoryContainer, FN_ADDR_TOKEN, 0);
+
+        struct lineDefinition * defn = (struct lineDefinition*) malloc(sizeof(struct lineDefinition));
+
+        defn->next=NULL;
+        defn->type=4;
+        defn->linenumber=line_num;
+        defn->name=(char*) malloc(strlen(identifier)+1);
+        strcpy(defn->name, identifier);
+        defn->currentpoint=sizeof(unsigned char);
+
+        memoryContainer->lineDefns=defn;
+
+        if (currentCall==NULL) {
+            mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls]=(char*)malloc(strlen(identifier)+1);
+            strcpy(mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls++], identifier);
+        } else {
+            currentCall->calledFunctions[currentCall->number_of_calls]=(char*)malloc(strlen(identifier)+1);
+            strcpy(currentCall->calledFunctions[currentCall->number_of_calls++], identifier);
+        }
+    }
 	return memoryContainer;
 }
 
@@ -936,6 +969,16 @@ static unsigned short getVariableId(char * name, int allowAdd) {
 		fprintf(stderr, "Can not find variable name %s at line %d, you must declare this before use\n", name, line_num);
 		exit(0);
 	}
+}
+
+static int doesVariableExist(char* name) {
+    struct scope_info * scopeNode=scope;
+	while (scopeNode != NULL) {
+		unsigned short id=findVariable(scopeNode->variables, name);
+		if (id >= 1) return 1;
+		scopeNode=scopeNode->next;
+	}
+	return 0;
 }
 
 /**

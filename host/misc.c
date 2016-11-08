@@ -100,6 +100,9 @@ char* translateErrorCodeToMessage(unsigned char errorCode) {
     case ERR_UNKNOWN_NATIVE_COMMAND:
         errorMessage="Unknown native command supplied to runtime library";
         break;
+    case ERR_FNCALL_VAR_NOT_CONTAINING_FN_PTR:
+        errorMessage="Function called via a variable but this variable is not pointing to any function";
+        break;
     }
     if (errorMessage != NULL) {
         char * msgToRet=(char*) malloc(strlen(errorMessage) + 1);

@@ -68,7 +68,7 @@ static int hostCoresBasePid;
 #ifdef HOST_INTERPRETER
 struct value_defn processAssembledCode(char*, unsigned int, unsigned int, int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
-static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
+static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, char, int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
@@ -82,9 +82,9 @@ static struct value_defn getExpressionValue(char*, unsigned int*, unsigned int, 
 static int determine_logical_expression(char*, unsigned int*,  unsigned int, int);
 static struct value_defn computeExpressionResult(unsigned char, char*, unsigned int*, unsigned int, int);
 #else
-struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
+struct value_defn processAssembledCode(char*, unsigned int, unsigned int, char);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
-static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int);
+static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char);
 static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
@@ -162,8 +162,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length, threadId);
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i, length, threadId);
-		if (command == FNCALL_TOKEN) {
-			i=handleFnCall(assembled, i, &fnAddr, length, threadId);
+		if (command == FNCALL_TOKEN || command == FNCALL_BY_VAR_TOKEN) {
+			i=handleFnCall(assembled, i, &fnAddr, length, command == FNCALL_BY_VAR_TOKEN ? 1:0, threadId);
 			fnLevel[threadId]++;
 			processAssembledCode(assembled, fnAddr, length, threadId);
 			clearVariablesToLevel(fnLevel[threadId], threadId);
@@ -196,8 +196,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length);
 		if (command == GOTO_TOKEN) i=handleGoto(assembled, i, length);
-		if (command == FNCALL_TOKEN) {
-			i=handleFnCall(assembled, i, &fnAddr, length);
+		if (command == FNCALL_TOKEN || command == FNCALL_BY_VAR_TOKEN) {
+			i=handleFnCall(assembled, i, &fnAddr, length, command == FNCALL_BY_VAR_TOKEN ? 1:0);
 			fnLevel++;
 			processAssembledCode(assembled, fnAddr, length);
 			clearVariablesToLevel(fnLevel);
@@ -265,11 +265,24 @@ static unsigned int handleNative(char * assembled, unsigned int currentPoint, un
  * Calls some function and stores the call point in the function call stack for returning from this function
  */
 #ifdef HOST_INTERPRETER
-static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, unsigned int * functionAddress, unsigned int length, int threadId) {
+static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, unsigned int * functionAddress, unsigned int length, char calledByVar, int threadId) {
 #else
-static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, unsigned int * functionAddress, unsigned int length) {
+static unsigned int handleFnCall(char * assembled, unsigned int currentPoint, unsigned int * functionAddress, unsigned int length, char calledByVar) {
 #endif
-	unsigned short fnAddress=getUShort(&assembled[currentPoint]);
+	unsigned short fnAddress;
+	if (calledByVar) {
+#ifdef HOST_INTERPRETER
+        struct symbol_node* callVar=getVariableSymbol(getUShort(&assembled[currentPoint]), fnLevel[threadId], threadId, 1);
+#else
+        struct symbol_node* callVar=getVariableSymbol(getUShort(&assembled[currentPoint]), fnLevel, 1);
+#endif
+        if (callVar->value.type != FN_ADDR_TYPE) raiseError(ERR_FNCALL_VAR_NOT_CONTAINING_FN_PTR);
+        char *ptr;
+        cpy(&ptr, callVar->value.data, sizeof(char*));
+        fnAddress=getUShort(ptr);
+	} else {
+        fnAddress=getUShort(&assembled[currentPoint]);
+	}
 	currentPoint+=sizeof(unsigned short);
 
 	unsigned short fnNumArgs=getUShort(&assembled[fnAddress]);
@@ -585,6 +598,11 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 	} else if (expressionId == NONE_TOKEN) {
 		value.type=NONE_TYPE;
 		value.dtype=SCALAR;
+	} else if (expressionId ==FN_ADDR_TOKEN) {
+        value.type=FN_ADDR_TYPE;
+		value.dtype=SCALAR;
+		cpy(value.data, &assembled[*currentPoint], sizeof(unsigned short));
+		*currentPoint+=sizeof(unsigned short);
 	} else if (expressionId == LET_TOKEN) {
 #ifdef HOST_INTERPRETER
 		*currentPoint=handleLet(assembled, *currentPoint, length, 0, threadId);
@@ -631,17 +649,17 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
             }
 		}
 		value.dtype=ARRAY;
-	} else if (expressionId == FNCALL_TOKEN) {
+	} else if (expressionId == FNCALL_TOKEN || expressionId == FNCALL_BY_VAR_TOKEN) {
 #ifdef HOST_INTERPRETER
 		unsigned int fnAddr;
-		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length, threadId);
+		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length, expressionId == FNCALL_BY_VAR_TOKEN ? 1:0, threadId);
 		fnLevel[threadId]++;
 		value=processAssembledCode(assembled, fnAddr, length, threadId);
 		clearVariablesToLevel(fnLevel[threadId], threadId);
 		fnLevel[threadId]--;
 #else
 		unsigned int fnAddr;
-		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length);
+		*currentPoint=handleFnCall(assembled, *currentPoint, &fnAddr, length, expressionId == FNCALL_BY_VAR_TOKEN ? 1:0);
 		fnLevel++;
 		value=processAssembledCode(assembled, fnAddr, length);
 		clearVariablesToLevel(fnLevel);
@@ -970,7 +988,7 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 struct value_defn getVariableValue(struct symbol_node* variableSymbol, int index) {
 	struct value_defn val;
 	val.type=variableSymbol->value.type;
-	val.dtype=variableSymbol->value.dtype;
+	val.dtype=SCALAR;
 	if (variableSymbol->value.type == STRING_TYPE) {
 		cpy(&val.data, &variableSymbol->value.data, sizeof(int*));
 	} else {

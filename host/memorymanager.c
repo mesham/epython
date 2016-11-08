@@ -40,7 +40,7 @@ struct function_call_tree_node mainCodeCallTree;
 static void determineUsedFunctions(void);
 static void processUsedFunction(struct functionDefinition*);
 static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
-static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*);
+static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*, int, int);
 static struct functionDefinition* findFunctionDefinition(char*);
 
 /**
@@ -68,8 +68,8 @@ void compileMemory(struct memorycontainer* memory) {
 			if (root->type==1) {
 				unsigned short lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
 				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
-			} else if (root->type==3){
-				unsigned short lineLocation=findLocationOfFunctionName(compiledMem->lineDefns, root->name);
+			} else if (root->type==3 || root->type==4) {
+				unsigned short lineLocation=findLocationOfFunctionName(compiledMem->lineDefns, root->name, root->linenumber, root->type==4);
 				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
 			}
 			root=root->next;
@@ -96,9 +96,6 @@ static void determineUsedFunctions(void) {
 		struct functionDefinition* defn=findFunctionDefinition(mainCodeCallTree.calledFunctions[i]);
 		if (defn != NULL) {
 			if (!defn->called) processUsedFunction(defn);
-		} else {
-			fprintf(stderr, "Can not find function name %s\n", mainCodeCallTree.calledFunctions[i]);
-			exit(0);
 		}
 	}
 }
@@ -115,9 +112,6 @@ static void processUsedFunction(struct functionDefinition* specificFunction) {
 			struct functionDefinition* defn=findFunctionDefinition(specificFunction->functionCalls[i]);
 			if (defn != NULL) {
 				if (!defn->called) processUsedFunction(defn);
-			} else {
-				fprintf(stderr, "Can not find function name %s\n", specificFunction->functionCalls[i]);
-				exit(0);
 			}
 		}
 	}
@@ -167,12 +161,16 @@ static unsigned short findLocationOfLineNumber(struct lineDefinition * root, int
 /**
  * Finds the location of a function name and returns this or raises an error if the function is not found
  */
-static unsigned short findLocationOfFunctionName(struct lineDefinition * root, char * functionName) {
+static unsigned short findLocationOfFunctionName(struct lineDefinition * root, char * functionName, int line_num_for_error, int isvarorfn) {
 	while (root != NULL) {
 		if (root->type==2 && strcmp(root->name, functionName) == 0) return (unsigned short) root->currentpoint;
 		root=root->next;
 	}
-	fprintf(stderr, "Can not find function name %s\n", functionName);
+	if (isvarorfn) {
+        fprintf(stderr, "Can not find variable or function '%s' in assignment at line number %d\n", functionName, line_num_for_error);
+	} else {
+        fprintf(stderr, "Can not find function '%s' in function call at line number %d\n", functionName, line_num_for_error);
+	}
 	exit(0);
 }
 

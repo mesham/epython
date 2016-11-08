@@ -34,6 +34,7 @@
 #define STRING_TYPE 2
 #define BOOLEAN_TYPE 3
 #define NONE_TYPE 4
+#define FN_ADDR_TYPE 5
 
 #define SCALAR 0
 #define ARRAY 1
