@@ -8,7 +8,7 @@ from parallel import *
 from random import randrange
 
 DATA_SIZE=12
-dim data[DATA_SIZE]
+data=[0]*DATA_SIZE
 
 i=0
 while i<DATA_SIZE:

@@ -8,9 +8,10 @@ concept and could be swapped out for something better such as quicksort if desir
 from util import *
 from parallel import *
 from random import randrange
+from array import array
 
 na=128
-sdim data[na]
+data=array(na)
 
 if coreid()==0:
 	populateData(data, na)
@@ -31,7 +32,7 @@ def sort(d, level, thissize):
 		pivot=thissize/2
 		cid=coreid() + (2^(3-level))
 		send(d, cid, pivot)
-		sdim split[thissize-pivot]
+		split=array(thissize-pivot)
 		for x in range(pivot, thissize-1):
 			split[x-pivot]=d[x]
 		sort(split,level+1, thissize-pivot)

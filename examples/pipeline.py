@@ -1,8 +1,10 @@
 from parallel import *
 from util import *
 from random import randrange
+from array import len
 
-dim data[300]
+sorting_size=100
+data=[0]*sorting_size
 
 if (coreid()==0):
 	pipelineStageOne(10)
@@ -15,7 +17,7 @@ elif (coreid()==3):
 
 def pipelineStageOne(num_items):
 	for i in range(num_items):
-		num=randrange(295) + 5
+		num=randrange(sorting_size-5) + 5
 		send(num, coreid()+1)
 	send(-1,coreid()+1)
 
@@ -37,7 +39,7 @@ def pipelineStageThree():
 		num=recv(coreid()-1)
 		if num > 0:
 			data=recv(coreid()-1, num)
-			odd_even_sort(num)
+			oddSort(data)
 		send(num, coreid()+1)
 		if num > 0: send(data, coreid()+1, num)
 
@@ -63,24 +65,3 @@ def pipelineStageFour():
 				i+=1
 		chance=(num_contig/total_num)*100
 		print chance+"% of numbers were contiguous"
-
-def odd_even_sort(l):
-	sorted=false
-	while not sorted:
-		sorted=true
-		i=0
-		while i < l:
-			if data[i] > data[i+1]:
-				temp= data[i]
-				data[i]=data[i+1]
-				data[i+1] = temp
-				sorted=false
-			i+=2
-		i=1
-		while i < l-1:
-			if data[i] > data[i+1]:
-				temp= data[i]
-				data[i]=data[i+1]
-				data[i+1] = temp
-				sorted=false
-			i+=2

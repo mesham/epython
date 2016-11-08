@@ -5,7 +5,7 @@ To run: epython arrays.py
 
 from random import randrange
 
-dim a[100]
+a=[0]*100
 i=0
 while i<100:
   a[i]=i

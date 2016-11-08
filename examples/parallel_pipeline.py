@@ -1,9 +1,10 @@
 from parallel import *
 from util import *
 from random import randrange
-from array import len
+from array import len, array
 
-dim data[300]
+sorting_size=100
+data=[0]*sorting_size
 
 if (coreid()==0):
 	pipelineStageOne(10)
@@ -16,7 +17,7 @@ elif (coreid()==15):
 
 def pipelineStageOne(num_items):
 	for i in range(num_items):
-		num=randrange(280) + 5
+		num=randrange(sorting_size-5) + 5
 		num+=num % 13
 		send(num, coreid()+1)
 	send(-1,coreid()+1)
@@ -49,7 +50,7 @@ def pipelineStageThree():
 		if num > 0: send(data, 15, num)
 
 def pipelineStageFour():
-	dim rdata[100]
+	rdata=array(100)
 	num=0
 	num_contig=0.0
 	total_num=0
@@ -82,10 +83,10 @@ def pipelineStageFour():
 		print chance+"% of numbers were contiguous"
 
 def parallel_odd_even_sort(ln):
-	dim other[ln]
+	other=array(ln)
 	i=2
 	while i <= 14:
-		odd_even_sort(ln)
+		oddSort(data,ln)
 		partner=0
 		if (i%2 == 0):
 			if (coreid() % 2 == 0):
@@ -138,24 +139,3 @@ def get_max_index(a):
 			j=i
 		i+=1
 	return j
-
-def odd_even_sort(l):
-	sorted=false
-	while not sorted:
-		sorted=true
-		i=0
-		while i < l:
-			if data[i] > data[i+1]:
-				temp=data[i]
-				data[i]=data[i+1]
-				data[i+1]=temp
-				sorted=false
-			i+=2
-		i=1
-		while i < l-1:
-			if data[i] > data[i+1]:
-				temp=data[i]
-				data[i]=data[i+1]
-				data[i+1]=temp
-				sorted=false
-			i+=2
