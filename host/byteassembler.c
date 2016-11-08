@@ -151,6 +151,14 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCSHAREDARRAY, position);
     } else if (strcmp(functionName, NATIVE_RTL_MATH_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_MATH, position);
+    } else if (strcmp(functionName, NATIVE_RTL_PROBE_FOR_MESSAGE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_PROBE_FOR_MESSAGE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TEST_FOR_SEND_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TEST_FOR_SEND, position);
+    } else if (strcmp(functionName, NATIVE_RTL_WAIT_FOR_SEND_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_WAIT_FOR_SEND, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SEND_NB_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND_NB, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

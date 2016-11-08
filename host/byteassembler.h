@@ -50,6 +50,10 @@
 #define NATIVE_RTL_ALLOCATEARRAY_STR "rtl_allocatearray"
 #define NATIVE_RTL_ALLOCATESHAREDARRAY_STR "rtl_allocatesharedarray"
 #define NATIVE_RTL_MATH_STR "rtl_math"
+#define NATIVE_RTL_PROBE_FOR_MESSAGE_STR "rtl_probe"
+#define NATIVE_RTL_TEST_FOR_SEND_STR "rtl_test_for_send"
+#define NATIVE_RTL_WAIT_FOR_SEND_STR "rtl_wait_for_send"
+#define NATIVE_RTL_SEND_NB_STR "rtl_send_nonblocking"
 
 extern int line_num;
 

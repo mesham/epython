@@ -54,10 +54,14 @@ pthread_mutex_t barrier_mutex;
 volatile unsigned int * pb;
 #endif
 
+static struct value_defn getInputFromUser(int);
+static struct value_defn getInputFromUserWithString(struct value_defn, int);
+static void displayToUser(struct value_defn, int);
+static void garbageCollect(int, struct symbol_node*, int);
 static int getTypeOfInput(char*);
 static struct value_defn performGetInputFromUser(char*, int);
 static void sendDataToDeviceCore(struct value_defn, int, int, int);
-static void sendDataToHostProcess(struct value_defn, int, int);
+static void sendDataToHostProcess(struct value_defn, int, char, int);
 static struct value_defn recvDataFromDeviceCore(int, int, int);
 static struct value_defn recvDataFromHostProcess(int, int);
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int, int, int);
@@ -67,6 +71,8 @@ static char removehostHeapNode(char*, int);
 static struct hostHeapNodes * findHeapNode(char*, int);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static struct value_defn performMathsOp(int, struct value_defn);
+static struct value_defn probeForMessage(int, int, int);
+static struct value_defn test_or_wait_for_sent_message(int, char, int);
 
 /**
  * Initiates the host communication data, this is called once (i.e. not by each thread) and will
@@ -158,12 +164,18 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         char * ptr;
         cpy(&ptr, parameters[0].data, sizeof(char*));
         freeMemoryInHeap(ptr, threadId);
-    } else if (fnIdentifier==NATIVE_FN_RTL_SEND) {
+    } else if (fnIdentifier==NATIVE_FN_RTL_SEND || fnIdentifier==NATIVE_FN_RTL_SEND_NB) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        sendData(parameters[0], getInt(parameters[1].data), threadId, hostCoresBasePid);
+        sendData(parameters[0], getInt(parameters[1].data), fnIdentifier==NATIVE_FN_RTL_SEND ? 1 : 0, threadId, hostCoresBasePid);
     } else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=recvData(getInt(parameters[0].data), threadId, hostCoresBasePid);
+    } else if (fnIdentifier==NATIVE_FN_RTL_PROBE_FOR_MESSAGE) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        *value=probeForMessage(getInt(parameters[0].data), threadId, hostCoresBasePid);
+    } else if (fnIdentifier==NATIVE_FN_RTL_TEST_FOR_SEND || fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        *value=test_or_wait_for_sent_message(getInt(parameters[0].data), fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND ? 1 : 0, threadId);
     } else if (fnIdentifier==NATIVE_FN_RTL_SENDRECV) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=sendRecvData(parameters[0], getInt(parameters[1].data), threadId, hostCoresBasePid);
@@ -213,7 +225,7 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 /**
  * Called when running on the host, will display to the user
  */
-void displayToUser(struct value_defn value, int threadId) {
+static void displayToUser(struct value_defn value, int threadId) {
 	if (value.type == INT_TYPE) {
         int v;
         cpy(&v, value.data, sizeof(int));
@@ -248,7 +260,7 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 /**
  * Called when running on the host, will get input from user displaying a message string
  */
-struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int threadId) {
+static struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int threadId) {
 	if (toDisplay.type != STRING_TYPE) raiseError(ERR_ONLY_DISPLAY_STR_WITH_INPUT);
 	char *c;
 	cpy(&c, &toDisplay.data, sizeof(char*));
@@ -258,7 +270,7 @@ struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int th
 /**
  * Called when running on the host, will get input from the user
  */
-struct value_defn getInputFromUser(int threadId) {
+static struct value_defn getInputFromUser(int threadId) {
 	return performGetInputFromUser(NULL, threadId);
 }
 
@@ -381,7 +393,7 @@ struct symbol_node* initialiseSymbolTable(int numberSymbols) {
 	return (struct symbol_node*) malloc(sizeof(struct symbol_node) * numberSymbols);
 }
 
-void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable, int threadId) {
+static void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable, int threadId) {
     volatile struct hostHeapNodes * head=rootHeapNode[threadId];
     char * ptr;
     while (head != NULL) {
@@ -513,13 +525,14 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
  * Called when running on the host, the function for sending data between processes
  */
  __attribute__((optimize("O0")))
-void sendData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
+void sendData(struct value_defn to_send, int target, char blocking, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
 	if (target >= (int) basicState->num_procs) raiseError(ERR_SEND_TO_UNKNOWN_CORE);
 	if (target < hostCoresBasePid) {
+        if (!blocking) raiseError(ERR_NBSEND_NOT_SUPPORTED);
 		sendDataToDeviceCore(to_send, target, threadId, hostCoresBasePid);
 	} else {
-		sendDataToHostProcess(to_send, target-hostCoresBasePid, threadId);
+		sendDataToHostProcess(to_send, target-hostCoresBasePid, blocking, threadId);
 	}
 }
 
@@ -539,7 +552,7 @@ static void sendDataToDeviceCore(struct value_defn to_send, int target, int thre
 }
 
 __attribute__((optimize("O0")))
-static void sendDataToHostProcess(struct value_defn to_send, int target, int threadId) {
+static void sendDataToHostProcess(struct value_defn to_send, int target, char blocking, int threadId) {
 	volatile unsigned char communication_data[6];
 	communication_data[0]=to_send.type;
 	cpy(&communication_data[1], to_send.data, 4);
@@ -548,9 +561,37 @@ static void sendDataToHostProcess(struct value_defn to_send, int target, int thr
 	char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
 	cpy(remoteMemory, communication_data, 6);
 	syncValues[threadId][target]=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
-	while (communication_data[5] != syncValues[threadId][target]) {
-		cpy(communication_data, remoteMemory, 6);
+	if (blocking) {
+        while (communication_data[5] != syncValues[threadId][target]) {
+            cpy(communication_data, remoteMemory, 6);
+        }
 	}
+}
+
+__attribute__((optimize("O0")))
+static struct value_defn test_or_wait_for_sent_message(int target, char is_wait, int threadId) {
+    struct value_defn toreturn;
+    toreturn.type=BOOLEAN_TYPE;
+    toreturn.dtype=SCALAR;
+    if (target >= (int) basicState->num_procs) raiseError(ERR_SEND_TO_UNKNOWN_CORE);
+	if (target < hostCoresBasePid) {
+        raiseError(ERR_PROBE_NOT_SUPPORTED);
+	} else {
+	    int boolVal;
+        volatile unsigned char communication_data[6];
+        char * remoteMemory=(char*) sharedComm[target] + (threadId*6);
+        cpy(communication_data, remoteMemory, 6);
+        if (is_wait) {
+            while (communication_data[5] != syncValues[threadId][target]) {
+                cpy(communication_data, remoteMemory, 6);
+            }
+            boolVal=1;
+        } else {
+            boolVal=communication_data[5] == syncValues[threadId][target];
+        }
+        cpy(toreturn.data, &boolVal, sizeof(int));
+	}
+	return toreturn;
 }
 
 /**
@@ -562,7 +603,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int threadId,
 		int i;
 		for (i=0;i<totalProcesses;i++) {
 			if (i == threadId) continue;
-			sendData(to_send, i, threadId, hostCoresBasePid);
+			sendData(to_send, i, 0, threadId, hostCoresBasePid);
 		}
 		return to_send;
 	} else {
@@ -654,6 +695,25 @@ void raiseError(unsigned char errorCode) {
 	}
 	exit(0);
 }
+
+ __attribute__((optimize("O0")))
+ static struct value_defn probeForMessage(int target, int threadId, int hostCoresBasePid) {
+    struct value_defn toreturn;
+    toreturn.type=BOOLEAN_TYPE;
+    toreturn.dtype=SCALAR;
+    if (target >= (int) basicState->num_procs) raiseError(ERR_RECV_FROM_UNKNOWN_CORE);
+	if (target < hostCoresBasePid) {
+        int boolVal=basicState->core_ctrl[target].core_command == 5;
+		cpy(toreturn.data, &boolVal, sizeof(int));
+	} else {
+	    volatile unsigned char communication_data[6];
+        cpy(communication_data, sharedComm[threadId] + (target*6), 6);
+        unsigned char sV=syncValues[threadId][target]==255 ? 0 : syncValues[threadId][target]+1;
+        int boolVal=communication_data[5] == sV;
+		cpy(toreturn.data, &boolVal, sizeof(int));
+	}
+	return toreturn;
+ }
 
 /**
  * Called when running on the host, the function for receiving data between processes

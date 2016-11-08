@@ -103,6 +103,12 @@ char* translateErrorCodeToMessage(unsigned char errorCode) {
     case ERR_FNCALL_VAR_NOT_CONTAINING_FN_PTR:
         errorMessage="Function called via a variable but this variable is not pointing to any function";
         break;
+    case ERR_PROBE_NOT_SUPPORTED:
+        errorMessage="Message probe and non-blocking send test and wait not supported for communications with virtual cores";
+        break;
+    case ERR_NBSEND_NOT_SUPPORTED:
+        errorMessage="Non-blocking sends between device and virtual cores on the host are not yet supported";
+        break;
     }
     if (errorMessage != NULL) {
         char * msgToRet=(char*) malloc(strlen(errorMessage) + 1);

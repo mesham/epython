@@ -8,6 +8,15 @@ def send(data, pid, n=none):
 			native rtl_send(d,pid)
 			i=i+1
 
+def nonblocking_send(data, pid):
+    native rtl_send_nonblocking(data, pid)
+
+def test_sent(pid):
+    return native rtl_test_for_send(pid)
+
+def wait_sent(pid):
+    return native rtl_wait_for_send(pid)
+
 def recv(pid, n=none):
 	if (n is none):
 		return native rtl_recv(pid)
@@ -18,6 +27,9 @@ def recv(pid, n=none):
 			retV[i]=native rtl_recv(pid)
 			i=i+1
 		return retV
+
+def probe(pid):
+    return native rtl_probe(pid)
 
 def sendrecv(data, pid, n=none):
 	if (n is none):

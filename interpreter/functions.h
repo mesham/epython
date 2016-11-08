@@ -34,41 +34,23 @@
  * Epiphany mode, and also standalone host mode only which is useful for interpreter development/testing
  */
 
-int checkStringEquality(struct value_defn, struct value_defn);
-struct symbol_node* initialiseSymbolTable(int);
-char* getStackMemory(int,char);
-void clearFreedStackFrames(char*);
 #ifdef HOST_INTERPRETER
 void callNativeFunction(struct value_defn*, unsigned char, int, struct value_defn*,int,int,int,struct symbol_node*,int);
 char* getHeapMemory(int,char,int);
 void freeMemoryInHeap(void*,int);
-struct value_defn getInputFromUser(int);
-struct value_defn getInputFromUserWithString(struct value_defn, int);
-void displayToUser(struct value_defn, int);
-void sendData(struct value_defn, int, int, int);
-struct value_defn recvData(int, int, int);
-struct value_defn sendRecvData(struct value_defn, int, int, int);
-struct value_defn bcastData(struct value_defn, int, int, int, int);
-struct value_defn reduceData(struct value_defn, int, int, int, int);
 void syncCores(int, int);
-void garbageCollect(int, struct symbol_node*, int);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int);
 #else
 void callNativeFunction(struct value_defn*, unsigned char, int, struct value_defn*, int, int, int, struct symbol_node*);
 char* getHeapMemory(int,char,int,struct symbol_node*);
 void freeMemoryInHeap(void*);
-struct value_defn getInputFromUser(void);
-struct value_defn getInputFromUserWithString(struct value_defn, int, struct symbol_node*);
-void displayToUser(struct value_defn, int, struct symbol_node*);
-void sendData(struct value_defn, int);
-struct value_defn recvData(int);
-struct value_defn sendRecvData(struct value_defn, int);
-struct value_defn bcastData(struct value_defn, int, int);
-struct value_defn reduceData(struct value_defn, int, int);
 void syncCores(int);
-void garbageCollect(int, struct symbol_node*);
 struct value_defn performStringConcatenation(struct value_defn, struct value_defn, int, struct symbol_node*);
 #endif
+int checkStringEquality(struct value_defn, struct value_defn);
+struct symbol_node* initialiseSymbolTable(int);
+char* getStackMemory(int,char);
+void clearFreedStackFrames(char*);
 void cpy(volatile void*, volatile void *, unsigned int);
 void raiseError(unsigned char);
 int slength(char*);

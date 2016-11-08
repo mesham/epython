@@ -259,7 +259,7 @@ static void issueSend(struct interpreterconfiguration* configuration) {
 		memcpy(&valueToSend.data, &data, sizeof(int));
 		printf("Send boolean %d to %d\n", data, target);
 	}
-	sendData(valueToSend, target, 0, configuration->coreProcs);
+	sendData(valueToSend, target, 0, 0, configuration->coreProcs);
 }
 
 /**

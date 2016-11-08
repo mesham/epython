@@ -34,7 +34,16 @@
 volatile static unsigned int sharedStackEntries=0, localStackEntries=0;
 volatile static unsigned char communication_data[6];
 
-static void sendDataToDeviceCore(struct value_defn, int);
+static void sendData(struct value_defn, int, char);
+static struct value_defn recvData(int);
+static struct value_defn sendRecvData(struct value_defn, int);
+static struct value_defn bcastData(struct value_defn, int, int);
+static struct value_defn reduceData(struct value_defn, int, int);
+static struct value_defn getInputFromUser(void);
+static struct value_defn getInputFromUserWithString(struct value_defn, int, struct symbol_node*);
+static void displayToUser(struct value_defn, int, struct symbol_node*);
+static void garbageCollect(int, struct symbol_node*);
+static void sendDataToDeviceCore(struct value_defn, int, char);
 static void sendDataToHostProcess(struct value_defn, int);
 static struct value_defn recvDataFromHostProcess(int);
 static struct value_defn recvDataFromDeviceCore(int);
@@ -49,6 +58,9 @@ static char * allocateChunkInHeapMemory(int, char);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static void performGC(int, struct symbol_node*, char);
 static struct value_defn performMathsOp(int, struct value_defn);
+static int getLargestCoreId(int);
+static struct value_defn probeForMessage(int);
+static struct test_or_wait_for_sent_message(int, char);
 
 void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
@@ -109,18 +121,24 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         char * ptr;
         cpy(&ptr, parameters[0].data, sizeof(char*));
         freeMemoryInHeap(ptr);
-    } else if (fnIdentifier==NATIVE_FN_RTL_SEND) {
+    } else if (fnIdentifier==NATIVE_FN_RTL_SEND || fnIdentifier==NATIVE_FN_RTL_SEND_NB) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-        sendData(parameters[0], getInt(parameters[1].data));
+        sendData(parameters[0], getInt(parameters[1].data), fnIdentifier==NATIVE_FN_RTL_SEND ? 1 : 0);
     } else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
         if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=recvData(getInt(parameters[0].data));
     } else if (fnIdentifier==NATIVE_FN_RTL_SENDRECV) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=sendRecvData(parameters[0], getInt(parameters[1].data));
+    } else if (fnIdentifier==NATIVE_FN_RTL_TEST_FOR_SEND || fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        *value=test_or_wait_for_sent_message(getInt(parameters[0].data), fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND ? 1 : 0);
     } else if (fnIdentifier==NATIVE_FN_RTL_BCAST) {
         if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         *value=bcastData(parameters[0], getInt(parameters[1].data), numActiveCores);
+    } else if (fnIdentifier==NATIVE_FN_RTL_PROBE_FOR_MESSAGE) {
+        if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+        *value=probeForMessage(getInt(parameters[0].data));
     } else if (fnIdentifier==NATIVE_FN_RTL_NUMCORES || fnIdentifier==NATIVE_FN_RTL_COREID) {
         if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         value->type=INT_TYPE;
@@ -164,7 +182,7 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 /**
  * Displays a message to the user and waits for the host to have done this
  */
-void displayToUser(struct value_defn value, int currentSymbolEntries, struct symbol_node* symbolTable) {
+static void displayToUser(struct value_defn value, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	sharedData->core_ctrl[myId].data[0]=value.type;
 	char* tempStr=NULL;
 	if (value.type == STRING_TYPE) {
@@ -194,7 +212,7 @@ int checkStringEquality(struct value_defn str1, struct value_defn str2) {
 /**
  * Requests input from the host with a string to display
  */
-struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int currentSymbolEntries, struct symbol_node* symbolTable) {
+static struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int currentSymbolEntries, struct symbol_node* symbolTable) {
 	if (toDisplay.type != STRING_TYPE) raiseError(ERR_ONLY_DISPLAY_STR_WITH_INPUT);
 	sharedData->core_ctrl[myId].data[0]=toDisplay.type;
 	char * msg=NULL;
@@ -211,7 +229,7 @@ struct value_defn getInputFromUserWithString(struct value_defn toDisplay, int cu
 /**
  * Requests input from the host (no string to display)
  */
-struct value_defn getInputFromUser() {
+static struct value_defn getInputFromUser() {
 	sharedData->core_ctrl[myId].data[0]=0;
 	return doGetInputFromUser();
 }
@@ -375,7 +393,7 @@ void freeMemoryInHeap(void * addr) {
     consolidateHeapChunks((int) address > LOCAL_CORE_MEMORY_MAP_TOP);
 }
 
-void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable) {
+static void garbageCollect(int currentSymbolEntries, struct symbol_node* symbolTable) {
     performGC(currentSymbolEntries, symbolTable, 0);
     performGC(currentSymbolEntries, symbolTable, 1);
 }
@@ -580,22 +598,12 @@ void clearFreedStackFrames(char* targetPointer) {
 /**
  * Sends data to some other core and blocks on this being received
  */
-void sendData(struct value_defn to_send, int target) {
-	int largestCoreId=sharedData->baseHostPid;
+static void sendData(struct value_defn to_send, int target, char blocking) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
-	if (target >= sharedData->num_procs) {
-		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
-			int i;
-			for (i=0;i<TOTAL_CORES;i++) {
-				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
-			}
-		} else {
-			raiseError(ERR_SEND_TO_UNKNOWN_CORE);
-		}
-	}
-	if (target < largestCoreId) {
-		sendDataToDeviceCore(to_send, target);
+	if (target < getLargestCoreId(source)) {
+		sendDataToDeviceCore(to_send, target, blocking);
 	} else {
+	    if (!blocking) raiseError(ERR_NBSEND_NOT_SUPPORTED)
 		sendDataToHostProcess(to_send, target);
 	}
 }
@@ -610,7 +618,7 @@ static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarg
 	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 }
 
-static void sendDataToDeviceCore(struct value_defn to_send, int target) {
+static void sendDataToDeviceCore(struct value_defn to_send, int target, char blocking) {
 	if (!sharedData->core_ctrl[target].active) {
 		raiseError(ERR_SEND_TO_INACTIVE_CORE);
 	} else {
@@ -623,14 +631,41 @@ static void sendDataToDeviceCore(struct value_defn to_send, int target) {
 		char * remoteMemory=(char*) e_get_global_address(row, col, sharedData->core_ctrl[target].postbox_start + (myId*6));
 		cpy(remoteMemory, communication_data, 6);
 		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
-		while (communication_data[5] != syncValues[target]) {
-			cpy(communication_data, remoteMemory, 6);
+		if (blocking) {
+            while (communication_data[5] != syncValues[target]) {
+                cpy(communication_data, remoteMemory, 6);
+            }
 		}
 	}
 }
 
-struct value_defn recvData(int source) {
-	int largestCoreId=sharedData->baseHostPid;
+static struct value_defn test_or_wait_for_sent_message(int target, char is_wait) {
+    struct value_defn toreturn;
+    toreturn.type=BOOLEAN_TYPE;
+    toreturn.dtype=SCALAR;
+    if (source < getLargestCoreId(target)) {
+        int row=target/e_group_config.group_cols;
+		int col=target-(row*e_group_config.group_cols);
+		int boolVal;
+		char * remoteMemory=(char*) e_get_global_address(row, col, sharedData->core_ctrl[target].postbox_start + (myId*6));
+		cpy(communication_data, remoteMemory, 6);
+        if (is_wait) {
+            while (communication_data[5] != syncValues[target]) {
+                cpy(communication_data, remoteMemory, 6);
+            }
+            boolVal=1;
+        } else {
+            boolVal=communication_data[5] == syncValues[target];
+        }
+        cpy(toreturn.data, &boolVal, sizeof(int));
+	} else {
+        raiseError(ERR_PROBE_NOT_SUPPORTED);
+	}
+	return toreturn;
+}
+
+static int getLargestCoreId(int source) {
+    int largestCoreId=sharedData->baseHostPid;
 	if (source >= sharedData->num_procs) {
 		if (source < TOTAL_CORES && sharedData->core_ctrl[source].active) {
 			int i;
@@ -641,7 +676,27 @@ struct value_defn recvData(int source) {
 			raiseError(ERR_RECV_FROM_UNKNOWN_CORE);
 		}
 	}
-	if (source < largestCoreId) {
+	return largestCoreId;
+}
+
+static struct value_defn probeForMessage(int source) {
+    struct value_defn toreturn;
+    toreturn.type=BOOLEAN_TYPE;
+    toreturn.dtype=SCALAR;
+	if (source < getLargestCoreId(source)) {
+        if (!sharedData->core_ctrl[source].active) raiseError(ERR_RECV_FROM_INACTIVE_CORE);
+        cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
+		volatile unsigned char searchingSVal=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		int boolVal=communication_data[5] == searchingSVal;
+		cpy(toreturn.data, &boolVal, sizeof(int));
+	} else {
+        raiseError(ERR_PROBE_NOT_SUPPORTED);
+	}
+	return toreturn;
+}
+
+static struct value_defn recvData(int source) {
+	if (source < getLargestCoreId(source)) {
 		return recvDataFromDeviceCore(source);
 	} else {
 		return recvDataFromHostProcess(source);
@@ -689,20 +744,9 @@ static struct value_defn recvDataFromDeviceCore(int source) {
  * rather than individual ones, so can greatly ease considerations of synchronisation. Basically it sends a message,
  * blocks on receive and then blocks on the initial send to form one overall block
  */
-struct value_defn sendRecvData(struct value_defn to_send, int target) {
-	int largestCoreId=sharedData->baseHostPid;
+static struct value_defn sendRecvData(struct value_defn to_send, int target) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
-	if (target >= sharedData->num_procs) {
-		if (target < TOTAL_CORES && sharedData->core_ctrl[target].active) {
-			int i;
-			for (i=0;i<TOTAL_CORES;i++) {
-				if (sharedData->core_ctrl[i].active) largestCoreId=i+1;
-			}
-		} else {
-			raiseError(ERR_SENDRECV_WITH_UNKNOWN_CORE);
-		}
-	}
-	if (target < largestCoreId) {
+	if (target < getLargestCoreId(source)) {
 		return sendRecvDataWithDeviceCore(to_send, target);
 	} else {
 		return sendRecvDataWithHostProcess(to_send, target);
@@ -789,7 +833,7 @@ static void performBarrier(volatile e_barrier_t barrier_array[], e_barrier_t  * 
 /**
  * Broadcasts data, if this is the source then send it, all cores return the data (even the source)
  */
-struct value_defn bcastData(struct value_defn to_send, int source, int totalProcesses) {
+static struct value_defn bcastData(struct value_defn to_send, int source, int totalProcesses) {
 	if (myId==source) {
 		int i, totalActioned=0;
 		for (i=0;i<TOTAL_CORES && totalActioned<totalProcesses;i++) {
@@ -808,7 +852,7 @@ struct value_defn bcastData(struct value_defn to_send, int source, int totalProc
 /**
  * Reduction of data amongst the cores with some operator
  */
-struct value_defn reduceData(struct value_defn to_send, int rop, int totalProcesses) {
+static struct value_defn reduceData(struct value_defn to_send, int rop, int totalProcesses) {
 	struct value_defn returnValue, retrieved;
 	int i, intV, tempInt, totalActioned=0;
 	float floatV, tempFloat;
