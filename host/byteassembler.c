@@ -441,7 +441,7 @@ struct memorycontainer* appendIfElseStatement(struct memorycontainer* expression
 }
 
 void appendArgument(char* argName) {
-	getVariableId(argName, 1);
+	addVariable(argName);
 }
 
 /**
