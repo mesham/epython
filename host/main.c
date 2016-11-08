@@ -59,6 +59,11 @@ struct epiphanyMonitorThreadWrapper {
 	struct shared_basic * deviceState;
 };
 
+struct included_source_files {
+    char * fileName;
+    struct included_source_files * next;
+};
+
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
 
 extern int yyparse();
@@ -66,6 +71,7 @@ extern int yy_scan_string(const char*);
 extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 
 struct stack_t indent_stack, filenameStack, lineNumberStack;
+struct included_source_files * included_src_root=NULL;
 
 static void doParse(char*);
 static char * getSourceFileContents(char*);
@@ -75,6 +81,8 @@ void loadByteCode(char*);
 static char* getIncludeFileWithPath(char*);
 static void runCodeOnHost(struct interpreterconfiguration*, struct shared_basic*);
 static void * runSpecificHostProcess(void*);
+static void appendIncludedSourceFileToStore(char*);
+static int hasSourceFileAlreadyBeenIncluded(char*);
 #ifndef HOST_STANDALONE
 static void* runCodeOnEpiphany(void*);
 #endif
@@ -227,14 +235,17 @@ static char * getSourceFileContents(char * filename) {
 					fprintf(stderr, "Opening of Python file '%s' failed, are you sure this file exists?\n", newFilename);
 					exit(0);
 				}
-				char * importedContents=getSourceFileContents(entirePathForFile);
+				if (!hasSourceFileAlreadyBeenIncluded(entirePathForFile)) {
+                    appendIncludedSourceFileToStore(entirePathForFile);
+                    char * importedContents=getSourceFileContents(entirePathForFile);
+                    if (strlen(importedContents)+strlen(contents)+1 >= contentsSize) {
+                        contentsSize=strlen(importedContents)+strlen(contents)+TEXTUAL_BASIC_SIZE_STRIDE;
+                        contents=realloc(contents, contentsSize);
+                    }
+                    sprintf(contents, "%s%s", contents, importedContents);
+				}
 				free(newFilename);
 				free(entirePathForFile);
-				if (strlen(importedContents)+strlen(contents)+1 >= contentsSize) {
-					contentsSize=strlen(importedContents)+strlen(contents)+TEXTUAL_BASIC_SIZE_STRIDE;
-					contents=realloc(contents, contentsSize);
-				}
-				sprintf(contents, "%s%s", contents, importedContents);
 			} else {
 				int i=0;
 				while(isspace(buffer[i]) && buffer[i] != '\0' && i < 1024) i++;
@@ -264,6 +275,23 @@ static char * getSourceFileContents(char * filename) {
 		fprintf(stderr, "Opening of Python file '%s' failed, are you sure this file exists?\n", filename);
 		exit(0);
 	}
+}
+
+static void appendIncludedSourceFileToStore(char * filename) {
+    struct included_source_files * newNode=(struct included_source_files *) malloc(sizeof(struct included_source_files));
+    newNode->fileName=(char*) malloc(strlen(filename) + 1);
+    strcpy(newNode->fileName, filename);
+    newNode->next=included_src_root;
+    included_src_root=newNode;
+}
+
+static int hasSourceFileAlreadyBeenIncluded(char * filename) {
+    struct included_source_files * head=included_src_root;
+    while (head != NULL) {
+        if (strcmp(head->fileName, filename) == 0) return 1;
+        head=head->next;
+    }
+    return 0;
 }
 
 static char* getIncludeFileWithPath(char * filename) {
