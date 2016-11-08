@@ -92,7 +92,7 @@ void enterFunction(char* fn_name) {
  * Gets the total number of entries in the symbol table
  */
 unsigned short getNumberEntriesInSymbolTable() {
-	return current_var_id + (getNumberSymbolTableEntriesForRecursion()*(RECURSION_VAR_DEPTH-1));
+	return (current_var_id - getNumberOfSymbolEntriesNotUsed()) + (getNumberSymbolTableEntriesForRecursion()*(RECURSION_VAR_DEPTH-1));
 }
 
 /**

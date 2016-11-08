@@ -35,6 +35,7 @@ struct functionListNode {
 	struct functionListNode * next;
 };
 
+int getNumberOfSymbolEntriesNotUsed(void);
 void addFunction(struct functionDefinition*);
 int getNumberSymbolTableEntriesForRecursion(void);
 void compileMemory(struct memorycontainer*);

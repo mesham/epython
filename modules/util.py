@@ -1,3 +1,5 @@
+from array import len
+
 def range(a,b=none,c=none):
 	i_a=a
 	i_b=b

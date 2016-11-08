@@ -43,6 +43,16 @@ static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
 static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*, int, int);
 static struct functionDefinition* findFunctionDefinition(char*);
 
+int getNumberOfSymbolEntriesNotUsed(void) {
+    int ignoreSymbolEntries=0;
+    struct functionListNode * fnHead=functionListHead;
+    while (fnHead != NULL) {
+        if (!fnHead->fn->called) ignoreSymbolEntries+=fnHead->fn->numberEntriesInSymbolTable;
+        fnHead=fnHead->next;
+    }
+    return ignoreSymbolEntries;
+}
+
 /**
  * Compiles the memory by going through and resolving relative links (i.e. gotos) and adds a stop at the end
  */
@@ -140,7 +150,7 @@ int getNumberSymbolTableEntriesForRecursion(void) {
 	int r=0;
 	struct functionListNode * fnHead=functionListHead;
 	while (fnHead != NULL) {
-		if (fnHead->fn->recursive) r+=fnHead->fn->numberEntriesInSymbolTable;
+		if (fnHead->fn->recursive && fnHead->fn->called) r+=fnHead->fn->numberEntriesInSymbolTable;
 		fnHead=fnHead->next;
 	}
 	return r;
