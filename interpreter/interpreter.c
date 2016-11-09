@@ -150,6 +150,8 @@ void runIntepreter(char * assembled, unsigned int length, unsigned short numberS
  */
 struct value_defn processAssembledCode(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
 	struct value_defn empty;
+	empty.type=NONE_TYPE;
+	empty.dtype=SCALAR;
 	unsigned int i, fnAddr;
 	for (i=currentPoint;i<length;) {
 		unsigned char command=getUChar(&assembled[i]);
@@ -184,6 +186,8 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
  */
 struct value_defn processAssembledCode(char * assembled, unsigned int currentPoint, unsigned int length) {
 	struct value_defn empty;
+	empty.type=NONE_TYPE;
+	empty.dtype=SCALAR;
 	unsigned int i, fnAddr;
 	for (i=currentPoint;i<length;) {
 		unsigned char command=getUChar(&assembled[i]);
