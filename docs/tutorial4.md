@@ -92,7 +92,7 @@ def pipelineStageFour():
 
 **This is an illustration of the code, the executable version is <a href="https://github.com/mesham/epython/blob/master/examples/pipeline.py" target="_blank">here</a>**
 
-Based upon its core ID, a core will execute a specific pipeline stage function where it waits for data and, once it has received this, will process the data and send results onto the next stage. The *odd_even_sort* function (not shown here, but in the executable version) will perform an odd-even sort on the number sequence. At the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down and this is the common way in which one terminates parallel pipelines.
+Based upon its core ID, a core will execute a specific pipeline stage function where it waits for data and, once it has received this, will process the data and send results onto the next stage. The *oddSort* function (in the util module) will perform an odd-even sort on the number sequence. At the end of the pipeline, stage one will send the value *-1* to stage two, which will then send it along to the next stage and quit. This action is repeated for the other stages and this is known a sentinal or poison pill, which will shut the pipeline down and this is the common way in which one terminates parallel pipelines.
 
 So, we now have a pipeline which passes data between the stages and each stage operates on this data. However there is a problem, namely that the amount of work per pipeline stage is very uneven. For instance stage 1 will progress very quickly, whereas stage 3 (the sorting stage) will take much longer and fast stages will be held up by the slower stages. Bear in mind though, that we are only mapping one stage to one Epiphany core, so our current pipeline is only using 4 of the Epiphany cores. Hence we have 12 idle cores and how can we take advantage of these to help address our work imbalance problem and improve performance?
 
@@ -182,7 +182,7 @@ def pipelineStageThree():
     if num > 0: send(data, 15, num)
     
 def pipelineStageFour():
-  dim rdata[100]
+  rdata=[0]*100
   num=0
   num_contig=0.0
   total_num=0
