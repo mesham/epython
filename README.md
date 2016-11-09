@@ -1,5 +1,7 @@
 #Epiphany Python
-This is an interpreter for Python which will run on the Epiphany chip and allows for common parallel activities such as communication and synchronisation. Full language documentation can be found in the docs folder. Example codes can be found in docs/examples
+This is a Python interpreter designed for low memory many core chips such as the Epiphany co-processor and supports the writing of parallel codes for these architectures. At 24Kb for the interpreter and runtime that executes on the many core chip, this is specifically designed to be a very small, tight implementation of the imperative aspects of Python with extensions (via Python module) for parallelism such as messaging, task farming, interoperability with a full Python interpreter (such as CPython) running on the host and many other features. ePython supports full memory management and garbage collection.
+
+ePython has been developed by <a href="https://www.epcc.ed.ac.uk/about/staff/dr-nick-brown">Nick Brown</a> and is [licenced](LICENCE) under BSD-2.
 
 ##Installation
 Type make
