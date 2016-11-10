@@ -59,7 +59,7 @@ As an exercise extend thsi example to run multiple functions over multiple worke
 
 ###Master worker
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/masterworker.png" width=300 align="right">
-In the previous section we used the terminology of "master" and "worker", this is a common approach in parallelism where one core (in this case that with the ID provided to the *initTaskFarm* function) is a master, dishing out work to all other other cores which are workers. Many parallel problems can be split up into this approach of master and worker, we have rewritten the estimation of PI via Monte Carlo example of ([tutorial 2](tutorial2.md)) to instead use tasks, the *taskfarm* module and this general parallelisation strategy of master-worker.
+In the previous section we used the terminology of "master" and "worker", this is a common approach in parallelism where one core (in this case that with the ID provided to the *initTaskFarm* function) is a master, dishing out work to all other other cores which are workers. You can see this in the diagram to the right, where the master sends out tasks and data to the workers which then execute these and send back any results and inform the master they have completed (and hence can accept another task.) Many parallel problems can be split up into this approach of master and worker, we have rewritten the estimation of PI via Monte Carlo example of ([tutorial 2](tutorial2.md)) to instead use tasks, the *taskfarm* module and this general parallelisation strategy of master-worker.
 
 ```python
 import parallel
