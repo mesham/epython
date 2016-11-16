@@ -1,3 +1,7 @@
+prefix ?= /usr
+bindir = $(prefix)/bin
+includedir = $(prefix)/include
+
 all: epiphany
 
 standalone: clean
@@ -31,17 +35,17 @@ clean:
 	@cd device; $(MAKE) clean
 
 install:
-	@cp epython-host epython-device.srec epython-device.elf /usr/bin
-	@cp epython.sh /usr/bin/epython
-	@mkdir -p /usr/include/epython
-	@cp -R modules /usr/include/epython/.
-	@echo 'export PYTHONPATH=$$PYTHONPATH:/usr/include/epython/modules:$(shell pwd)' >> ~/.bashrc
+	@mkdir -p $(DESTDIR)$(bindir)
+	@cp epython-host epython-device.srec epython-device.elf $(DESTDIR)$(bindir)
+	@cp epython.sh $(DESTDIR)$(bindir)/epython
+	@mkdir -p $(DESTDIR)$(includedir)/epython
+	@cp -R modules $(DESTDIR)$(includedir)/epython/.
+	@echo 'export PYTHONPATH=$$PYTHONPATH:$(includedir)/epython/modules:$(shell pwd)' >> ~/.bashrc
 	@echo "ePython installed, start a new bash session by executing bash before running ePython"
 
 uninstall:
-	@rm /usr/bin/epython-host
-	@rm /usr/bin/epython-device.srec
-	@rm /usr/bin/epython-device.elf
-	@rm /usr/bin/epython
-	@rm /usr/include/parallel.py
-	@rm /usr/include/util.py
+	@rm $(DESTDIR)$(bindir)/epython-host
+	@rm $(DESTDIR)$(bindir)/epython-device.srec
+	@rm $(DESTDIR)$(bindir)/epython-device.elf
+	@rm $(DESTDIR)$(bindir)/epython
+	@rm $(DESTDIR)$(includedir)/epython/modules/*.py
