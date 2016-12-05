@@ -308,7 +308,7 @@ static char* getIncludeFileWithPath(char * filename) {
             free(testFilename);
 	    }
 
-		char * prev = getenv("PYTHONPATH");
+		char * prev = getenv("EPYTHONPATH");
 		if (prev == NULL) return NULL;
 		char * pch=strchr(prev, ':');
 		while (pch != NULL) {
