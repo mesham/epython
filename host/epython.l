@@ -184,6 +184,7 @@ ELIF									return ELIF;
 IN										return IN;
 IS										return IS;
 WHILE									return WHILE;
+PASS									return PASS;
 EXIT                                    return EXIT;
 FOR                                     return FOR;
 TO                                      return TO;

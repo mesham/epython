@@ -194,8 +194,8 @@ struct memorycontainer* concatenateMemory(struct memorycontainer* m1, struct mem
 	memoryContainer->length=m1->length + m2->length;
 	memoryContainer->data=malloc(memoryContainer->length);
 	memoryContainer->lineDefns=m1->lineDefns;
-	memcpy(memoryContainer->data, m1->data, m1->length);
-	memcpy(&memoryContainer->data[m1->length], m2->data, m2->length);
+	if (m1->data != NULL && m1->length > 0) memcpy(memoryContainer->data, m1->data, m1->length);
+	if (m2->data != NULL && m2->length > 0) memcpy(&memoryContainer->data[m1->length], m2->data, m2->length);
 	struct lineDefinition * root=m2->lineDefns, *r2;
 	while (root != NULL) {
 		root->currentpoint+=m1->length;

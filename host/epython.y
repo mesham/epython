@@ -32,7 +32,7 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token DIM SDIM EXIT ELSE ELIF COMMA WHILE
+%token DIM SDIM EXIT ELSE ELIF COMMA WHILE PASS
 %token FOR TO FROM NEXT GOTO PRINT INPUT
 %token IF NATIVE
 
@@ -93,6 +93,7 @@ statement
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
+	| PASS { $$=appendPassStatement(); }
 ;
 
 arrayaccessor

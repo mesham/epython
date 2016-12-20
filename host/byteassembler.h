@@ -104,6 +104,7 @@ struct memorycontainer* appendLetWithOperatorStatement(char*, struct memoryconta
 struct memorycontainer* appendReturnStatement(void);
 struct memorycontainer* appendReturnStatementWithExpression(struct memorycontainer*);
 struct memorycontainer* appendStopStatement(void);
+struct memorycontainer* appendPassStatement(void);
 struct memorycontainer* createStringExpression(char*);
 struct memorycontainer* createRealExpression(float);
 struct memorycontainer* createIntegerExpression(int);

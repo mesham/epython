@@ -636,6 +636,18 @@ struct memorycontainer* appendStopStatement() {
 }
 
 /**
+ * Appends and returns an empty statement for pass, this is a noop
+ */
+struct memorycontainer* appendPassStatement() {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=0;
+	memoryContainer->data=NULL;
+	memoryContainer->lineDefns=NULL;
+
+	return memoryContainer;
+}
+
+/**
  * Creates an expression from a string
  */
 struct memorycontainer* createStringExpression(char * string) {
