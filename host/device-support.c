@@ -395,7 +395,7 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
 		if (((core->data[0] >> 7) & 1) == 1) {
 			int v;
 			memcpy(&v, &core->data[1], sizeof(int));
-			sprintf(newString,"0x%x%s", v, str1);
+			sprintf(newString,"0x%x%s", v, str2);
 		} else if (core->data[0]==INT_TYPE) {
 			int d;
 			memcpy(&d, &core->data[1], sizeof(int));
