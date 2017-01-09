@@ -224,9 +224,9 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         }
     } else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
 		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
-		value.type=parameters[0].type;
-		value.dtype=parameters[0].dtype;
-		cpy(value.data, parameters[0].data, sizeof(char*));
+		value->type=parameters[0].type;
+		value->dtype=parameters[0].dtype;
+		cpy(value->data, parameters[0].data, sizeof(char*));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
