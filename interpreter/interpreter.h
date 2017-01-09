@@ -38,6 +38,8 @@
 
 #define SCALAR 0
 #define ARRAY 1
+#define REFSCALAR 2
+#define REFARRAY 3
 
 #define UNALLOCATED 1
 #define ALLOCATED 2

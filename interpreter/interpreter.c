@@ -423,7 +423,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 #endif
 	variableSymbol->value.type=value.type;
 	variableSymbol->value.dtype=value.dtype;
-	if (value.dtype == ARRAY) {
+	if (value.dtype >= ARRAY) {
 		cpy(variableSymbol->value.data, value.data, sizeof(char*));
 	} else if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(char*));
@@ -437,6 +437,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 			setVariableValue(variableSymbol, value, -1);
 		}
 	}
+	if (variableSymbol->value.dtype > 3) variableSymbol->value.dtype-=4;
 	return currentPoint;
 }
 
@@ -675,6 +676,21 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
         *currentPoint=handleNative(assembled, *currentPoint, length, &value);
 #endif
+	} else if (expressionId == REFERENCE_TOKEN || expressionId == DEREFERENCE_TOKEN) {
+		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
+		*currentPoint+=sizeof(unsigned short);
+#ifdef HOST_INTERPRETER
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel[threadId], threadId, 1);
+#else
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
+#endif
+		value.type=variableSymbol->value.type;
+		// We plus 2 regardless as deref needs to be special in order to be a copy in assignment rather than scalar
+		value.dtype=variableSymbol->value.dtype + 2;
+		char * ptr;
+		cpy(&ptr, variableSymbol->value.data, sizeof(char*));
+		ptr=getGlobalReference(ptr);
+		cpy(value.data, &ptr, sizeof(char*));
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
@@ -887,14 +903,14 @@ static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lv
 		}
 #endif
 	}
-	int zero=0;
+	char* zero=0;
 #ifdef HOST_INTERPRETER
 	int newEntryLocation=getSymbolTableEntryId(threadId);
 	symbolTable[threadId][newEntryLocation].id=id;
 	symbolTable[threadId][newEntryLocation].state=ALLOCATED;
 	symbolTable[threadId][newEntryLocation].level=lvl;
 	symbolTable[threadId][newEntryLocation].value.type=INT_TYPE;
-	cpy(symbolTable[threadId][newEntryLocation].value.data, &zero, sizeof(int));
+	cpy(symbolTable[threadId][newEntryLocation].value.data, &zero, sizeof(char*));
 	return &symbolTable[threadId][newEntryLocation];
 #else
 	int newEntryLocation=getSymbolTableEntryId();
@@ -903,7 +919,7 @@ static struct symbol_node* getVariableSymbol(unsigned short id, unsigned char lv
 	symbolTable[newEntryLocation].state=ALLOCATED;
 	symbolTable[newEntryLocation].value.type=INT_TYPE;
 	symbolTable[newEntryLocation].value.dtype=SCALAR;
-	cpy(symbolTable[newEntryLocation].value.data, &zero, sizeof(int));
+	cpy(symbolTable[newEntryLocation].value.data, &zero, sizeof(char*));
 	return &symbolTable[newEntryLocation];
 #endif
 }

@@ -473,6 +473,10 @@ void clearFreedStackFrames(char* targetPointer) {
 	// No operation here (allow stack to leak on host)
 }
 
+char* getGlobalReference(char* data) {
+	return data;
+}
+
 __attribute__((optimize("O0")))
 struct value_defn sendRecvData(struct value_defn to_send, int target, int threadId, int hostCoresBasePid) {
 	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
@@ -799,7 +803,7 @@ static struct value_defn performMathsOp(int operation, struct value_defn value) 
 		int r=rand();
 		cpy(result.data, &r, sizeof(int));
 	} else {
-		float fvalue=0, r;
+		float fvalue=0, r=0;
 		int ivalue;
 		if (value.type==REAL_TYPE) {
             cpy(&fvalue, value.data, sizeof(float));
