@@ -423,7 +423,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 #endif
 	variableSymbol->value.type=value.type;
 	variableSymbol->value.dtype=value.dtype;
-	if (value.dtype >= ARRAY) {
+	if (value.dtype == ARRAY || value.dtype > 3) {
 		cpy(variableSymbol->value.data, value.data, sizeof(char*));
 	} else if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(char*));
@@ -432,7 +432,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 		if (currentAddress == 0) {
 			char * address=getStackMemory(sizeof(int), 0);
 			cpy(variableSymbol->value.data, &address, sizeof(char*));
-			cpy(address, value.data, sizeof(int));
+			cpy(address, value.data, sizeof(char*));
 		} else {
 			setVariableValue(variableSymbol, value, -1);
 		}
@@ -685,9 +685,13 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
 #endif
 		value.type=variableSymbol->value.type;
+		if (expressionId == REFERENCE_TOKEN) {
+			cpy(value.data, variableSymbol->value.data, sizeof(char*));
+		} else {
+			value=getVariableValue(variableSymbol, -1);
+		}
 		// We plus 2 regardless as deref needs to be special in order to be a copy in assignment rather than scalar
 		value.dtype=variableSymbol->value.dtype + 2;
-		cpy(value.data, variableSymbol->value.data, sizeof(char*));
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);

@@ -175,14 +175,14 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
             raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         }
 	} else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
-		value.type=parameters[0].type;
-		value.dtype=parameters[0].dtype;
+		value->type=parameters[0].type;
+		value->dtype=parameters[0].dtype;
 		char * ptr;
 		cpy(&ptr, parameters[0].data, sizeof(char*));
-		char * remoteMemory=(char*) e_get_global_address(localCoreId/e_group_config.group_cols,
-														localCoreId-(row*e_group_config.group_cols),
-														ptr);
-		cpy(value.data, remoteMemory, sizeof(char*));
+		int row=localCoreId/e_group_config.group_cols;
+		int col=localCoreId-(row*e_group_config.group_cols);
+		char * remoteMemory=(char*) e_get_global_address(row, col, ptr);
+		cpy(value->data, remoteMemory, sizeof(char*));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
