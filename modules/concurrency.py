@@ -4,4 +4,4 @@ def expose(data, pid):
 
 def access(src):
 	ref=native rtl_recv(src)
-	return deref(ref)
+	return native rtl_dereference(ref)
