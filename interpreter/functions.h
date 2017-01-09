@@ -50,7 +50,6 @@ struct value_defn performStringConcatenation(struct value_defn, struct value_def
 int checkStringEquality(struct value_defn, struct value_defn);
 struct symbol_node* initialiseSymbolTable(int);
 char* getStackMemory(int,char);
-char* getGlobalReference(char*);
 void clearFreedStackFrames(char*);
 void cpy(volatile void*, volatile void *, unsigned int);
 void raiseError(unsigned char);

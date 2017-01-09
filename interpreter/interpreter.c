@@ -687,10 +687,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 		value.type=variableSymbol->value.type;
 		// We plus 2 regardless as deref needs to be special in order to be a copy in assignment rather than scalar
 		value.dtype=variableSymbol->value.dtype + 2;
-		char * ptr;
-		cpy(&ptr, variableSymbol->value.data, sizeof(char*));
-		ptr=getGlobalReference(ptr);
-		cpy(value.data, &ptr, sizeof(char*));
+		cpy(value.data, variableSymbol->value.data, sizeof(char*));
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);

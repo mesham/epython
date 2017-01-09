@@ -222,6 +222,11 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
         } else {
             raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
         }
+    } else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
+		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
+		value.type=parameters[0].type;
+		value.dtype=parameters[0].dtype;
+		cpy(value.data, parameters[0].data, sizeof(char*));
     } else {
         raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
     }
@@ -471,10 +476,6 @@ void freeMemoryInHeap(void* addr, int threadId) {
 
 void clearFreedStackFrames(char* targetPointer) {
 	// No operation here (allow stack to leak on host)
-}
-
-char* getGlobalReference(char* data) {
-	return data;
 }
 
 __attribute__((optimize("O0")))
