@@ -36,10 +36,15 @@
 #define NONE_TYPE 4
 #define FN_ADDR_TYPE 5
 
+#define INT_PTR_TYPE 100
+#define REAL_PTR_TYPE 101
+#define STRING_PTR_TYPE 102
+#define BOOLEAN_PTR_TYPE 103
+#define NONE_PTR_TYPE 104
+#define FN_ADDR_PTR_TYPE 105
+
 #define SCALAR 0
 #define ARRAY 1
-#define REFSCALAR 2
-#define REFARRAY 3
 
 #define UNALLOCATED 1
 #define ALLOCATED 2

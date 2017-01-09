@@ -423,7 +423,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 #endif
 	variableSymbol->value.type=value.type;
 	variableSymbol->value.dtype=value.dtype;
-	if (value.dtype == ARRAY || value.dtype > 3) {
+	if (value.dtype == ARRAY || value.dtype > 1) {
 		cpy(variableSymbol->value.data, value.data, sizeof(char*));
 	} else if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(char*));
@@ -437,7 +437,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 			setVariableValue(variableSymbol, value, -1);
 		}
 	}
-	if (variableSymbol->value.dtype > 3) variableSymbol->value.dtype-=4;
+	if (variableSymbol->value.dtype > 1) variableSymbol->value.dtype-=2;
 	return currentPoint;
 }
 
@@ -676,7 +676,7 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
         *currentPoint=handleNative(assembled, *currentPoint, length, &value);
 #endif
-	} else if (expressionId == REFERENCE_TOKEN || expressionId == DEREFERENCE_TOKEN) {
+	} else if (expressionId == REFERENCE_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
@@ -684,14 +684,12 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
 		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
 #endif
+		value.dtype=SCALAR;
 		value.type=variableSymbol->value.type;
-		if (expressionId == REFERENCE_TOKEN) {
-			cpy(value.data, variableSymbol->value.data, sizeof(char*));
-		} else {
-			value=getVariableValue(variableSymbol, -1);
-		}
-		// We plus 2 regardless as deref needs to be special in order to be a copy in assignment rather than scalar
-		value.dtype=variableSymbol->value.dtype + 2;
+		value.type|=1 << 7;
+		value.type|=(variableSymbol->value.dtype & 1)<<5;
+		value.type|=(variableSymbol->value.dtype >> 1 & 1)<<6;
+		cpy(value.data, variableSymbol->value.data, sizeof(char*));
 	} else if (expressionId == IDENTIFIER_TOKEN || expressionId == ARRAYACCESS_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);

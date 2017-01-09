@@ -55,6 +55,7 @@
 #define NATIVE_RTL_WAIT_FOR_SEND_STR "rtl_wait_for_send"
 #define NATIVE_RTL_SEND_NB_STR "rtl_send_nonblocking"
 #define NATIVE_RTL_GLOBAL_REFRENCE_STR "rtl_global_reference"
+#define NATIVE_RTL_DEREFRENCE_STR "rtl_dereference"
 
 extern int line_num;
 
