@@ -37,7 +37,7 @@ void yyerror (char const *msg) {
 %token IF NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
-%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT STR ID DEREF
+%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT STR ID
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
 %left ADD SUB ADDADD SUBSUB
@@ -208,7 +208,6 @@ value
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| ID LPAREN ident RPAREN { $$=appendReferenceStatement($3); }
-	| DEREF LPAREN ident RPAREN { $$=appendDereferenceStatement($3); }
 ;
 
 ident

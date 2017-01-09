@@ -367,7 +367,11 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
 
 		int totalLen=strlen(str1)+21;
 		newString=(char*) malloc(totalLen);
-		if (core->data[5]==INT_TYPE) {
+		if (((core->data[5] >> 7) & 1) == 1) {
+			int v;
+			memcpy(&v, &core->data[6], sizeof(int));
+			sprintf(newString,"%s0x%x", str1, v);
+		} else if (core->data[5]==INT_TYPE) {
 			int d;
 			memcpy(&d, &core->data[6], sizeof(int));
 			sprintf(newString,"%s%d", str1, d);
@@ -388,7 +392,11 @@ static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct
 
 		int totalLen=strlen(str2)+21;
 		newString=(char*) malloc(totalLen);
-		if (core->data[0]==INT_TYPE) {
+		if (((core->data[0] >> 7) & 1) == 1) {
+			int v;
+			memcpy(&v, &core->data[1], sizeof(int));
+			sprintf(newString,"0x%x%s", v, str1);
+		} else if (core->data[0]==INT_TYPE) {
 			int d;
 			memcpy(&d, &core->data[1], sizeof(int));
 			sprintf(newString,"%d%s", d, str2);
@@ -514,7 +522,14 @@ static int getTypeOfInput(char * input) {
  * Displays a message from the core
  */
 static void displayCoreMessage(int coreId, struct core_ctrl * core) {
-	if (core->data[0] == 0) {
+	if (((core->data[0] >> 7) & 1) == 1) {
+		int y;
+        memcpy(&y, &(core->data[1]), sizeof(int));
+        char t=core->data[0] & 0x1F;
+        char dt=core->data[0] >> 5 & 0x3;
+		printf("[device %d] 0x%x points to %s %s\n", coreId, y,
+				t==0 ? "integer" : t==1 ? "floating point" : t==2 ? "boolean" : t==3 ? "none" : t==4 ? "function" : "unknown", dt==0 ? "scalar" : "array");
+	} else if (core->data[0] == 0) {
 		int y;
         memcpy(&y, &(core->data[1]), sizeof(int));
 		printf("[device %d] %d\n", coreId, y);

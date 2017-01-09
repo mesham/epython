@@ -100,15 +100,14 @@ extern int yydebug;
     NOT = 310,
     STR = 311,
     ID = 312,
-    DEREF = 313,
-    LPAREN = 314,
-    RPAREN = 315,
-    SLBRACE = 316,
-    SRBRACE = 317,
-    TRUE = 318,
-    FALSE = 319,
-    ASSGN = 320,
-    POW = 321
+    LPAREN = 313,
+    RPAREN = 314,
+    SLBRACE = 315,
+    SRBRACE = 316,
+    TRUE = 317,
+    FALSE = 318,
+    ASSGN = 319,
+    POW = 320
   };
 #endif
 /* Tokens.  */
@@ -167,15 +166,14 @@ extern int yydebug;
 #define NOT 310
 #define STR 311
 #define ID 312
-#define DEREF 313
-#define LPAREN 314
-#define RPAREN 315
-#define SLBRACE 316
-#define SRBRACE 317
-#define TRUE 318
-#define FALSE 319
-#define ASSGN 320
-#define POW 321
+#define LPAREN 313
+#define RPAREN 314
+#define SLBRACE 315
+#define SRBRACE 316
+#define TRUE 317
+#define FALSE 318
+#define ASSGN 319
+#define POW 320
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -191,7 +189,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 195 "parser.h" /* yacc.c:1909  */
+#line 193 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

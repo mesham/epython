@@ -197,7 +197,6 @@ INPUT                                   return INPUT;
 NATIVE									return NATIVE;
 STR										return STR;
 ID							return ID;
-DEREF							return DEREF;
 "#"										BEGIN(SINGLELINECOMMENT);
 
 [:.;]                                  return yytext[0];

@@ -428,11 +428,12 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 	} else if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(char*));
 	} else {
-		int currentAddress=getInt(variableSymbol->value.data);
-		if (currentAddress == 0) {
-			char * address=getStackMemory(sizeof(int), 0);
-			cpy(variableSymbol->value.data, &address, sizeof(char*));
-			cpy(address, value.data, sizeof(char*));
+		char * ptr;
+		cpy(&ptr, variableSymbol->value.data, sizeof(char*));
+		if (ptr == 0) {
+			ptr=getStackMemory(sizeof(int), 0);
+			cpy(variableSymbol->value.data, &ptr, sizeof(char*));
+			cpy(ptr, value.data, sizeof(char*));
 		} else {
 			setVariableValue(variableSymbol, value, -1);
 		}
@@ -980,13 +981,13 @@ void setVariableValue(struct symbol_node* variableSymbol, struct value_defn valu
 	if (value.type == STRING_TYPE) {
 		cpy(&variableSymbol->value.data, &value.data, sizeof(char*));
 	} else {
-		int currentAddress=getInt(variableSymbol->value.data);
-		if (currentAddress == 0) {
-			char * address=getStackMemory(sizeof(int) * index, 0);
-			cpy(variableSymbol->value.data, &address, sizeof(char*));
-			cpy(address+((index+1) *4), value.data, sizeof(int));
+		char * ptr;
+		cpy(&ptr, variableSymbol->value.data, sizeof(char*));
+		if (ptr == 0) {
+			ptr=getStackMemory(sizeof(int) * index, 0);
+			cpy(variableSymbol->value.data, &ptr, sizeof(char*));
+			cpy(ptr+((index+1) *4), value.data, sizeof(int));
 		} else {
-			char * ptr;
 			cpy(&ptr, variableSymbol->value.data, sizeof(char*));
 			if (variableSymbol->value.dtype == ARRAY) {
                 unsigned char num_dims;

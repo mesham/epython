@@ -182,7 +182,7 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		int row=localCoreId/e_group_config.group_cols;
 		int col=localCoreId-(row*e_group_config.group_cols);
 		char * remoteMemory=(char*) e_get_global_address(row, col, ptr);
-		cpy(value->data, remoteMemory, sizeof(char*));
+		cpy(value->data, &remoteMemory, sizeof(char*));
 	} else if (fnIdentifier==NATIVE_FN_RTL_DEREFERENCE) {
 		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		value->type=parameters[0].type & 0x1F;

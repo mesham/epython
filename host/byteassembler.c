@@ -115,19 +115,6 @@ struct memorycontainer* appendReferenceStatement(char* identifier) {
 	return memoryContainer;
 };
 
-struct memorycontainer* appendDereferenceStatement(char* identifier) {
-	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char) + sizeof(unsigned short);
-	memoryContainer->data=(char*) malloc(memoryContainer->length);
-	memoryContainer->lineDefns=NULL;
-
-	unsigned int position=0;
-
-	position=appendStatement(memoryContainer, DEREFERENCE_TOKEN, position);
-	appendVariable(memoryContainer, getVariableId(identifier, 0), position);
-	return memoryContainer;
-};
-
 struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, struct stack_t* args, struct memorycontainer* singleArg) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=(sizeof(unsigned char)*2) + sizeof(unsigned short);

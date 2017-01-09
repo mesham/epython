@@ -241,7 +241,14 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
  * Called when running on the host, will display to the user
  */
 static void displayToUser(struct value_defn value, int threadId) {
-	if (value.type == INT_TYPE) {
+	if (((value.type >> 7) & 1) == 1) {
+		char* y;
+        memcpy(&y, value.data, sizeof(char*));
+        char t=value.type & 0x1F;
+        char dt=value.type >> 5 & 0x3;
+		printf("[host %d] %p points to %s %s\n", threadId, y,
+				t==0 ? "integer" : t==1 ? "floating point" : t==2 ? "boolean" : t==3 ? "none" : t==4 ? "function" : "unknown", dt==0 ? "scalar" : "array");
+	} else if (value.type == INT_TYPE) {
         int v;
         cpy(&v, value.data, sizeof(int));
 		printf("[host %d] %d\n", threadId, v);
@@ -360,7 +367,11 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		cpy(&str1, &v1.data, sizeof(char*));
 		int totalLen=strlen(str1)+21;
 		char * newString=getHeapMemory(totalLen, 0, threadId);
-		if (v2.type==INT_TYPE) {
+		if (((v2.type >> 7) & 1) == 1) {
+			char* v;
+			cpy(&v, v2.data, sizeof(char*));
+			sprintf(newString,"%s%p", str1, v);
+		} else if (v2.type==INT_TYPE) {
 			int int_v;
 			cpy(&int_v, v2.data, sizeof(int));
 			sprintf(newString,"%s%d", str1, int_v);
@@ -381,7 +392,11 @@ struct value_defn performStringConcatenation(struct value_defn v1, struct value_
 		cpy(&str2, &v2.data, sizeof(char*));
 		int totalLen=strlen(str2)+21;
 		char * newString=getHeapMemory(totalLen, 0, threadId);
-		if (v1.type==INT_TYPE) {
+		if (((v1.type >> 7) & 1) == 1) {
+			char* v;
+			cpy(&v, v2.data, sizeof(char*));
+			sprintf(newString,"%p%s", v, str2);
+		} else if (v1.type==INT_TYPE) {
 			int int_v;
 			cpy(&int_v, v1.data, sizeof(int));
 			sprintf(newString,"%d%s", int_v, str2);
