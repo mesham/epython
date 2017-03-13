@@ -35,6 +35,15 @@ struct functionListNode {
 	struct functionListNode * next;
 };
 
+struct exportableFunctionTableNode {
+    char * functionName;
+    unsigned short functionLocation;
+    struct exportableFunctionTableNode * next;
+};
+
+extern struct exportableFunctionTableNode* exportableFunctionTable;
+extern int numberExportableFunctionsInTable;
+
 int getNumberOfSymbolEntriesNotUsed(void);
 void addFunction(struct functionDefinition*);
 int getNumberSymbolTableEntriesForRecursion(void);

@@ -41,11 +41,12 @@
 #include "host-functions.h"
 #include "functions.h"
 #include "misc.h"
+#include "memorymanager.h"
 
 #define LISTENER_PIPE_NAME "toepython"
 #define WRITER_PIPE_NAME "fromepython"
 
-enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV};
+enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO};
 
 static char * buffered_line;
 static int listener_pipe_handle, writer_pipe_handle;
@@ -60,13 +61,14 @@ static void issueSync(void);
 static void issueReduce(struct interpreterconfiguration*);
 static void issueBcast(struct interpreterconfiguration*);
 static void issueSendRecv(struct interpreterconfiguration*);
+static void sendBackFunctionInformation(struct interpreterconfiguration*);
 
 /**
  * Runs interactivity with full Python on this host CPU, will send over commands to different Epiphany cores
  */
-void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configuration, struct shared_basic * basicState, pthread_t* emanagementThread) {
+void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configuration, struct shared_basic * basicState, pthread_t* emanagementThread, char otherVirtualHosts) {
 	initialise_namedPipes();
-	initHostCommunicationData(1, basicState, configuration->coreProcs);
+	if (!otherVirtualHosts) initHostCommunicationData(1, basicState, configuration->coreProcs);
 	while (1==1) {
 		enum command cmd=blockOnCommand(emanagementThread);
 		if (cmd == SEND) issueSend(configuration);
@@ -77,6 +79,7 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 		if (cmd == REDUCE) issueReduce(configuration);
 		if (cmd == BCAST) issueBcast(configuration);
 		if (cmd == SENDRECV) issueSendRecv(configuration);
+		if (cmd == GETFUNCTIONINFO) sendBackFunctionInformation(configuration);
 		if (cmd == EXIT) return;
 	}
 }
@@ -89,6 +92,24 @@ static void issueNumcores(struct interpreterconfiguration* configuration) {
 	sprintf(dataToWrite, "%d", configuration->hostProcs + configuration->coreProcs);
 	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
 	fsync(writer_pipe_handle);
+}
+
+static void sendBackFunctionInformation(struct interpreterconfiguration* configuration) {
+    char line[100];
+    char * dataToWrite=(char*) malloc(numberExportableFunctionsInTable * 100);
+    if (exportableFunctionTable != NULL) {
+        dataToWrite[0]='\0';
+        struct exportableFunctionTableNode* root=exportableFunctionTable;
+        while (root != NULL) {
+            sprintf(line, "%s>%hu\n", root->functionName, root->functionLocation);
+            sprintf(dataToWrite, "%s%s", dataToWrite, line);
+            root=root->next;
+        }
+    } else {
+        sprintf(dataToWrite,"-");
+    }
+    errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
+    free(dataToWrite);
 }
 
 /**
@@ -314,6 +335,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	if (strcmp(commandStr, "6") == 0) return REDUCE;
 	if (strcmp(commandStr, "7") == 0) return BCAST;
 	if (strcmp(commandStr, "8") == 0) return SENDRECV;
+	if (strcmp(commandStr, "9") == 0) return GETFUNCTIONINFO;
 	return NONE;
 }
 

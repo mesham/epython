@@ -31,6 +31,6 @@
 #include "configuration.h"
 #include <pthread.h>
 
-void runFullPythonInteractivityOnHost(struct interpreterconfiguration*, struct shared_basic*, pthread_t*);
+void runFullPythonInteractivityOnHost(struct interpreterconfiguration*, struct shared_basic*, pthread_t*, char);
 
 #endif /* CONFIGURATION_H_ */

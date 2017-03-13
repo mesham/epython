@@ -124,6 +124,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 						exit(0);
 					}
 					configuration->hostProcs=atoi(argv[++i]);
+					if (configuration->fullPythonHost) configuration->hostProcs++;
 				}
 			} else if (areStringsEqualIgnoreCase(argv[i], "-d")) {
 				if (i+1 ==argc) {

@@ -59,6 +59,12 @@ struct epiphanyMonitorThreadWrapper {
 	struct shared_basic * deviceState;
 };
 
+struct fullPythonInteractivityThreadWrapper {
+    struct interpreterconfiguration* configuration;
+    struct shared_basic * deviceState;
+    pthread_t* emanagementThread;
+};
+
 struct included_source_files {
     char * fileName;
     struct included_source_files * next;
@@ -83,6 +89,7 @@ static void runCodeOnHost(struct interpreterconfiguration*, struct shared_basic*
 static void * runSpecificHostProcess(void*);
 static void appendIncludedSourceFileToStore(char*);
 static int hasSourceFileAlreadyBeenIncluded(char*);
+static void* runCodeForFullPythonInteractivity(void*);
 #ifndef HOST_STANDALONE
 static void* runCodeOnEpiphany(void*);
 #endif
@@ -108,27 +115,33 @@ int main (int argc, char *argv[]) {
 		writeOutByteCode(configuration->compiledByteFilename);
 	} else {
 #ifndef HOST_STANDALONE
-		pthread_t epiphany_management_thread;
+		pthread_t epiphany_management_thread, fullPythonInteractivityThread;
 		struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
 		struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
 		w->configuration=configuration;
 		w->deviceState=deviceState;
 		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)w);
 		if (configuration->fullPythonHost) {
-			runFullPythonInteractivityOnHost(configuration, deviceState, &epiphany_management_thread);
-		} else {
-			runCodeOnHost(configuration, deviceState);
+			struct fullPythonInteractivityThreadWrapper * wrapperForInteract=(struct fullPythonInteractivityThreadWrapper *) malloc(sizeof(struct fullPythonInteractivityThreadWrapper));
+			wrapperForInteract->configuration=configuration;
+			wrapperForInteract->deviceState=deviceState;
+			wrapperForInteract->emanagementThread=&epiphany_management_thread;
+			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
 #else
+		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
 		standAloneState->symbol_size=getNumberEntriesInSymbolTable();
 		standAloneState->num_procs=configuration->coreProcs+configuration->hostProcs;
 		standAloneState->baseHostPid=configuration->coreProcs;
 		if (configuration->fullPythonHost) {
-			runFullPythonInteractivityOnHost(configuration, standAloneState, NULL);
-		} else {
-			runCodeOnHost(configuration, standAloneState);
+			struct fullPythonInteractivityThreadWrapper * wrapperForInteract=(struct fullPythonInteractivityThreadWrapper *) malloc(sizeof(struct fullPythonInteractivityThreadWrapper));
+			wrapperForInteract->configuration=configuration;
+			wrapperForInteract->deviceState=standAloneState;
+			wrapperForInteract->emanagementThread=NULL;
+			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
+		runCodeOnHost(configuration, standAloneState);
 #endif
 		pthread_exit(NULL);
 #ifndef HOST_STANDALONE
@@ -163,7 +176,15 @@ static void* runCodeOnEpiphany(void * raw_wrapper) {
 }
 #endif
 
-
+/**
+* Runs the full python interactivity monitor (host virtual core id = 0) in a thread
+*/
+static void* runCodeForFullPythonInteractivity(void * raw_wrapper) {
+    struct fullPythonInteractivityThreadWrapper * wrapperForInteract=(struct fullPythonInteractivityThreadWrapper*) raw_wrapper;
+    runFullPythonInteractivityOnHost(wrapperForInteract->configuration, wrapperForInteract->deviceState, wrapperForInteract->emanagementThread,
+                                     wrapperForInteract->configuration->hostProcs > 1);
+    return NULL;
+}
 
 /**
  * Runs the code on the host if compiled in standalone mode (helpful for development)
@@ -177,7 +198,7 @@ static void runCodeOnHost(struct interpreterconfiguration* configuration, struct
 	unsigned int memoryFilledSize=getMemoryFilledSize();
 	unsigned short entriesInSymbolTable=getNumberEntriesInSymbolTable();
 	if (configuration->hostProcs > 0) initThreadedAspectsForInterpreter(configuration->hostProcs, configuration->coreProcs, basicState);
-	for (i=0;i<configuration->hostProcs;i++) {
+	for (i=(configuration->fullPythonHost ? 1 : 0);i<configuration->hostProcs;i++) {
 		threadWrappers[i].assembledCode=assembledCode;
 		threadWrappers[i].memoryFilledSize=memoryFilledSize;
 		threadWrappers[i].entriesInSymbolTable=entriesInSymbolTable;

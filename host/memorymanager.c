@@ -34,6 +34,9 @@
 struct memorycontainer* assembledMemory=NULL;
 // This is the function list
 struct functionListNode* functionListHead=NULL;
+// Exportable view of the functions and their location in the byte code
+struct exportableFunctionTableNode* exportableFunctionTable=NULL;
+int numberExportableFunctionsInTable=0;
 
 struct function_call_tree_node mainCodeCallTree;
 
@@ -81,6 +84,13 @@ void compileMemory(struct memorycontainer* memory) {
 			} else if (root->type==3 || root->type==4) {
 				unsigned short lineLocation=findLocationOfFunctionName(compiledMem->lineDefns, root->name, root->linenumber, root->type==4);
 				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
+				struct exportableFunctionTableNode* newExportableNode=(struct exportableFunctionTableNode*) malloc(sizeof(struct exportableFunctionTableNode));
+				newExportableNode->functionLocation=lineLocation;
+				newExportableNode->functionName=(char*) malloc(strlen(root->name)+1);
+				strcpy(newExportableNode->functionName, root->name);
+				newExportableNode->next=exportableFunctionTable;
+				exportableFunctionTable=newExportableNode;
+				numberExportableFunctionsInTable++;
 			}
 			root=root->next;
 		}
