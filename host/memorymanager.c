@@ -45,6 +45,7 @@ static void processUsedFunction(struct functionDefinition*);
 static unsigned short findLocationOfLineNumber(struct lineDefinition*, int);
 static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*, int, int);
 static struct functionDefinition* findFunctionDefinition(char*);
+static int doesFunctionAlreadyExistInExportableTable(char*);
 
 int getNumberOfSymbolEntriesNotUsed(void) {
     int ignoreSymbolEntries=0;
@@ -81,16 +82,20 @@ void compileMemory(struct memorycontainer* memory) {
 			if (root->type==1) {
 				unsigned short lineLocation=findLocationOfLineNumber(compiledMem->lineDefns, root->linenumber);
 				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
-			} else if (root->type==3 || root->type==4) {
+			} else if (root->type==3 || root->type==4 || root->type==2) {
 				unsigned short lineLocation=findLocationOfFunctionName(compiledMem->lineDefns, root->name, root->linenumber, root->type==4);
-				memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
-				struct exportableFunctionTableNode* newExportableNode=(struct exportableFunctionTableNode*) malloc(sizeof(struct exportableFunctionTableNode));
-				newExportableNode->functionLocation=lineLocation;
-				newExportableNode->functionName=(char*) malloc(strlen(root->name)+1);
-				strcpy(newExportableNode->functionName, root->name);
-				newExportableNode->next=exportableFunctionTable;
-				exportableFunctionTable=newExportableNode;
-				numberExportableFunctionsInTable++;
+				if (root->type==3 || root->type==4) {
+					memcpy(&compiledMem->data[root->currentpoint], &lineLocation, sizeof(unsigned short));
+				}
+				if (!doesFunctionAlreadyExistInExportableTable(root->name)) {
+					struct exportableFunctionTableNode* newExportableNode=(struct exportableFunctionTableNode*) malloc(sizeof(struct exportableFunctionTableNode));
+					newExportableNode->functionLocation=lineLocation;
+					newExportableNode->functionName=(char*) malloc(strlen(root->name)+1);
+					strcpy(newExportableNode->functionName, root->name);
+					newExportableNode->next=exportableFunctionTable;
+					exportableFunctionTable=newExportableNode;
+					numberExportableFunctionsInTable++;
+				}
 			}
 			root=root->next;
 		}
@@ -105,6 +110,18 @@ void compileMemory(struct memorycontainer* memory) {
 	} else {
 		assembledMemory=stopStatement;
 	}
+}
+
+/**
+* Determines whether a specific function of a specific name already exists in the exportable global function table
+*/
+static int doesFunctionAlreadyExistInExportableTable(char* functionName) {
+	struct exportableFunctionTableNode* root=exportableFunctionTable;
+	while (root != NULL) {
+		if (strcmp(root->functionName, functionName) == 0) return 1;
+		root=root->next;
+	}
+	return 0;
 }
 
 /**
