@@ -5,7 +5,7 @@
 static const unsigned int TAB_WIDTH = 4;
 
 int line_num = 0, indent_caller;
-char * parsing_filename=NULL;
+char * parsing_filename=NULL, *fn_decorator=NULL;
 int line_indent=0, fake_outdent_symbol=0;
 
 extern struct stack_t indent_stack, filenameStack, lineNumberStack;
@@ -174,6 +174,7 @@ NOT|"!"                                 return NOT;
 "]"										return SRBRACE;
 "("                                     return LPAREN;
 ")"                                     return RPAREN;
+"@"					return AT;
 TRUE									return TRUE;
 FALSE									return FALSE;
 DEF										return DEF;

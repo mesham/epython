@@ -58,6 +58,7 @@
 #define NATIVE_RTL_DEREFRENCE_STR "rtl_dereference"
 
 extern int line_num;
+extern char * fn_decorator;
 
 // Used for tracking gotos and line numberings (which are resolved once the byte code is assembled)
 struct lineDefinition {

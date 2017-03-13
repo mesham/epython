@@ -60,54 +60,55 @@ extern int yydebug;
     COMMA = 270,
     WHILE = 271,
     PASS = 272,
-    FOR = 273,
-    TO = 274,
-    FROM = 275,
-    NEXT = 276,
-    GOTO = 277,
-    PRINT = 278,
-    INPUT = 279,
-    IF = 280,
-    NATIVE = 281,
-    ADD = 282,
-    SUB = 283,
-    COLON = 284,
-    DEF = 285,
-    RET = 286,
-    NONE = 287,
-    FILESTART = 288,
-    IN = 289,
-    ADDADD = 290,
-    SUBSUB = 291,
-    MULMUL = 292,
-    DIVDIV = 293,
-    MODMOD = 294,
-    POWPOW = 295,
-    FLOORDIVFLOORDIV = 296,
-    FLOORDIV = 297,
-    MULT = 298,
-    DIV = 299,
-    MOD = 300,
-    AND = 301,
-    OR = 302,
-    NEQ = 303,
-    LEQ = 304,
-    GEQ = 305,
-    LT = 306,
-    GT = 307,
-    EQ = 308,
-    IS = 309,
-    NOT = 310,
-    STR = 311,
-    ID = 312,
-    LPAREN = 313,
-    RPAREN = 314,
-    SLBRACE = 315,
-    SRBRACE = 316,
-    TRUE = 317,
-    FALSE = 318,
-    ASSGN = 319,
-    POW = 320
+    AT = 273,
+    FOR = 274,
+    TO = 275,
+    FROM = 276,
+    NEXT = 277,
+    GOTO = 278,
+    PRINT = 279,
+    INPUT = 280,
+    IF = 281,
+    NATIVE = 282,
+    ADD = 283,
+    SUB = 284,
+    COLON = 285,
+    DEF = 286,
+    RET = 287,
+    NONE = 288,
+    FILESTART = 289,
+    IN = 290,
+    ADDADD = 291,
+    SUBSUB = 292,
+    MULMUL = 293,
+    DIVDIV = 294,
+    MODMOD = 295,
+    POWPOW = 296,
+    FLOORDIVFLOORDIV = 297,
+    FLOORDIV = 298,
+    MULT = 299,
+    DIV = 300,
+    MOD = 301,
+    AND = 302,
+    OR = 303,
+    NEQ = 304,
+    LEQ = 305,
+    GEQ = 306,
+    LT = 307,
+    GT = 308,
+    EQ = 309,
+    IS = 310,
+    NOT = 311,
+    STR = 312,
+    ID = 313,
+    LPAREN = 314,
+    RPAREN = 315,
+    SLBRACE = 316,
+    SRBRACE = 317,
+    TRUE = 318,
+    FALSE = 319,
+    ASSGN = 320,
+    POW = 321
   };
 #endif
 /* Tokens.  */
@@ -126,61 +127,62 @@ extern int yydebug;
 #define COMMA 270
 #define WHILE 271
 #define PASS 272
-#define FOR 273
-#define TO 274
-#define FROM 275
-#define NEXT 276
-#define GOTO 277
-#define PRINT 278
-#define INPUT 279
-#define IF 280
-#define NATIVE 281
-#define ADD 282
-#define SUB 283
-#define COLON 284
-#define DEF 285
-#define RET 286
-#define NONE 287
-#define FILESTART 288
-#define IN 289
-#define ADDADD 290
-#define SUBSUB 291
-#define MULMUL 292
-#define DIVDIV 293
-#define MODMOD 294
-#define POWPOW 295
-#define FLOORDIVFLOORDIV 296
-#define FLOORDIV 297
-#define MULT 298
-#define DIV 299
-#define MOD 300
-#define AND 301
-#define OR 302
-#define NEQ 303
-#define LEQ 304
-#define GEQ 305
-#define LT 306
-#define GT 307
-#define EQ 308
-#define IS 309
-#define NOT 310
-#define STR 311
-#define ID 312
-#define LPAREN 313
-#define RPAREN 314
-#define SLBRACE 315
-#define SRBRACE 316
-#define TRUE 317
-#define FALSE 318
-#define ASSGN 319
-#define POW 320
+#define AT 273
+#define FOR 274
+#define TO 275
+#define FROM 276
+#define NEXT 277
+#define GOTO 278
+#define PRINT 279
+#define INPUT 280
+#define IF 281
+#define NATIVE 282
+#define ADD 283
+#define SUB 284
+#define COLON 285
+#define DEF 286
+#define RET 287
+#define NONE 288
+#define FILESTART 289
+#define IN 290
+#define ADDADD 291
+#define SUBSUB 292
+#define MULMUL 293
+#define DIVDIV 294
+#define MODMOD 295
+#define POWPOW 296
+#define FLOORDIVFLOORDIV 297
+#define FLOORDIV 298
+#define MULT 299
+#define DIV 300
+#define MOD 301
+#define AND 302
+#define OR 303
+#define NEQ 304
+#define LEQ 305
+#define GEQ 306
+#define LT 307
+#define GT 308
+#define EQ 309
+#define IS 310
+#define NOT 311
+#define STR 312
+#define ID 313
+#define LPAREN 314
+#define RPAREN 315
+#define SLBRACE 316
+#define SRBRACE 317
+#define TRUE 318
+#define FALSE 319
+#define ASSGN 320
+#define POW 321
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 21 "epython.y" /* yacc.c:1909  */
+#line 22 "epython.y" /* yacc.c:1909  */
 
 	int integer;
 	unsigned char uchar;
@@ -189,7 +191,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 193 "parser.h" /* yacc.c:1909  */
+#line 195 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

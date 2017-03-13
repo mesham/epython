@@ -9,6 +9,7 @@
 
 extern int line_num;
 extern char * parsing_filename;
+extern char * fn_decorator;
 void yyerror(char const*);
 int yylex(void);
 
@@ -32,7 +33,7 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token DIM SDIM EXIT ELSE ELIF COMMA WHILE PASS
+%token DIM SDIM EXIT ELSE ELIF COMMA WHILE PASS AT
 %token FOR TO FROM NEXT GOTO PRINT INPUT
 %token IF NATIVE
 
@@ -87,13 +88,14 @@ statement
     	| ident arrayaccessor ASSGN expression { $$=appendArraySetStatement($1, $2, $4); }
     	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendNativeCallFunctionStatement("rtl_print", NULL, $2); }	
-	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }	
+	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }
 	| fn_entry LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($1, $3, $6); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| PASS { $$=appendPassStatement(); }
+	| AT ident {  fn_decorator=(char*) malloc(strlen($2)+1); strcpy(fn_decorator, $2); $$ = NULL; }
 ;
 
 arrayaccessor
@@ -117,6 +119,7 @@ fndeclarationargs
 	
 fn_entry
 	: DEF ident { enterFunction($2); $$=$2; }
+	;
 
 codeblock
 	: NEWLINE indent_rule lines outdent_rule { $$=$3; }

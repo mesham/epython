@@ -516,6 +516,14 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 	fn->numberEntriesInSymbolTable=current_var_id - currentSymbolTableId;
 	fn->recursive=isFnRecursive;
 	fn->number_of_fn_calls=currentCall->number_of_calls;
+	if (fn_decorator != NULL) {
+		if (strcmp(fn_decorator, "exportable")==0) {
+			mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls]=(char*)malloc(strlen(functionName)+1);
+			strcpy(mainCodeCallTree.calledFunctions[mainCodeCallTree.number_of_calls++], functionName);
+		}
+		free(fn_decorator);
+		fn_decorator=NULL;
+	}
 	if (currentCall->number_of_calls == 0) {
 		fn->functionCalls=NULL;
 	} else {
