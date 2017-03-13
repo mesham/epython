@@ -11,6 +11,7 @@ toepython_pipe_name="toepython"
 fromepython_pipe_name="fromepython"
 popen=None
 ePythonFunctionTable=None
+number_of_cores=0
 
 def executeOnEpiphany():
 	global popen
@@ -93,6 +94,16 @@ def send(data, pid, length=None, isFunctionPointer=False):
 		while i<length:
 			underlyingSend(data[i], pid, isFunctionPointer=isFunctionPointer)
 			i+=1
+
+def probe(pid):
+	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	os.write(wp, "12 "+str(pid)+"\n")
+	os.close(wp)
+	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
+	recv_data=os.read(rp, 1024)
+	os.close(rp)
+	items = recv_data.split(" ")
+	return bool(items[2])
 
 def underlyingRecv(pid):
 	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
@@ -221,20 +232,46 @@ def receiveKernelReturnValue(coreId):
 	else:
 		return recv(coreId, length)
 
-def epiphany(test_func=None,async=False):
+def testKernelCompletion(pid):
+	return probe(pid)
+
+def waitForKernelCompletion(pid):
+	return receiveKernelReturnValue(pid)
+
+def doPhysicalEpiphanyLaunch(pid, function_name, *args):
+	send(len(args), pid)
+	send(ePythonFunctionTable[function_name], pid, isFunctionPointer=True)		
+	for arg in args:
+		if isinstance(arg, list):
+			send(len(arg), pid)
+		else:
+			send(0, pid)
+		send(arg, pid)
+	
+def epiphany(test_func=None,async=False,target=None):
 	if not test_func:
-		return functools.partial(epiphany, async=async)
+		return functools.partial(epiphany, async=async,target=target)
 	@functools.wraps(test_func)
-	def f(*args, **kwargs):		
-		send(len(args),1)
-		send(ePythonFunctionTable[test_func.func_name], 1, isFunctionPointer=True)		
-		for arg in args:
-			if isinstance(arg, list):
-				send(len(arg), 1)
+	def f(*args, **kwargs):
+		global number_of_cores
+		if target is None:
+			pidtarget=range(1,number_of_cores)
+		else:
+			if isinstance(target, list):
+				pidtarget=target
 			else:
-				send(0,1)
-			send(arg,1)
-		if not async: return receiveKernelReturnValue(1)
+				pidtarget=[target]
+		for pid in pidtarget:
+			doPhysicalEpiphanyLaunch(pid, test_func.func_name, *args)
+		if not async:
+			if len(pidtarget) == 1:
+				return receiveKernelReturnValue(pidtarget[0])
+			else:
+				returnVals=[]
+				index=0
+				for pid in pidtarget:
+					returnVals[index]=receiveKernelReturnValue(pidtarget[0])
+					index+=1				
 	return f
 
 def shutdownEpython():
@@ -261,7 +298,7 @@ def initialise():
 				firstAddition=False
 				generatedCode+="@exportable\n"
 	if runningCoProcessor:
-		global popen, ePythonFunctionTable
+		global popen, ePythonFunctionTable, number_of_cores
 		atexit.register(shutdownEpython)
 		fo = open("pythonkernels.py", "wb")
 		fo.write(generatedCode);
@@ -270,5 +307,6 @@ def initialise():
 		thread.start_new_thread(executeOnEpiphany,())
 		pingEpython()
 		ePythonFunctionTable=getExportableFunctionTable()
+		number_of_cores=numcores()
 
 initialise()
