@@ -267,6 +267,7 @@ static void displayToUser(struct value_defn value, int threadId) {
 		cpy(&c, &value.data, sizeof(char*));
 		printf("[host %d] %s\n", threadId, c);
 	}
+	fflush(stdout);
 }
 
 /**

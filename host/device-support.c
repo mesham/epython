@@ -549,6 +549,7 @@ static void displayCoreMessage(int coreId, struct core_ctrl * core) {
 		char * message=core->host_shared_data_start+relativeLocation;
 		printf("[device %d] %s\n", coreId, message);
 	}
+	fflush(stdout);
 }
 
 /**
