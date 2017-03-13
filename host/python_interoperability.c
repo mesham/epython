@@ -46,7 +46,7 @@
 #define LISTENER_PIPE_NAME "toepython"
 #define WRITER_PIPE_NAME "fromepython"
 
-enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING};
+enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING, PROBE};
 
 static char * buffered_line;
 static int listener_pipe_handle, writer_pipe_handle;
@@ -63,6 +63,7 @@ static void issueBcast(struct interpreterconfiguration*);
 static void issueSendRecv(struct interpreterconfiguration*);
 static void sendBackFunctionInformation(struct interpreterconfiguration*);
 static void sendPongToPython(struct interpreterconfiguration*);
+static void issueProbeForMessage(struct interpreterconfiguration*);
 
 /**
  * Runs interactivity with full Python on this host CPU, will send over commands to different Epiphany cores
@@ -83,6 +84,7 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 		if (cmd == GETFUNCTIONINFO) sendBackFunctionInformation(configuration);
 		if (cmd == PING) sendPongToPython(configuration);
 		if (cmd == EXIT) return;
+		if (cmd == PROBE) issueProbeForMessage(configuration);
 	}
 }
 
@@ -267,6 +269,17 @@ static void issueSendRecv(struct interpreterconfiguration* configuration) {
 	fsync(writer_pipe_handle);
 }
 
+static void issueProbeForMessage(struct interpreterconfiguration* configuration) {
+	int target=atoi(strtok(NULL, " "));
+	struct value_defn valToReturn=probeForMessage(target, 0, configuration->coreProcs);
+	char dataToWrite[50];
+	int i_v;
+	memcpy(&i_v, valToReturn.data, sizeof(int));
+	sprintf(dataToWrite, "%d %d %d", valToReturn.type, valToReturn.dtype, i_v);
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
+	fsync(writer_pipe_handle);
+}
+
 /**
  * Issues a send from Python
  */
@@ -351,6 +364,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	if (strcmp(commandStr, "9") == 0) return GETFUNCTIONINFO;
 	if (strcmp(commandStr, "10") == 0) return PING;
 	if (strcmp(commandStr, "11") == 0) return EXIT;
+	if (strcmp(commandStr, "12") == 0) return PROBE;
 	return NONE;
 }
 

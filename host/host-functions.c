@@ -72,7 +72,6 @@ static char removehostHeapNode(char*, int);
 static struct hostHeapNodes * findHeapNode(char*, int);
 static char isMemoryAddressFound(char*, int, struct symbol_node*);
 static struct value_defn performMathsOp(int, struct value_defn);
-static struct value_defn probeForMessage(int, int, int);
 static struct value_defn test_or_wait_for_sent_message(int, char, int);
 
 /**
@@ -747,7 +746,7 @@ void raiseError(unsigned char errorCode) {
 }
 
  __attribute__((optimize("O0")))
- static struct value_defn probeForMessage(int target, int threadId, int hostCoresBasePid) {
+ struct value_defn probeForMessage(int target, int threadId, int hostCoresBasePid) {
     struct value_defn toreturn;
     toreturn.type=BOOLEAN_TYPE;
     toreturn.dtype=SCALAR;
