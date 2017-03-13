@@ -46,7 +46,7 @@
 #define LISTENER_PIPE_NAME "toepython"
 #define WRITER_PIPE_NAME "fromepython"
 
-enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO};
+enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING};
 
 static char * buffered_line;
 static int listener_pipe_handle, writer_pipe_handle;
@@ -62,6 +62,7 @@ static void issueReduce(struct interpreterconfiguration*);
 static void issueBcast(struct interpreterconfiguration*);
 static void issueSendRecv(struct interpreterconfiguration*);
 static void sendBackFunctionInformation(struct interpreterconfiguration*);
+static void sendPongToPython(struct interpreterconfiguration*);
 
 /**
  * Runs interactivity with full Python on this host CPU, will send over commands to different Epiphany cores
@@ -80,8 +81,19 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 		if (cmd == BCAST) issueBcast(configuration);
 		if (cmd == SENDRECV) issueSendRecv(configuration);
 		if (cmd == GETFUNCTIONINFO) sendBackFunctionInformation(configuration);
+		if (cmd == PING) sendPongToPython(configuration);
 		if (cmd == EXIT) return;
 	}
+}
+
+/**
+* A ping pong mechanism, pongs back to caller when tested. This is useful for ensuring that the code is loaded and ready
+*/
+static void sendPongToPython(struct interpreterconfiguration* configuration) {
+	char dataToWrite[20];
+	sprintf(dataToWrite, "PONG");
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
+	fsync(writer_pipe_handle);
 }
 
 /**
@@ -268,19 +280,20 @@ static void issueSend(struct interpreterconfiguration* configuration) {
 		valueToSend.type=INT_TYPE;
 		int data=atoi(strtok(NULL, " "));
 		memcpy(&valueToSend.data, &data, sizeof(int));
-		printf("Send integer %d to %d\n", data, target);
 	} else if (type == REAL_TYPE) {
 		valueToSend.type=REAL_TYPE;
 		float data=atof(strtok(NULL, " "));
 		memcpy(&valueToSend.data, &data, sizeof(float));
-		printf("Send real %f to %d\n", data, target);
 	} else if (type == BOOLEAN_TYPE) {
 		valueToSend.type=BOOLEAN_TYPE;
 		int data=atoi(strtok(NULL, " "));
 		memcpy(&valueToSend.data, &data, sizeof(int));
-		printf("Send boolean %d to %d\n", data, target);
+	} else if (type == FN_ADDR_TYPE) {
+		valueToSend.type=FN_ADDR_TYPE;
+		int data=atoi(strtok(NULL, " "));
+		memcpy(&valueToSend.data, &data, sizeof(int));
 	}
-	sendData(valueToSend, target, 0, 0, configuration->coreProcs);
+	sendData(valueToSend, target, 1, 0, configuration->coreProcs);
 }
 
 /**
@@ -336,6 +349,8 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	if (strcmp(commandStr, "7") == 0) return BCAST;
 	if (strcmp(commandStr, "8") == 0) return SENDRECV;
 	if (strcmp(commandStr, "9") == 0) return GETFUNCTIONINFO;
+	if (strcmp(commandStr, "10") == 0) return PING;
+	if (strcmp(commandStr, "11") == 0) return EXIT;
 	return NONE;
 }
 
