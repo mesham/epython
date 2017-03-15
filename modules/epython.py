@@ -12,6 +12,8 @@ fromepython_pipe_name="fromepython"
 popen=None
 ePythonFunctionTable=None
 number_of_cores=0
+activeCores=None
+thisCore=0
 
 def executeOnEpiphany():
 	global popen
@@ -227,16 +229,49 @@ def isdevice():
 
 def receiveKernelReturnValue(coreId):
 	length=recv(coreId)
+	activeCores[coreId]=False
 	if (length==0):
 		return recv(coreId)
 	else:
 		return recv(coreId, length)
 
+class KernelExecutionHandler:
+	def __init__(self, coreids):
+		self.coreids=coreids
+	def getCoreIds(self):
+		return self.coreids
+	def wait(self):
+		returnVals=[]
+		index=0
+		for pid in self.coreids:
+			returnVals.append(receiveKernelReturnValue(pid))
+			index+=1	
+		return returnVals
+	def wait_any(self):
+		for pid in self.coreids:
+			if (probe(pid)):
+				self.coreids.remove(pid)
+				return {pid : receiveKernelReturnValue(pid)}
+	def outstanding(self):
+		return len(self.coreids) > 0
+	def number_outstanding(self):
+		return len(self.coreids)
+	def test(self):
+		for pid in self.coreids:
+			if not probe(pid): return false
+		return true
+
 def testKernelCompletion(pid):
-	return probe(pid)
+	if (isinstance(pid, KernelExecutionHandler)):
+		return pid.test()
+	else:
+		return probe(pid)
 
 def waitForKernelCompletion(pid):
-	return receiveKernelReturnValue(pid)
+	if (isinstance(pid, KernelExecutionHandler)):
+		return pid.wait()
+	else:
+		return receiveKernelReturnValue(pid)
 
 def doPhysicalEpiphanyLaunch(pid, function_name, *args):
 	send(len(args), pid)
@@ -248,35 +283,43 @@ def doPhysicalEpiphanyLaunch(pid, function_name, *args):
 			send(0, pid)
 		send(arg, pid)
 	
-def epiphany(test_func=None,async=False,target=None):
+def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 	if not test_func:
-		return functools.partial(epiphany, async=async,target=target)
+		return functools.partial(epiphany, async=async,target=target, auto=auto, all=all)
 	@functools.wraps(test_func)
 	def f(*args, **kwargs):
-		global number_of_cores
-		if target is None:
-			pidtarget=range(1,number_of_cores)
-		else:
-			if isinstance(target, list):
-				pidtarget=target
+		isAsync=async
+		myTarget=target
+		myAuto=auto
+		myAll=all
+		if kwargs is not None:
+			for key, value in kwargs.iteritems():
+				if key == "async": isAsync=value
+				if key == "target": myTarget=value
+				if key == "auto": myAuto=value
+				if key == "all": myAll=value
+		if myAll:
+			pidtarget=range(0,number_of_cores)
+			pidtarget.remove(thisCore)		
+		if not myTarget is None:			
+			if isinstance(myTarget, list):
+				pidtarget=myTarget
 			else:
-				pidtarget=[target]
+				pidtarget=[myTarget]
 		for pid in pidtarget:
+			activeCores[pid]=True
 			doPhysicalEpiphanyLaunch(pid, test_func.func_name, *args)
-		if not async:
-			if len(pidtarget) == 1:
-				return receiveKernelReturnValue(pidtarget[0])
-			else:
-				returnVals=[]
-				index=0
-				for pid in pidtarget:
-					returnVals[index]=receiveKernelReturnValue(pidtarget[0])
-					index+=1				
+		handler=KernelExecutionHandler(pidtarget)
+		if isAsync:
+			return handler
+		else:
+			return handler.wait()
 	return f
 
 def shutdownEpython():
 	global popen
-	send(-1,1)
+	for pid in range(0,number_of_cores):
+		if not pid == thisCore: send(-1,pid)
 	stopEpython()
 	popen.wait()
 
@@ -298,15 +341,17 @@ def initialise():
 				firstAddition=False
 				generatedCode+="@exportable\n"
 	if runningCoProcessor:
-		global popen, ePythonFunctionTable, number_of_cores
+		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
 		fo = open("pythonkernels.py", "wb")
 		fo.write(generatedCode);
 		fo.close()
-		popen = subprocess.Popen("./epython-host -fullpython -h 1 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
+		popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
 		thread.start_new_thread(executeOnEpiphany,())
 		pingEpython()
 		ePythonFunctionTable=getExportableFunctionTable()
 		number_of_cores=numcores()
+		thisCore=coreid()
+		activeCores=[False]*number_of_cores
 
 initialise()
