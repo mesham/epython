@@ -6,6 +6,8 @@ import thread
 import atexit
 import os.path
 import subprocess
+from threading import Thread, Lock
+import inspect
 
 toepython_pipe_name="toepython"
 fromepython_pipe_name="fromepython"
@@ -14,6 +16,10 @@ ePythonFunctionTable=None
 number_of_cores=0
 activeCores=None
 thisCore=0
+active=True
+globalVars=[]
+outstandingLaunches=[]
+schuedulerMutex = Lock()
 
 def executeOnEpiphany():
 	global popen
@@ -228,36 +234,48 @@ def isdevice():
 		return false
 
 def receiveKernelReturnValue(coreId):
-	length=recv(coreId)
-	activeCores[coreId]=False
+	length=recv(coreId)	
 	if (length==0):
-		return recv(coreId)
+		data=recv(coreId)
 	else:
-		return recv(coreId, length)
+		data=recv(coreId, length)
+	activeCores[coreId]=False
+	return data
 
 class KernelExecutionHandler:
-	def __init__(self, coreids):
-		self.coreids=coreids
-	def getCoreIds(self):
-		return self.coreids
+	def __init__(self, running_coreids, num_scheduled):
+		self.running_coreids=running_coreids
+		self.num_scheduled=num_scheduled
+	def getRunningCoreIds(self):
+		return self.running_coreids
+	def appendRunningCoreIds(self, cids):
+		self.running_coreids.extend(cids)
 	def wait(self):
+		while (self.num_scheduled > 0) : pass
 		returnVals=[]
 		index=0
-		for pid in self.coreids:
+		for pid in self.running_coreids:
 			returnVals.append(receiveKernelReturnValue(pid))
 			index+=1	
 		return returnVals
 	def wait_any(self):
-		for pid in self.coreids:
-			if (probe(pid)):
-				self.coreids.remove(pid)
-				return {pid : receiveKernelReturnValue(pid)}
-	def outstanding(self):
-		return len(self.coreids) > 0
+		while True:
+			while len(self.running_coreids == 0): pass
+			for pid in self.running_coreids:
+				if (probe(pid)):
+					self.running_coreids.remove(pid)
+					return {pid : receiveKernelReturnValue(pid)}		
+	def number_running(self):
+		return len(self.running_coreids)
 	def number_outstanding(self):
-		return len(self.coreids)
+		return len(self.running_coreids) + self.num_scheduled
+	def getNumberScheduled(self):
+		return self.num_scheduled
+	def setNumberScheduled(self, num_scheduled):
+		self.num_scheduled=num_scheduled
 	def test(self):
-		for pid in self.coreids:
+		if self.num_scheduled > 0 : return false
+		for pid in self.running_coreids:
 			if not probe(pid): return false
 		return true
 
@@ -275,83 +293,186 @@ def waitForKernelCompletion(pid):
 
 def doPhysicalEpiphanyLaunch(pid, function_name, *args):
 	send(len(args), pid)
-	send(ePythonFunctionTable[function_name], pid, isFunctionPointer=True)		
+	send(ePythonFunctionTable[function_name], pid, isFunctionPointer=True)
 	for arg in args:
 		if isinstance(arg, list):
 			send(len(arg), pid)
 		else:
 			send(0, pid)
 		send(arg, pid)
+
+def waitAll(*args):
+	results=[]
+	for handler in args:		
+		results.append(handler.wait())
+	return results
+
+class OutstandingLaunch:
+	def __init__(self, num_outstanding, func_name, *args):
+		self.num_outstanding=num_outstanding
+		self.func_name=func_name
+		self.args=args
+	def setHandler(self, handler):
+		self.handler=handler
+	def getHandler(self):
+		return self.handler
+	def getNumOutstanding(self):
+		return self.num_outstanding
+	def setNumOutstanding(self, num_outstanding):
+		self.num_outstanding=num_outstanding
+	def getFunctionName(self):
+		return self.func_name
+	def getArgs(self):
+		return self.args
+
+def copy_from_epiphany(var):
+	callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+	varName=[var_name for var_name, var_val in callers_local_vars if var_val is var][2]
+	try:
+		varId=globalVars.index(varName)
+		return issueKernelLaunches("copyFromGlobal", False, None, None, True, [varId])
+	except ValueError:
+		print "Error, can not find global variable " +str(varName)+" for copying from the Epiphany"
+		quit()
+
+def define_on_epiphany(var):
+	pass
+
+def copy_to_epiphany(var, data):
+	callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+	varName=[var_name for var_name, var_val in callers_local_vars if var_val is var][2]
+	try:
+		varId=globalVars.index(varName)
+		issueKernelLaunches("copyToGlobal", False, None, None, True, [varId, data])
+	except ValueError:
+		print "Error, can not find global variable " +str(varName)+" for copying to Epiphany"
+		quit()
+
+def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
+	outstandingLaunch=None
+	if not myAuto is None:
+		pidtarget=[]
+		schuedulerMutex.acquire()
+		try:
+			for kernelinstance in range(0,myAuto):				
+				idx=activeCores.index(False)
+				activeCores[idx]=True
+				pidtarget.append(idx)
+		except ValueError:
+			outstandingLaunch=OutstandingLaunch(myAuto-kernelinstance, kernelName, *args)
+			outstandingLaunches.append(outstandingLaunch)
+		schuedulerMutex.release()
+	elif myAll:
+		pidtarget=range(0,number_of_cores)
+		pidtarget.remove(thisCore)		
+	elif not myTarget is None:			
+		if isinstance(myTarget, list):
+			pidtarget=myTarget
+		else:
+			pidtarget=[myTarget]
+	for pid in pidtarget:
+		activeCores[pid]=True
+		doPhysicalEpiphanyLaunch(pid, kernelName, *args)
+	handler=KernelExecutionHandler(pidtarget, 0 if outstandingLaunch is None else outstandingLaunch.getNumOutstanding())
+	if not outstandingLaunch is None: outstandingLaunch.setHandler(handler)
+	if isAsync:
+		return handler
+	else:
+		return handler.wait()
 	
 def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 	if not test_func:
 		return functools.partial(epiphany, async=async,target=target, auto=auto, all=all)
 	@functools.wraps(test_func)
 	def f(*args, **kwargs):
+		global outstandingLaunches
 		isAsync=async
 		myTarget=target
 		myAuto=auto
 		myAll=all
-		if kwargs is not None:
-			for key, value in kwargs.iteritems():
-				if key == "async": isAsync=value
-				if key == "target": myTarget=value
-				if key == "auto": myAuto=value
-				if key == "all": myAll=value
-		if myAll:
-			pidtarget=range(0,number_of_cores)
-			pidtarget.remove(thisCore)		
-		if not myTarget is None:			
-			if isinstance(myTarget, list):
-				pidtarget=myTarget
-			else:
-				pidtarget=[myTarget]
-		for pid in pidtarget:
-			activeCores[pid]=True
-			doPhysicalEpiphanyLaunch(pid, test_func.func_name, *args)
-		handler=KernelExecutionHandler(pidtarget)
-		if isAsync:
-			return handler
-		else:
-			return handler.wait()
+		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)		
 	return f
 
+def epiphany_single(test_func):
+	return epiphany(test_func=test_func, async=True, target=None, auto=1, all=False)
+
+def epiphany_multiple(test_func=None, cores=None):
+	if cores is None:
+		print "Error - you must specify the number of Epiphany cores to use with the multiple decorator"
+		quit()
+	return epiphany(test_func=test_func, async=True, target=None, auto=cores, all=False)
+
 def shutdownEpython():
-	global popen
+	global popen, active, outstandingLaunches
+	while len(outstandingLaunches) > 0: pass
+	active=False
 	for pid in range(0,number_of_cores):
 		if not pid == thisCore: send(-1,pid)
 	stopEpython()
 	popen.wait()
 
+def pollEpiphanyScheduler():
+	while active:
+		for outstanding in outstandingLaunches:
+			pidtarget=[]
+			schuedulerMutex.acquire()
+			try:
+				for launchId in range(0,outstanding.getNumOutstanding()):							
+					idx=activeCores.index(False)
+					activeCores[idx]=True
+					pidtarget.append(idx)
+			except ValueError:
+				pass
+			schuedulerMutex.release()
+			if len(pidtarget) > 0:
+				outstanding.setNumOutstanding(outstanding.getNumOutstanding() - len(pidtarget))
+				if outstanding.getNumOutstanding() == 0: outstandingLaunches.remove(outstanding)
+				for pid in pidtarget:
+					doPhysicalEpiphanyLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())				
+				outstanding.getHandler().appendRunningCoreIds(pidtarget)
+				outstanding.getHandler().setNumberScheduled(outstanding.getHandler().getNumberScheduled()-len(pidtarget))
+				break	# This enforces strict ordering of processing kernels in the order that they are scheduled
+			else:
+				break  # This enforces strict ordering of processing kernels in the order that they are scheduled
+
 def initialise():
+	global globalVars
 	insideKernel=False
 	firstAddition=False
-	runningCoProcessor=False
+	runningCoProcessor=False	
 	generatedCode="import coprocessor\n"
+	kernelsCode=""
 	with open(sys.argv[0], 'rU') as f:
 		for line in f:
 			if firstAddition and not line.startswith((' ', '\t')):
 				insideKernel=False
 			if insideKernel:
-				generatedCode+=line
+				kernelsCode+=line
 				firstAddition=True
+			if "copy_to_epiphany(" in line or "define_on_epiphany("  in line:
+				var=line.split('(')[1].replace(',',')').split(')')[0]
+				if not var in globalVars:
+					globalVars.append(var)
+					generatedCode+=var+"=None\n"#registerGlobalVariable("+var+")\n"
 			if "@epiphany" in line:
 				runningCoProcessor=True
 				insideKernel=True
 				firstAddition=False
-				generatedCode+="@exportable\n"
+				kernelsCode+="@exportable\n"
 	if runningCoProcessor:
 		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
 		fo = open("pythonkernels.py", "wb")
-		fo.write(generatedCode);
+		fo.write(generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
 		popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
 		thread.start_new_thread(executeOnEpiphany,())
+		thread.start_new_thread(pollEpiphanyScheduler,())
 		pingEpython()
 		ePythonFunctionTable=getExportableFunctionTable()
 		number_of_cores=numcores()
 		thisCore=coreid()
 		activeCores=[False]*number_of_cores
+		activeCores[thisCore]=True
 
 initialise()
