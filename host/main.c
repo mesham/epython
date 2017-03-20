@@ -128,6 +128,7 @@ int main (int argc, char *argv[]) {
 			wrapperForInteract->emanagementThread=&epiphany_management_thread;
 			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
+		runCodeOnHost(configuration, deviceState);
 #else
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
