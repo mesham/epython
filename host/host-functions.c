@@ -739,7 +739,7 @@ void syncCores(int global, int threadId) {
 void raiseError(unsigned char errorCode) {
     char* errorMessage=translateErrorCodeToMessage(errorCode);
 	if (errorMessage != NULL) {
-        fprintf(stderr, "Error from host virtual core %s\n", errorMessage);
+        fprintf(stderr, "Error from host virtual core: %s\n", errorMessage);
         free(errorMessage);
 	}
 	exit(0);
