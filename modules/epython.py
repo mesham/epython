@@ -465,7 +465,7 @@ def initialise():
 		fo = open("pythonkernels.py", "wb")
 		fo.write(generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
-		popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
+		popen = subprocess.Popen("./epython-host -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
 		thread.start_new_thread(executeOnEpiphany,())
 		thread.start_new_thread(pollEpiphanyScheduler,())
 		pingEpython()

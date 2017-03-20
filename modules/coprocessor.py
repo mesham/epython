@@ -17,4 +17,4 @@ def copyToGlobal(gid, data):
 def copyFromGlobal(gid):
 	return None
 
-initTaskFarm(0)
+initTaskFarm(16)
