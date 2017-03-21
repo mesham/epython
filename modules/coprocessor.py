@@ -1,7 +1,8 @@
 import parallel
 import taskfarm
+import array
 
-globalLookup=[0]*10
+globalLookup=array(10)
 globalLookupPoint=0
 
 def registerGlobalVariable(a):
@@ -11,10 +12,19 @@ def registerGlobalVariable(a):
 @exportable
 def copyToGlobal(gid, data):
 	d=native rtl_dereference(globalLookup[gid])
-	d=data
+	if (len(d) != len(data)):
+		print "Error, data to write must equal the target data size"
+		exit()
+	elif(len(d) == 0):
+		d=data
+	else:
+		i=0
+		while i<len(d):
+			d[i]=data[i]
+			i+=1
 
 @exportable
 def copyFromGlobal(gid):
-	return None
+	return native rtl_dereference(globalLookup[gid])
 
 initTaskFarm(16)

@@ -8,6 +8,7 @@ import os.path
 import subprocess
 from threading import Thread, Lock
 import inspect
+import re
 
 toepython_pipe_name="toepython"
 fromepython_pipe_name="fromepython"
@@ -325,27 +326,23 @@ class OutstandingLaunch:
 	def getArgs(self):
 		return self.args
 
-def copy_from_epiphany(var):
-	callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-	varName=[var_name for var_name, var_val in callers_local_vars if var_val is var][2]
+def copy_from_epiphany(var):	
 	try:
-		varId=globalVars.index(varName)
+		varId=globalVars.index(var)
 		return issueKernelLaunches("copyFromGlobal", False, None, None, True, [varId])
 	except ValueError:
-		print "Error, can not find global variable " +str(varName)+" for copying from the Epiphany"
+		print "Error, can not find global variable " +str(var)+" for copying from the Epiphany"
 		quit()
 
 def define_on_epiphany(var):
 	pass
 
 def copy_to_epiphany(var, data):
-	callers_local_vars = inspect.currentframe().f_back.f_locals.items()
-	varName=[var_name for var_name, var_val in callers_local_vars if var_val is var][2]
 	try:
-		varId=globalVars.index(varName)
+		varId=globalVars.index(var)
 		issueKernelLaunches("copyToGlobal", False, None, None, True, [varId, data])
 	except ValueError:
-		print "Error, can not find global variable " +str(varName)+" for copying to Epiphany"
+		print "Error, can not find global variable " +str(var)+" for copying to Epiphany"
 		quit()
 
 def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
@@ -442,8 +439,12 @@ def initialise():
 	runningCoProcessor=False	
 	generatedCode="import coprocessor\n"
 	kernelsCode=""
+	global_definitions={}
 	with open(sys.argv[0], 'rU') as f:
 		for line in f:
+			if not line.startswith((' ', '\t')):
+				if (re.search(r'\w+=.+',line)):
+					global_definitions[line.split('=')[0]]=line.split('=')[1]
 			if firstAddition and not line.startswith((' ', '\t')):
 				insideKernel=False
 			if insideKernel:
@@ -453,7 +454,7 @@ def initialise():
 				var=line.split('(')[1].replace(',',')').split(')')[0]
 				if not var in globalVars:
 					globalVars.append(var)
-					generatedCode+=var+"=None\n"#registerGlobalVariable("+var+")\n"
+					generatedCode+=var+"="+global_definitions[var]+"\nregisterGlobalVariable("+var+")\n"
 			if "@epiphany" in line:
 				runningCoProcessor=True
 				insideKernel=True
@@ -465,7 +466,8 @@ def initialise():
 		fo = open("pythonkernels.py", "wb")
 		fo.write(generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
-		popen = subprocess.Popen("./epython-host -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
+		#popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
+		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
 		thread.start_new_thread(executeOnEpiphany,())
 		thread.start_new_thread(pollEpiphanyScheduler,())
 		pingEpython()
