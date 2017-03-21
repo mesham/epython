@@ -450,7 +450,7 @@ def initialise():
 			if insideKernel:
 				kernelsCode+=line
 				firstAddition=True
-			if "copy_to_epiphany(" in line or "define_on_epiphany("  in line:
+			if "define_on_epiphany("  in line:
 				var=line.split('(')[1].replace(',',')').split(')')[0]
 				if not var in globalVars:
 					globalVars.append(var)
