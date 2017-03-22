@@ -7,6 +7,9 @@ def pi():
 def e():
     return 2.718281
 
+def exp(x):
+	return pow(e(), x)
+
 def sqrt(a):
     return native rtl_math(0, a)
 
