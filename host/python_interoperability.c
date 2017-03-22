@@ -339,12 +339,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	struct pollfd ufds[1];
 	ufds[0].fd = listener_pipe_handle;
 	ufds[0].events = POLLIN | POLLPRI;
-	int retVal=0;
-	while ((retVal=poll(ufds, 1, 500))< 1) {
-		if (retVal == 0 && emanagementthread != NULL) {
-			if (pthread_kill(*emanagementthread, 0) != 0) return EXIT;
-		}
-	}
+	poll(ufds, 1, -1);
 	for (i = 0; i < 1024; i++) {
 		errorCheck(read(listener_pipe_handle, &buffered_line[i], 1), "Reading python pipe");
 		if (buffered_line[i] == '\n') {
