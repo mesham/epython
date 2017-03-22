@@ -26,7 +26,7 @@ def executeOnEpiphany():
 	global popen
 	for line in iter(popen.stdout.readline, b''):
 		print line,
-	popen.stdout.close()	
+	popen.stdout.close()
 
 def pingEpython():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
@@ -69,7 +69,7 @@ def sendrecv(data, pid):
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
 	recv_data=os.read(rp, 1024)
 	os.close(rp)
-	items = recv_data.split(" ")	
+	items = recv_data.split(" ")
         if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
@@ -121,7 +121,7 @@ def underlyingRecv(pid):
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
 	recv_data=os.read(rp, 1024)
 	os.close(rp)
-	items = recv_data.split(" ")	
+	items = recv_data.split(" ")
         if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
@@ -152,7 +152,7 @@ def reduce(data, operator):
 		command_to_send+="3 "
 	else:
 		print "Operator "+operator+" not found"
-	
+
 	if type(data) is int:
 		command_to_send+="0 "
 	elif type(data) is float:
@@ -160,15 +160,15 @@ def reduce(data, operator):
 	elif type(data) is bool:
 		command_to_send+="3 "
 	command_to_send+="0 "+str(data)+"\n"
-	
+
 	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
-	
+
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
 	recv_data=os.read(rp, 1024)
 	os.close(rp)
-	items = recv_data.split(" ")	
+	items = recv_data.split(" ")
         if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
@@ -178,7 +178,7 @@ def reduce(data, operator):
 
 def bcast(data, root):
 	command_to_send="7 "+str(root)
-	
+
 	if type(data) is int:
 		command_to_send+=" 0 "
 	elif type(data) is float:
@@ -186,15 +186,15 @@ def bcast(data, root):
 	elif type(data) is bool:
 		command_to_send+=" 3 "
 	command_to_send+="0 "+str(data)+"\n"
-	
+
 	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
-	
+
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
 	recv_data=os.read(rp, 1024)
 	os.close(rp)
-	items = recv_data.split(" ")	
+	items = recv_data.split(" ")
         if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
@@ -235,7 +235,7 @@ def isdevice():
 		return false
 
 def receiveKernelReturnValue(coreId):
-	length=recv(coreId)	
+	length=recv(coreId)
 	if (length==0):
 		data=recv(coreId)
 	else:
@@ -257,7 +257,7 @@ class KernelExecutionHandler:
 		index=0
 		for pid in self.running_coreids:
 			returnVals.append(receiveKernelReturnValue(pid))
-			index+=1	
+			index+=1
 		return returnVals
 	def wait_any(self):
 		while True:
@@ -265,7 +265,7 @@ class KernelExecutionHandler:
 			for pid in self.running_coreids:
 				if (probe(pid)):
 					self.running_coreids.remove(pid)
-					return {pid : receiveKernelReturnValue(pid)}		
+					return {pid : receiveKernelReturnValue(pid)}
 	def number_running(self):
 		return len(self.running_coreids)
 	def number_outstanding(self):
@@ -304,7 +304,7 @@ def doPhysicalEpiphanyLaunch(pid, function_name, *args):
 
 def waitAll(*args):
 	results=[]
-	for handler in args:		
+	for handler in args:
 		results.append(handler.wait())
 	return results
 
@@ -326,7 +326,7 @@ class OutstandingLaunch:
 	def getArgs(self):
 		return self.args
 
-def copy_from_epiphany(var):	
+def copy_from_epiphany(var):
 	try:
 		varId=globalVars.index(var)
 		return issueKernelLaunches("copyFromGlobal", False, None, None, True, [varId])
@@ -351,7 +351,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 		pidtarget=[]
 		schuedulerMutex.acquire()
 		try:
-			for kernelinstance in range(0,myAuto):				
+			for kernelinstance in range(0,myAuto):
 				idx=activeCores.index(False)
 				activeCores[idx]=True
 				pidtarget.append(idx)
@@ -361,8 +361,8 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 		schuedulerMutex.release()
 	elif myAll:
 		pidtarget=range(0,number_of_cores)
-		pidtarget.remove(thisCore)		
-	elif not myTarget is None:			
+		pidtarget.remove(thisCore)
+	elif not myTarget is None:
 		if isinstance(myTarget, list):
 			pidtarget=myTarget
 		else:
@@ -376,7 +376,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 		return handler
 	else:
 		return handler.wait()
-	
+
 def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 	if not test_func:
 		return functools.partial(epiphany, async=async,target=target, auto=auto, all=all)
@@ -387,7 +387,7 @@ def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 		myTarget=target
 		myAuto=auto
 		myAll=all
-		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)		
+		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
 def epiphany_single(test_func):
@@ -414,7 +414,7 @@ def pollEpiphanyScheduler():
 			pidtarget=[]
 			schuedulerMutex.acquire()
 			try:
-				for launchId in range(0,outstanding.getNumOutstanding()):							
+				for launchId in range(0,outstanding.getNumOutstanding()):
 					idx=activeCores.index(False)
 					activeCores[idx]=True
 					pidtarget.append(idx)
@@ -425,7 +425,7 @@ def pollEpiphanyScheduler():
 				outstanding.setNumOutstanding(outstanding.getNumOutstanding() - len(pidtarget))
 				if outstanding.getNumOutstanding() == 0: outstandingLaunches.remove(outstanding)
 				for pid in pidtarget:
-					doPhysicalEpiphanyLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())				
+					doPhysicalEpiphanyLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())
 				outstanding.getHandler().appendRunningCoreIds(pidtarget)
 				outstanding.getHandler().setNumberScheduled(outstanding.getHandler().getNumberScheduled()-len(pidtarget))
 				break	# This enforces strict ordering of processing kernels in the order that they are scheduled
@@ -436,8 +436,9 @@ def initialise():
 	global globalVars
 	insideKernel=False
 	firstAddition=False
-	runningCoProcessor=False	
-	generatedCode="import coprocessor\n"
+	runningCoProcessor=False
+	importCode="import coprocessor\n"
+	generatedCode=""
 	kernelsCode=""
 	global_definitions={}
 	with open(sys.argv[0], 'rU') as f:
@@ -448,7 +449,10 @@ def initialise():
 			if firstAddition and not line.startswith((' ', '\t')):
 				insideKernel=False
 			if insideKernel:
-				kernelsCode+=line
+				if (re.search(r'\s*import .*',line) or re.search(r'\s*from .*',line)):
+					importCode+=line.lstrip()
+				else:
+					kernelsCode+=line
 				firstAddition=True
 			if "define_on_epiphany("  in line:
 				var=line.split('(')[1].replace(',',')').split(')')[0]
@@ -464,10 +468,10 @@ def initialise():
 		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
 		fo = open("pythonkernels.py", "wb")
-		fo.write(generatedCode+"worker()\n"+kernelsCode);
+		fo.write(importCode+generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
-		#popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
-		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)	
+		#popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		thread.start_new_thread(executeOnEpiphany,())
 		thread.start_new_thread(pollEpiphanyScheduler,())
 		pingEpython()
