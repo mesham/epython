@@ -94,8 +94,11 @@ def underlyingSend(data, pid, isFunctionPointer=False):
 	os.close(wp)
 
 def send(data, pid, length=None, isFunctionPointer=False):
-	if (isinstance(data, list)):
+	length=None
+	try:
 		length=len(data)
+	except TypeError:
+		pass
 	if length is None:
 		underlyingSend(data, pid, isFunctionPointer=isFunctionPointer)
 	else:
@@ -296,9 +299,9 @@ def doPhysicalEpiphanyLaunch(pid, function_name, *args):
 	send(len(args), pid)
 	send(ePythonFunctionTable[function_name], pid, isFunctionPointer=True)
 	for arg in args:
-		if isinstance(arg, list):
+		try:
 			send(len(arg), pid)
-		else:
+		except TypeError:
 			send(0, pid)
 		send(arg, pid)
 
