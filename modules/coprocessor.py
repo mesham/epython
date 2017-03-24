@@ -6,25 +6,26 @@ globalLookup=array(10)
 globalLookupPoint=0
 
 def registerGlobalVariable(a):
-	globalLookup[globalLookupPoint]=id(a)
+	globalLookup[globalLookupPoint]=symbol(a)
 	globalLookupPoint+=1
 
 @exportable
 def copyToGlobal(gid, data):
-	d=native rtl_dereference(globalLookup[gid])
-	if (len(d) != len(data)):
+	srcdata=None
+	alias(srcdata, globalLookup[gid])
+	if (len(srcdata) != len(data)):
 		print "Error, data to write must equal the target data size"
-		exit()
-	elif(len(d) == 0):
-		d=data
+		quit()
+	elif(len(srcdata) == 0):
+		srcdata=data
 	else:
-		i=0
-		while i<len(d):
-			d[i]=data[i]
-			i+=1
+		srcdata[0]=data[0]
+		arraycopy(srcdata, data)
 
 @exportable
 def copyFromGlobal(gid):
-	return native rtl_dereference(globalLookup[gid])
+	srcdata=None
+	alias(srcdata, globalLookup[gid])
+	return srcdata
 
 initTaskFarm(16)
