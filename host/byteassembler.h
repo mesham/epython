@@ -56,6 +56,8 @@
 #define NATIVE_RTL_SEND_NB_STR "rtl_send_nonblocking"
 #define NATIVE_RTL_GLOBAL_REFRENCE_STR "rtl_global_reference"
 #define NATIVE_RTL_DEREFRENCE_STR "rtl_dereference"
+#define NATIVE_RTL_FLATTEN_STR "rtl_flatten"
+#define NATIVE_RTL_ARRAY_COPY_STR "rtl_arraycopy"
 
 extern int line_num;
 extern char * fn_decorator;

@@ -176,6 +176,10 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_GLOBAL_REFERENCE, position);
     } else if (strcmp(functionName, NATIVE_RTL_DEREFRENCE_STR)==0) {
     	position=appendStatement(memoryContainer, NATIVE_FN_RTL_DEREFERENCE, position);
+		} else if (strcmp(functionName, NATIVE_RTL_FLATTEN_STR)==0) {
+    	position=appendStatement(memoryContainer, NATIVE_FN_RTL_FLATTEN, position);
+		} else if (strcmp(functionName, NATIVE_RTL_ARRAY_COPY_STR)==0) {
+    	position=appendStatement(memoryContainer, NATIVE_FN_RTL_ARRAYCOPY, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

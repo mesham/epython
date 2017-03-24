@@ -30,6 +30,17 @@ def shared_mem_array(a,b=none,c=none,d=none,e=none,f=none,g=none):
     else:
         return native rtl_allocatesharedarray(a,b,c,d,e,f,g)
 
+def flatten(arr):
+    native rtl_flatten(arr, size(arr))
+    return arr
+
+def arraycopy(target, source):
+    if (len(target) != len(source)):
+        print "Error, array copy overall sizes must match"
+        exit()
+    else:
+        native rtl_arraycopy(target, source, ndim(target), ndim(source), len(target))
+
 def size(arr):
     dims=ndim(arr)
     if dims > 0:
