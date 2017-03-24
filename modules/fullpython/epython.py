@@ -247,11 +247,11 @@ def receiveKernelReturnValue(coreId):
 	return data
 
 class KernelExecutionHandler:
-	def __init__(self, running_coreids, num_scheduled):
-		self.running_coreids=running_coreids
-		self.num_scheduled=num_scheduled
-	def append(handler_to_append):
-		appendRunningCoreIds(self, handler_to_appendgetRunningCoreIds())
+	def __init__(self, running_coreids=None, num_scheduled=None):
+		self.running_coreids=[] if running_coreids is None else running_coreids
+		self.num_scheduled=0 if num_scheduled is None else num_scheduled
+	def append(self, handler_to_append):
+		self.appendRunningCoreIds(handler_to_append.getRunningCoreIds())
 		self.num_scheduled+=handler_to_append.getNumberScheduled()
 	def getRunningCoreIds(self):
 		return self.running_coreids
@@ -335,7 +335,7 @@ class OutstandingLaunch:
 def copy_from_epiphany(var, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
-		issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
+		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
 		print "Error, can not find global variable " +str(var)+" for copying from the Epiphany"
 		quit()
@@ -346,7 +346,7 @@ def define_on_epiphany(var):
 def copy_to_epiphany(var, data, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
-		issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
+		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
 		print "Error, can not find global variable " +str(var)+" for copying to Epiphany"
 		quit()
@@ -393,6 +393,15 @@ def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 		myTarget=target
 		myAuto=auto
 		myAll=all
+		for arg in kwargs:
+			if (arg == "target"):
+				myTarget=kwargs[arg]
+			elif (arg == "async"):
+				isAsync=kwargs[arg]
+			elif (arg == "auto"):
+				myAuto=kwargs[arg]
+			elif (arg == "all"):
+				myAll=kwargs[arg]
 		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
