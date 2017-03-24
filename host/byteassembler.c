@@ -115,6 +115,33 @@ struct memorycontainer* appendReferenceStatement(char* identifier) {
 	return memoryContainer;
 };
 
+struct memorycontainer* appendSymbolStatement(char* identifier) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char) + sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, SYMBOL_TOKEN, position);
+	appendVariable(memoryContainer, getVariableId(identifier, 0), position);
+	return memoryContainer;
+};
+
+struct memorycontainer* appendAliasStatement(char* tgtidentifier, struct memorycontainer* srcExpression) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=sizeof(unsigned char) + sizeof(unsigned short);
+	memoryContainer->data=(char*) malloc(memoryContainer->length);
+	memoryContainer->lineDefns=NULL;
+
+	unsigned int position=0;
+
+	position=appendStatement(memoryContainer, ALIAS_TOKEN, position);
+	position=appendVariable(memoryContainer, getVariableId(tgtidentifier, 0), position);
+	memoryContainer=concatenateMemory(memoryContainer, srcExpression);
+	return memoryContainer;
+};
+
 struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, struct stack_t* args, struct memorycontainer* singleArg) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=(sizeof(unsigned char)*2) + sizeof(unsigned short);

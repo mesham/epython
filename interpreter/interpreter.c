@@ -74,6 +74,7 @@ static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
+static unsigned int handleAlias(char *, unsigned int, unsigned int, int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int, int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int, int);
 static int getSymbolTableEntryId(int);
@@ -90,6 +91,7 @@ static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
+static unsigned int handleAlias(char *, unsigned int, unsigned int);
 static int getArrayAccessorIndex(struct symbol_node*, char*, unsigned int*, unsigned int);
 static struct symbol_node* getVariableSymbol(unsigned short, unsigned char, int);
 static int getSymbolTableEntryId(void);
@@ -172,6 +174,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 			fnLevel[threadId]--;
 		}
 		if (command == NATIVE_TOKEN) i=handleNative(assembled, i, length, NULL, threadId);
+		if (command == ALIAS_TOKEN) i=handleAlias(assembled, i, length, threadId);
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length, threadId);
@@ -208,6 +211,7 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 			fnLevel--;
 		}
 		if (command == NATIVE_TOKEN) i=handleNative(assembled, i, length, NULL);
+		if (command == ALIAS_TOKEN) i=handleAlias(assembled, i, length);
 		if (command == RETURN_TOKEN) return empty;
 		if (command == RETURN_EXP_TOKEN) {
 			return getExpressionValue(assembled, &i, length);
@@ -399,6 +403,26 @@ static unsigned int handleArraySet(char * assembled, unsigned int currentPoint, 
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
 #endif
 	setVariableValue(variableSymbol, value, targetIndex);
+	return currentPoint;
+}
+
+#ifdef HOST_INTERPRETER
+static unsigned int handleAlias(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
+#else
+static unsigned int handleAlias(char * assembled, unsigned int currentPoint, unsigned int length) {
+#endif
+	unsigned short tgtVarId=getUShort(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned short);
+#ifdef HOST_INTERPRETER
+	struct symbol_node* tgtVariableSymbol=getVariableSymbol(tgtVarId, fnLevel[threadId], threadId, 1);
+	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
+#else
+	struct symbol_node* tgtVariableSymbol=getVariableSymbol(tgtVarId, fnLevel, 1);
+	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
+#endif
+	int symbolVal=getInt(value.data);
+	tgtVariableSymbol->state=ALIAS;
+	tgtVariableSymbol->alias=(unsigned char) symbolVal;
 	return currentPoint;
 }
 
@@ -677,6 +701,13 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #else
         *currentPoint=handleNative(assembled, *currentPoint, length, &value);
 #endif
+	} else if (expressionId == SYMBOL_TOKEN) {
+		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
+		int data=(int) variable_id;
+		*currentPoint+=sizeof(unsigned short);
+		value.dtype=SCALAR;
+		value.type=INT_TYPE;
+		cpy(value.data, &data, sizeof(int));
 	} else if (expressionId == REFERENCE_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);

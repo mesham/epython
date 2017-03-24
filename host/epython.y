@@ -38,7 +38,7 @@ void yyerror (char const *msg) {
 %token IF NATIVE
 
 %token ADD SUB COLON DEF RET NONE FILESTART IN ADDADD SUBSUB MULMUL DIVDIV MODMOD POWPOW FLOORDIVFLOORDIV FLOORDIV
-%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT STR ID
+%token MULT DIV MOD AND OR NEQ LEQ GEQ LT GT EQ IS NOT STR ID SYMBOL ALIAS
 %token LPAREN RPAREN SLBRACE SRBRACE TRUE FALSE
 
 %left ADD SUB ADDADD SUBSUB
@@ -97,6 +97,7 @@ statement
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| PASS { $$=appendPassStatement(); }
 	| AT ident {  fn_decorator=(char*) malloc(strlen($2)+1); strcpy(fn_decorator, $2); $$ = NULL; }
+	| ALIAS LPAREN ident COMMA expression RPAREN { $$=appendAliasStatement($3, $5); }
 ;
 
 arrayaccessor
@@ -212,6 +213,7 @@ value
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| ID LPAREN ident RPAREN { $$=appendReferenceStatement($3); }
+	| SYMBOL LPAREN ident RPAREN { $$=appendSymbolStatement($3); }
 ;
 
 ident

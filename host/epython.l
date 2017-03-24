@@ -199,6 +199,8 @@ INPUT                                   return INPUT;
 NATIVE									return NATIVE;
 STR										return STR;
 ID							return ID;
+SYMBOL					return SYMBOL;
+ALIAS					return ALIAS;
 "#"										BEGIN(SINGLELINECOMMENT);
 
 [:.;]                                  return yytext[0];

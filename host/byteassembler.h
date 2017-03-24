@@ -99,6 +99,8 @@ void appendArgument(char*);
 struct memorycontainer* appendCallFunctionStatement(char*, struct stack_t*);
 struct memorycontainer* appendNativeCallFunctionStatement(char*, struct stack_t*, struct memorycontainer*);
 struct memorycontainer* appendReferenceStatement(char*);
+struct memorycontainer* appendSymbolStatement(char*);
+struct memorycontainer* appendAliasStatement(char*,struct memorycontainer*);
 struct memorycontainer* appendGotoStatement(int);
 struct memorycontainer* appendWhileStatement(struct memorycontainer*, struct memorycontainer*);
 struct memorycontainer* appendForStatement(char *, struct memorycontainer*, struct memorycontainer*);
