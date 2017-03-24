@@ -33,7 +33,7 @@ void yyerror (char const *msg) {
 %token <string>  STRING IDENTIFIER
 
 %token NEWLINE INDENT OUTDENT
-%token DIM SDIM EXIT ELSE ELIF COMMA WHILE PASS AT
+%token DIM SDIM EXIT QUIT ELSE ELIF COMMA WHILE PASS AT
 %token FOR TO FROM NEXT GOTO PRINT INPUT
 %token IF NATIVE
 
@@ -89,6 +89,7 @@ statement
     	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendNativeCallFunctionStatement("rtl_print", NULL, $2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }
+	| QUIT LPAREN RPAREN{ $$=appendStopStatement(); }
 	| fn_entry LPAREN fndeclarationargs RPAREN COLON codeblock { appendNewFunctionStatement($1, $3, $6); leaveScope(); $$ = NULL; }
 	| RET { $$ = appendReturnStatement(); }	
 	| RET expression { $$ = appendReturnStatementWithExpression($2); }

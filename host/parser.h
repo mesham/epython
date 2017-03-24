@@ -55,60 +55,61 @@ extern int yydebug;
     DIM = 265,
     SDIM = 266,
     EXIT = 267,
-    ELSE = 268,
-    ELIF = 269,
-    COMMA = 270,
-    WHILE = 271,
-    PASS = 272,
-    AT = 273,
-    FOR = 274,
-    TO = 275,
-    FROM = 276,
-    NEXT = 277,
-    GOTO = 278,
-    PRINT = 279,
-    INPUT = 280,
-    IF = 281,
-    NATIVE = 282,
-    ADD = 283,
-    SUB = 284,
-    COLON = 285,
-    DEF = 286,
-    RET = 287,
-    NONE = 288,
-    FILESTART = 289,
-    IN = 290,
-    ADDADD = 291,
-    SUBSUB = 292,
-    MULMUL = 293,
-    DIVDIV = 294,
-    MODMOD = 295,
-    POWPOW = 296,
-    FLOORDIVFLOORDIV = 297,
-    FLOORDIV = 298,
-    MULT = 299,
-    DIV = 300,
-    MOD = 301,
-    AND = 302,
-    OR = 303,
-    NEQ = 304,
-    LEQ = 305,
-    GEQ = 306,
-    LT = 307,
-    GT = 308,
-    EQ = 309,
-    IS = 310,
-    NOT = 311,
-    STR = 312,
-    ID = 313,
-    LPAREN = 314,
-    RPAREN = 315,
-    SLBRACE = 316,
-    SRBRACE = 317,
-    TRUE = 318,
-    FALSE = 319,
-    ASSGN = 320,
-    POW = 321
+    QUIT = 268,
+    ELSE = 269,
+    ELIF = 270,
+    COMMA = 271,
+    WHILE = 272,
+    PASS = 273,
+    AT = 274,
+    FOR = 275,
+    TO = 276,
+    FROM = 277,
+    NEXT = 278,
+    GOTO = 279,
+    PRINT = 280,
+    INPUT = 281,
+    IF = 282,
+    NATIVE = 283,
+    ADD = 284,
+    SUB = 285,
+    COLON = 286,
+    DEF = 287,
+    RET = 288,
+    NONE = 289,
+    FILESTART = 290,
+    IN = 291,
+    ADDADD = 292,
+    SUBSUB = 293,
+    MULMUL = 294,
+    DIVDIV = 295,
+    MODMOD = 296,
+    POWPOW = 297,
+    FLOORDIVFLOORDIV = 298,
+    FLOORDIV = 299,
+    MULT = 300,
+    DIV = 301,
+    MOD = 302,
+    AND = 303,
+    OR = 304,
+    NEQ = 305,
+    LEQ = 306,
+    GEQ = 307,
+    LT = 308,
+    GT = 309,
+    EQ = 310,
+    IS = 311,
+    NOT = 312,
+    STR = 313,
+    ID = 314,
+    LPAREN = 315,
+    RPAREN = 316,
+    SLBRACE = 317,
+    SRBRACE = 318,
+    TRUE = 319,
+    FALSE = 320,
+    ASSGN = 321,
+    POW = 322
   };
 #endif
 /* Tokens.  */
@@ -122,60 +123,61 @@ extern int yydebug;
 #define DIM 265
 #define SDIM 266
 #define EXIT 267
-#define ELSE 268
-#define ELIF 269
-#define COMMA 270
-#define WHILE 271
-#define PASS 272
-#define AT 273
-#define FOR 274
-#define TO 275
-#define FROM 276
-#define NEXT 277
-#define GOTO 278
-#define PRINT 279
-#define INPUT 280
-#define IF 281
-#define NATIVE 282
-#define ADD 283
-#define SUB 284
-#define COLON 285
-#define DEF 286
-#define RET 287
-#define NONE 288
-#define FILESTART 289
-#define IN 290
-#define ADDADD 291
-#define SUBSUB 292
-#define MULMUL 293
-#define DIVDIV 294
-#define MODMOD 295
-#define POWPOW 296
-#define FLOORDIVFLOORDIV 297
-#define FLOORDIV 298
-#define MULT 299
-#define DIV 300
-#define MOD 301
-#define AND 302
-#define OR 303
-#define NEQ 304
-#define LEQ 305
-#define GEQ 306
-#define LT 307
-#define GT 308
-#define EQ 309
-#define IS 310
-#define NOT 311
-#define STR 312
-#define ID 313
-#define LPAREN 314
-#define RPAREN 315
-#define SLBRACE 316
-#define SRBRACE 317
-#define TRUE 318
-#define FALSE 319
-#define ASSGN 320
-#define POW 321
+#define QUIT 268
+#define ELSE 269
+#define ELIF 270
+#define COMMA 271
+#define WHILE 272
+#define PASS 273
+#define AT 274
+#define FOR 275
+#define TO 276
+#define FROM 277
+#define NEXT 278
+#define GOTO 279
+#define PRINT 280
+#define INPUT 281
+#define IF 282
+#define NATIVE 283
+#define ADD 284
+#define SUB 285
+#define COLON 286
+#define DEF 287
+#define RET 288
+#define NONE 289
+#define FILESTART 290
+#define IN 291
+#define ADDADD 292
+#define SUBSUB 293
+#define MULMUL 294
+#define DIVDIV 295
+#define MODMOD 296
+#define POWPOW 297
+#define FLOORDIVFLOORDIV 298
+#define FLOORDIV 299
+#define MULT 300
+#define DIV 301
+#define MOD 302
+#define AND 303
+#define OR 304
+#define NEQ 305
+#define LEQ 306
+#define GEQ 307
+#define LT 308
+#define GT 309
+#define EQ 310
+#define IS 311
+#define NOT 312
+#define STR 313
+#define ID 314
+#define LPAREN 315
+#define RPAREN 316
+#define SLBRACE 317
+#define SRBRACE 318
+#define TRUE 319
+#define FALSE 320
+#define ASSGN 321
+#define POW 322
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -191,7 +193,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 195 "parser.h" /* yacc.c:1909  */
+#line 197 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

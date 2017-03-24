@@ -187,6 +187,7 @@ IS										return IS;
 WHILE									return WHILE;
 PASS									return PASS;
 EXIT                                    return EXIT;
+QUIT					return QUIT;
 FOR                                     return FOR;
 TO                                      return TO;
 FROM									return FROM;
