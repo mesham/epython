@@ -703,11 +703,15 @@ static struct value_defn getExpressionValue(char * assembled, unsigned int * cur
 #endif
 	} else if (expressionId == SYMBOL_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
-		int data=(int) variable_id;
 		*currentPoint+=sizeof(unsigned short);
+#ifdef HOST_INTERPRETER
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel[threadId], threadId, 1);
+#else
+		struct symbol_node* variableSymbol=getVariableSymbol(variable_id, fnLevel, 1);
+#endif
 		value.dtype=SCALAR;
 		value.type=INT_TYPE;
-		cpy(value.data, &data, sizeof(int));
+		cpy(value.data, &variableSymbol->id, sizeof(int));
 	} else if (expressionId == REFERENCE_TOKEN) {
 		unsigned short variable_id=getUShort(&assembled[*currentPoint]);
 		*currentPoint+=sizeof(unsigned short);
