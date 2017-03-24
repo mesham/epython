@@ -42,7 +42,7 @@ def stopEpython():
 	os.close(wp)
 
 def getExportableFunctionTable():
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "9\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -63,7 +63,7 @@ def sendrecv(data, pid):
 	elif type(data) is bool:
 		command_to_send+="3 "
 	command_to_send+="0 "+str(data)+"\n"
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -89,7 +89,7 @@ def underlyingSend(data, pid, isFunctionPointer=False):
 		elif type(data) is bool:
 			command_to_send+="3 "
 	command_to_send+="0 "+str(data)+"\n"
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
 
@@ -108,7 +108,7 @@ def send(data, pid, length=None, isFunctionPointer=False):
 			i+=1
 
 def probe(pid):
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "12 "+str(pid)+"\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -118,7 +118,7 @@ def probe(pid):
 	return bool(items[2])
 
 def underlyingRecv(pid):
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "2 "+str(pid)+"\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -164,7 +164,7 @@ def reduce(data, operator):
 		command_to_send+="3 "
 	command_to_send+="0 "+str(data)+"\n"
 
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
 
@@ -190,7 +190,7 @@ def bcast(data, root):
 		command_to_send+=" 3 "
 	command_to_send+="0 "+str(data)+"\n"
 
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
 
@@ -206,7 +206,7 @@ def bcast(data, root):
 		return bool(items[2])
 
 def numcores():
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "3\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -215,7 +215,7 @@ def numcores():
 	return int(recv_data)
 
 def coreid():
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "4\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
@@ -224,7 +224,7 @@ def coreid():
 	return int(recv_data)
 
 def sync():
-	wp=os.open(toepython_pipe_name, os.O_NONBLOCK | os.O_WRONLY)
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, "5\n")
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
