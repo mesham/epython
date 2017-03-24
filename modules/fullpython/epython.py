@@ -250,6 +250,9 @@ class KernelExecutionHandler:
 	def __init__(self, running_coreids, num_scheduled):
 		self.running_coreids=running_coreids
 		self.num_scheduled=num_scheduled
+	def append(handler_to_append):
+		appendRunningCoreIds(self, handler_to_appendgetRunningCoreIds())
+		self.num_scheduled+=handler_to_append.getNumberScheduled()
 	def getRunningCoreIds(self):
 		return self.running_coreids
 	def appendRunningCoreIds(self, cids):
@@ -329,10 +332,10 @@ class OutstandingLaunch:
 	def getArgs(self):
 		return self.args
 
-def copy_from_epiphany(var):
+def copy_from_epiphany(var, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
-		return issueKernelLaunches("copyFromGlobal", False, None, None, True, [varId])
+		issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
 		print "Error, can not find global variable " +str(var)+" for copying from the Epiphany"
 		quit()
@@ -340,10 +343,10 @@ def copy_from_epiphany(var):
 def define_on_epiphany(var):
 	pass
 
-def copy_to_epiphany(var, data):
+def copy_to_epiphany(var, data, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
-		issueKernelLaunches("copyToGlobal", False, None, None, True, [varId, data])
+		issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
 		print "Error, can not find global variable " +str(var)+" for copying to Epiphany"
 		quit()
@@ -473,7 +476,7 @@ def initialise():
 		fo = open("pythonkernels.py", "wb")
 		fo.write(importCode+generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
-		#popen = subprocess.Popen("./epython-host -fullpython -h 2 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		#popen = subprocess.Popen("./epython-host -fullpython -h 1 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		thread.start_new_thread(executeOnEpiphany,())
 		thread.start_new_thread(pollEpiphanyScheduler,())
