@@ -829,7 +829,7 @@ static int getArrayAccessorIndex(struct symbol_node* variableSymbol, char * asse
     for (i=0;i<num_dims;i++) {
         num_weights=array_dims-(i+1);
         runningWeight=1;
-        for (j=num_weights;j<0;j--) {
+        for (j=num_weights;j>0;j--) {
             cpy(&spec_weight, &arraymemory[sizeof(int) * (array_dims-j)], sizeof(int));
             runningWeight*=spec_weight;
         }
