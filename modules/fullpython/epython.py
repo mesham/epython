@@ -60,23 +60,24 @@ def getExportableFunctionTable():
 
 def getTypeFromData(data):
 	if type(data) is int:
-			return 0
-		elif type(data) is float:
-			return 1
-		elif type(data) is bool:
-			return 3
-		else:
-			if useNumpy:
-				if type(data) is np.int:
-					return 0
-				elif type(data) is np.float64 or type(data) is np.float32:
-					return 1
-				elif type(data) is np.bool:
-					return 3
-	print "Error, can not map data to type "+type(data)
+		return 0
+	elif type(data) is float:
+		return 1
+	elif type(data) is bool:
+		return 3
+	else:
+		if useNumpy:
+			if type(data) is np.int:
+				return 0
+			elif type(data) is np.float64 or type(data) is np.float32:
+				return 1
+			elif type(data) is np.bool:
+				return 3
+	print "Error, can not map data to type "+str(type(data))
+	quit()
 
 def sendrecv(data, pid):
-	command_to_send="8 "+str(pid)+" "+str(getTypeFromData)+" "
+	command_to_send="8 "+str(pid)+" "+str(getTypeFromData(data))+" "
 	command_to_send+="0 "+str(data)+"\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
@@ -97,7 +98,7 @@ def underlyingSend(data, pid, isFunctionPointer=False):
 	if isFunctionPointer:
 		command_to_send+="5 "
 	else:
-		command_to_send+=str(getTypeFromData)+" "
+		command_to_send+=str(getTypeFromData(data))+" "
 
 	command_to_send+="0 "+str(data)+"\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
@@ -167,7 +168,7 @@ def reduce(data, operator):
 	else:
 		print "Operator "+operator+" not found"
 
-	command_to_send+=str(getTypeFromData)+" "
+	command_to_send+=str(getTypeFromData(data))+" "
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
@@ -188,7 +189,7 @@ def reduce(data, operator):
 def bcast(data, root):
 	command_to_send="7 "+str(root)
 
-	command_to_send+=str(getTypeFromData)+" "
+	command_to_send+=str(getTypeFromData(data))+" "
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
