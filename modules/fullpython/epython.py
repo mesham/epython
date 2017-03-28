@@ -10,6 +10,10 @@ from threading import Thread, Lock
 import inspect
 import re
 
+useNumpy=False
+
+if useNumpy: import numpy as np
+
 toepython_pipe_name="toepython"
 fromepython_pipe_name="fromepython"
 popen=None
@@ -54,14 +58,25 @@ def getExportableFunctionTable():
 			exportedFunctions[line.split('>')[0]]=int(line.split('>')[1])
 	return exportedFunctions
 
-def sendrecv(data, pid):
-	command_to_send="8 "+str(pid)+" "
+def getTypeFromData(data):
 	if type(data) is int:
-		command_to_send+="0 "
-	elif type(data) is float:
-		command_to_send+="1 "
-	elif type(data) is bool:
-		command_to_send+="3 "
+			return 0
+		elif type(data) is float:
+			return 1
+		elif type(data) is bool:
+			return 3
+		else:
+			if useNumpy:
+				if type(data) is np.int:
+					return 0
+				elif type(data) is np.float64 or type(data) is np.float32:
+					return 1
+				elif type(data) is np.bool:
+					return 3
+	print "Error, can not map data to type "+type(data)
+
+def sendrecv(data, pid):
+	command_to_send="8 "+str(pid)+" "+str(getTypeFromData)+" "
 	command_to_send+="0 "+str(data)+"\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
@@ -82,12 +97,8 @@ def underlyingSend(data, pid, isFunctionPointer=False):
 	if isFunctionPointer:
 		command_to_send+="5 "
 	else:
-		if type(data) is int:
-			command_to_send+="0 "
-		elif type(data) is float:
-			command_to_send+="1 "
-		elif type(data) is bool:
-			command_to_send+="3 "
+		command_to_send+=str(getTypeFromData)+" "
+
 	command_to_send+="0 "+str(data)+"\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
@@ -156,12 +167,7 @@ def reduce(data, operator):
 	else:
 		print "Operator "+operator+" not found"
 
-	if type(data) is int:
-		command_to_send+="0 "
-	elif type(data) is float:
-		command_to_send+="1 "
-	elif type(data) is bool:
-		command_to_send+="3 "
+	command_to_send+=str(getTypeFromData)+" "
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
@@ -182,12 +188,7 @@ def reduce(data, operator):
 def bcast(data, root):
 	command_to_send="7 "+str(root)
 
-	if type(data) is int:
-		command_to_send+=" 0 "
-	elif type(data) is float:
-		command_to_send+=" 1 "
-	elif type(data) is bool:
-		command_to_send+=" 3 "
+	command_to_send+=str(getTypeFromData)+" "
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
