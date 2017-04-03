@@ -9,6 +9,7 @@ import subprocess
 from threading import Thread, Lock
 import inspect
 import re
+from enum import Enum
 
 useNumpy=False
 
@@ -26,7 +27,10 @@ globalVars=[]
 outstandingLaunches=[]
 schuedulerMutex = Lock()
 
-def executeOnEpiphany():
+class Device(Enum):
+	EPIPHANY=1
+
+def executeOnCoProcessor():
 	global popen
 	for line in iter(popen.stdout.readline, b''):
 		print line,
@@ -93,31 +97,36 @@ def sendrecv(data, pid):
 	if items[0]=="3":
 		return bool(items[2])
 
-def underlyingSend(data, pid, isFunctionPointer=False):
+def underlyingSend(data, pid, length, isFunctionPointer=False):
 	command_to_send="1 "+str(pid)+" "
 	if isFunctionPointer:
 		command_to_send+="5 "
 	else:
-		command_to_send+=str(getTypeFromData(data))+" "
+		if (length > 1):
+			command_to_send+=str(getTypeFromData(data[0]))+" "
+		else:
+			command_to_send+=str(getTypeFromData(data))+" "
+	command_to_send+="0 "+str(length)+" "
+	if (length > 1):
+		i=0
+		while i<length:
+			command_to_send+=str(data[i])+" "
+			i+=1
+	else:
+		command_to_send+=str(data)
 
-	command_to_send+="0 "+str(data)+"\n"
+	command_to_send+="\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
 	os.write(wp, command_to_send)
 	os.close(wp)
 
 def send(data, pid, length=None, isFunctionPointer=False):
-	length=None
+	length=1
 	try:
 		length=len(data)
 	except TypeError:
 		pass
-	if length is None:
-		underlyingSend(data, pid, isFunctionPointer=isFunctionPointer)
-	else:
-		i=0
-		while i<length:
-			underlyingSend(data[i], pid, isFunctionPointer=isFunctionPointer)
-			i+=1
+	underlyingSend(data, pid, length, isFunctionPointer=isFunctionPointer)
 
 def probe(pid):
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
@@ -300,7 +309,7 @@ def waitForKernelCompletion(pid):
 	else:
 		return receiveKernelReturnValue(pid)
 
-def doPhysicalEpiphanyLaunch(pid, function_name, *args):
+def doPhysicalCoprocessorLaunch(pid, function_name, *args):
 	send(len(args), pid)
 	send(ePythonFunctionTable[function_name], pid, isFunctionPointer=True)
 	for arg in args:
@@ -334,23 +343,23 @@ class OutstandingLaunch:
 	def getArgs(self):
 		return self.args
 
-def copy_from_epiphany(var, target=None, async=False):
+def copy_from_device(var, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
 		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
-		print "Error, can not find global variable " +str(var)+" for copying from the Epiphany"
+		print "Error, can not find global variable " +str(var)+" for copying from the device"
 		quit()
 
-def define_on_epiphany(var):
+def define_on_device(var):
 	pass
 
-def copy_to_epiphany(var, data, target=None, async=False):
+def copy_to_device(var, data, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
 		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
-		print "Error, can not find global variable " +str(var)+" for copying to Epiphany"
+		print "Error, can not find global variable " +str(var)+" for copying to device"
 		quit()
 
 def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
@@ -377,7 +386,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 			pidtarget=[myTarget]
 	for pid in pidtarget:
 		activeCores[pid]=True
-		doPhysicalEpiphanyLaunch(pid, kernelName, *args)
+		doPhysicalCoprocessorLaunch(pid, kernelName, *args)
 	handler=KernelExecutionHandler(pidtarget, 0 if outstandingLaunch is None else outstandingLaunch.getNumOutstanding())
 	if not outstandingLaunch is None: outstandingLaunch.setHandler(handler)
 	if isAsync:
@@ -385,9 +394,9 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 	else:
 		return handler.wait()
 
-def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
+def offload(test_func=None,async=False,target=None, auto=None, all=True, device=Device.EPIPHANY):
 	if not test_func:
-		return functools.partial(epiphany, async=async,target=target, auto=auto, all=all)
+		return functools.partial(offload, async=async,target=target, auto=auto, all=all)
 	@functools.wraps(test_func)
 	def f(*args, **kwargs):
 		global outstandingLaunches
@@ -407,14 +416,14 @@ def epiphany(test_func=None,async=False,target=None, auto=None, all=True):
 		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
-def epiphany_single(test_func):
-	return epiphany(test_func=test_func, async=True, target=None, auto=1, all=False)
+def offload_single(test_func, device=Device.EPIPHANY):
+	return offload(test_func=test_func, async=True, target=None, auto=1, all=False, device=device)
 
-def epiphany_multiple(test_func=None, cores=None):
+def offload_multiple(test_func=None, cores=None, device=Device.EPIPHANY):
 	if cores is None:
-		print "Error - you must specify the number of Epiphany cores to use with the multiple decorator"
+		print "Error - you must specify the number of device cores to use with the multiple decorator"
 		quit()
-	return epiphany(test_func=test_func, async=True, target=None, auto=cores, all=False)
+	return offload(test_func=test_func, async=True, target=None, auto=cores, all=False, device=device)
 
 def shutdownEpython():
 	global popen, active, outstandingLaunches
@@ -425,7 +434,7 @@ def shutdownEpython():
 	stopEpython()
 	popen.wait()
 
-def pollEpiphanyScheduler():
+def pollScheduler():
 	while active:
 		for outstanding in outstandingLaunches:
 			pidtarget=[]
@@ -442,7 +451,7 @@ def pollEpiphanyScheduler():
 				outstanding.setNumOutstanding(outstanding.getNumOutstanding() - len(pidtarget))
 				if outstanding.getNumOutstanding() == 0: outstandingLaunches.remove(outstanding)
 				for pid in pidtarget:
-					doPhysicalEpiphanyLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())
+					doPhysicalCoprocessorLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())
 				outstanding.getHandler().appendRunningCoreIds(pidtarget)
 				outstanding.getHandler().setNumberScheduled(outstanding.getHandler().getNumberScheduled()-len(pidtarget))
 				break	# This enforces strict ordering of processing kernels in the order that they are scheduled
@@ -471,12 +480,12 @@ def initialise():
 				else:
 					kernelsCode+=line
 				firstAddition=True
-			if "define_on_epiphany("  in line:
+			if "define_on_device("  in line:
 				var=line.split('(')[1].replace(',',')').split(')')[0]
 				if not var in globalVars:
 					globalVars.append(var)
 					generatedCode+=var+"="+global_definitions[var]+"\nregisterGlobalVariable("+var+")\n"
-			if "@epiphany" in line:
+			if "@offload" in line:
 				runningCoProcessor=True
 				insideKernel=True
 				firstAddition=False
@@ -489,8 +498,8 @@ def initialise():
 		fo.close()
 		#popen = subprocess.Popen("./epython-host -fullpython -h 1 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
-		thread.start_new_thread(executeOnEpiphany,())
-		thread.start_new_thread(pollEpiphanyScheduler,())
+		thread.start_new_thread(executeOnCoProcessor,())
+		thread.start_new_thread(pollScheduler,())
 		pingEpython()
 		ePythonFunctionTable=getExportableFunctionTable()
 		number_of_cores=numcores()
