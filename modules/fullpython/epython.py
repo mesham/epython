@@ -9,7 +9,6 @@ import subprocess
 from threading import Thread, Lock
 import inspect
 import re
-from enum import Enum
 
 useNumpy=False
 
@@ -27,8 +26,7 @@ globalVars=[]
 outstandingLaunches=[]
 schuedulerMutex = Lock()
 
-class Device(Enum):
-	EPIPHANY=1
+EPIPHANY=1
 
 def executeOnCoProcessor():
 	global popen
@@ -394,7 +392,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 	else:
 		return handler.wait()
 
-def offload(test_func=None,async=False,target=None, auto=None, all=True, device=Device.EPIPHANY):
+def offload(test_func=None,async=False,target=None, auto=None, all=True, device=EPIPHANY):
 	if not test_func:
 		return functools.partial(offload, async=async,target=target, auto=auto, all=all)
 	@functools.wraps(test_func)
@@ -416,10 +414,10 @@ def offload(test_func=None,async=False,target=None, auto=None, all=True, device=
 		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
-def offload_single(test_func, device=Device.EPIPHANY):
+def offload_single(test_func, device=EPIPHANY):
 	return offload(test_func=test_func, async=True, target=None, auto=1, all=False, device=device)
 
-def offload_multiple(test_func=None, cores=None, device=Device.EPIPHANY):
+def offload_multiple(test_func=None, cores=None, device=EPIPHANY):
 	if cores is None:
 		print "Error - you must specify the number of device cores to use with the multiple decorator"
 		quit()

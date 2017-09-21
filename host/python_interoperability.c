@@ -287,26 +287,31 @@ static void issueSend(struct interpreterconfiguration* configuration) {
 	int target=atoi(strtok(NULL, " "));
 	int type=atoi(strtok(NULL, " "));
 	int dtype=atoi(strtok(NULL, " "));
-	struct value_defn valueToSend;
-	valueToSend.dtype=(char) dtype;
-	if (type == INT_TYPE) {
-		valueToSend.type=INT_TYPE;
-		int data=atoi(strtok(NULL, " "));
-		memcpy(&valueToSend.data, &data, sizeof(int));
-	} else if (type == REAL_TYPE) {
-		valueToSend.type=REAL_TYPE;
-		float data=atof(strtok(NULL, " "));
-		memcpy(&valueToSend.data, &data, sizeof(float));
-	} else if (type == BOOLEAN_TYPE) {
-		valueToSend.type=BOOLEAN_TYPE;
-		int data=atoi(strtok(NULL, " "));
-		memcpy(&valueToSend.data, &data, sizeof(int));
-	} else if (type == FN_ADDR_TYPE) {
-		valueToSend.type=FN_ADDR_TYPE;
-		int data=atoi(strtok(NULL, " "));
-		memcpy(&valueToSend.data, &data, sizeof(int));
+	int num_elements=atoi(strtok(NULL, " "));
+	int i=0;
+  	for (i=0;i<num_elements;i++) {
+		struct value_defn valueToSend;
+		valueToSend.dtype=(char) dtype;
+		if (type == INT_TYPE) {
+			valueToSend.type=INT_TYPE;
+			int data=atoi(strtok(NULL, " "));
+			memcpy(&valueToSend.data, &data, sizeof(int));
+		} else if (type == REAL_TYPE) {
+			valueToSend.type=REAL_TYPE;
+			char * v=strtok(NULL, " ");
+    			float data=atof(v);
+			memcpy(&valueToSend.data, &data, sizeof(float));
+		} else if (type == BOOLEAN_TYPE) {
+			valueToSend.type=BOOLEAN_TYPE;
+			int data=atoi(strtok(NULL, " "));
+			memcpy(&valueToSend.data, &data, sizeof(int));
+		} else if (type == FN_ADDR_TYPE) {
+			valueToSend.type=FN_ADDR_TYPE;
+			int data=atoi(strtok(NULL, " "));
+			memcpy(&valueToSend.data, &data, sizeof(int));
+		}
+		sendData(valueToSend, target, 1, 0, configuration->coreProcs);
 	}
-	sendData(valueToSend, target, 1, 0, configuration->coreProcs);
 }
 
 /**

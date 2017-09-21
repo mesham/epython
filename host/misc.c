@@ -32,7 +32,7 @@
 
 void errorCheck(int value, char * errorMessage) {
     if (value == -1) {
-        fprintf(stderr, "Error: %s\n", errorMessage);
+	fprintf(stderr, "Error: %s with %d\n", errorMessage, value);
         exit(EXIT_FAILURE);
     }
 }
