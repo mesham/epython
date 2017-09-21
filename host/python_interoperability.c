@@ -43,8 +43,9 @@
 #include "misc.h"
 #include "memorymanager.h"
 
-#define LISTENER_PIPE_NAME "toepython"
-#define WRITER_PIPE_NAME "fromepython"
+#define LISTENER_PIPE_NAME "/tmp/toepython"
+#define WRITER_PIPE_NAME "/tmp/fromepython"
+#define MAX_PIPE_COMMAND_LENGTH 1024*1024
 
 enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING, PROBE};
 
@@ -345,7 +346,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	ufds[0].fd = listener_pipe_handle;
 	ufds[0].events = POLLIN | POLLPRI;
 	poll(ufds, 1, -1);
-	for (i = 0; i < 1024; i++) {
+	for (i = 0; i < MAX_PIPE_COMMAND_LENGTH; i++) {
 		errorCheck(read(listener_pipe_handle, &buffered_line[i], 1), "Reading python pipe");
 		if (buffered_line[i] == '\n') {
 			buffered_line[i] = '\0';
@@ -378,5 +379,5 @@ static void initialise_namedPipes(void) {
 	listener_pipe_handle=open(LISTENER_PIPE_NAME, O_RDWR | O_NONBLOCK);
 	writer_pipe_handle=open(WRITER_PIPE_NAME, O_RDWR | O_NONBLOCK);
 
-	buffered_line = (char*)malloc(1024);
+	buffered_line = (char*)malloc(MAX_PIPE_COMMAND_LENGTH);
 }

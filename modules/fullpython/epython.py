@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import stat
 import sys
 import functools
 import thread
@@ -14,8 +15,8 @@ useNumpy=False
 
 if useNumpy: import numpy as np
 
-toepython_pipe_name="toepython"
-fromepython_pipe_name="fromepython"
+toepython_pipe_name="/tmp/toepython"
+fromepython_pipe_name="/tmp/fromepython"
 popen=None
 ePythonFunctionTable=None
 number_of_cores=0
@@ -26,7 +27,8 @@ globalVars=[]
 outstandingLaunches=[]
 schuedulerMutex = Lock()
 
-EPIPHANY=1
+ALL_DEVICES=0
+EPIPHANY_DEVICE=1
 
 def executeOnCoProcessor():
 	global popen
@@ -392,7 +394,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 	else:
 		return handler.wait()
 
-def offload(test_func=None,async=False,target=None, auto=None, all=True, device=EPIPHANY):
+def offload(test_func=None,async=False,target=None, auto=None, all=True, device=ALL_DEVICES):
 	if not test_func:
 		return functools.partial(offload, async=async,target=target, auto=auto, all=all)
 	@functools.wraps(test_func)
@@ -414,10 +416,10 @@ def offload(test_func=None,async=False,target=None, auto=None, all=True, device=
 		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
-def offload_single(test_func, device=EPIPHANY):
+def offload_single(test_func, device=ALL_DEVICES):
 	return offload(test_func=test_func, async=True, target=None, auto=1, all=False, device=device)
 
-def offload_multiple(test_func=None, cores=None, device=EPIPHANY):
+def offload_multiple(test_func=None, cores=None, device=ALL_DEVICES):
 	if cores is None:
 		print "Error - you must specify the number of device cores to use with the multiple decorator"
 		quit()
@@ -431,6 +433,14 @@ def shutdownEpython():
 		if not pid == thisCore: send(-1,pid)
 	stopEpython()
 	popen.wait()
+	try:
+		os.remove(toepython_pipe_name)
+	except OSError:
+		pass
+	try:
+		os.remove(fromepython_pipe_name)
+	except OSError:
+                pass
 
 def pollScheduler():
 	while active:
@@ -494,6 +504,14 @@ def initialise():
 		fo = open("pythonkernels.py", "wb")
 		fo.write(importCode+generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
+		try:
+			os.mkfifo(toepython_pipe_name, 0644)
+		except OSError:
+			pass
+		try:
+                        os.mkfifo(fromepython_pipe_name, 0644)
+                except OSError:
+                        pass
 		#popen = subprocess.Popen("./epython-host -fullpython -h 1 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		thread.start_new_thread(executeOnCoProcessor,())
