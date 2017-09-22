@@ -7,7 +7,7 @@ import thread
 import atexit
 import os.path
 import subprocess
-from threading import Thread, Lock
+from threading import Thread, Lock, Condition
 import inspect
 import re
 
@@ -26,6 +26,7 @@ active=True
 globalVars=[]
 outstandingLaunches=[]
 schuedulerMutex = Lock()
+schedulerCondition = Condition()
 
 ALL_DEVICES=0
 EPIPHANY_DEVICE=1
@@ -255,6 +256,9 @@ def receiveKernelReturnValue(coreId):
 	else:
 		data=recv(coreId, length)
 	activeCores[coreId]=False
+	schedulerCondition.acquire()
+	schedulerCondition.notify()
+	schedulerCondition.release()
 	return data
 
 class KernelExecutionHandler:
@@ -326,22 +330,43 @@ def waitAll(*args):
 	return results
 
 class OutstandingLaunch:
-	def __init__(self, num_outstanding, func_name, *args):
+	def __init__(self, num_outstanding, func_name, args):
 		self.num_outstanding=num_outstanding
 		self.func_name=func_name
 		self.args=args
+		self.handler=None
 	def setHandler(self, handler):
 		self.handler=handler
 	def getHandler(self):
 		return self.handler
-	def getNumOutstanding(self):
-		return self.num_outstanding
-	def setNumOutstanding(self, num_outstanding):
-		self.num_outstanding=num_outstanding
 	def getFunctionName(self):
 		return self.func_name
 	def getArgs(self):
 		return self.args
+
+class AnyCoresOutstandingLaunch(OutstandingLaunch):
+	def __init__(self, num_outstanding, func_name, *args):
+		OutstandingLaunch.__init__(self,num_outstanding,func_name, args)
+		self.num_outstanding=num_outstanding
+	def getNumOutstanding(self):
+		return self.num_outstanding
+	def setNumOutstanding(self, num_outstanding):
+		self.num_outstanding=num_outstanding
+
+class SpecificCoresOutstandingLaunch(OutstandingLaunch):
+	def __init__(self, outstandingpids, func_name, *args):
+		OutstandingLaunch.__init__(self,len(outstandingpids),func_name, args)
+		self.outstandingpids=outstandingpids
+	def getNumOutstanding(self):
+		return len(self.outstandingpids)
+	def getOutstandingCores(self):
+		return self.outstandingpids
+	def setOutstandingCores(self, outstandingpids):
+		self.outstandingpids=outstandingpids
+	def appendCoreId(self, coreid):
+		self.outstandingpids.append(coreid)
+	def removeCoreIds(self, listtoremove):
+		self.outstandingpids = [x for x in self.outstandingpids if x not in listtoremove]
 
 def copy_from_device(var, target=None, async=False):
 	try:
@@ -373,8 +398,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 				activeCores[idx]=True
 				pidtarget.append(idx)
 		except ValueError:
-			outstandingLaunch=OutstandingLaunch(myAuto-kernelinstance, kernelName, *args)
-			outstandingLaunches.append(outstandingLaunch)
+			outstandingLaunch=AnyCoresOutstandingLaunch(myAuto-kernelinstance, kernelName, *args)
 		schuedulerMutex.release()
 	elif myAll:
 		pidtarget=range(0,number_of_cores)
@@ -384,11 +408,25 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 			pidtarget=myTarget
 		else:
 			pidtarget=[myTarget]
+	schuedulerMutex.acquire()
+	busyPids=[]
+	runningCoreIds=[]
 	for pid in pidtarget:
-		activeCores[pid]=True
-		doPhysicalCoprocessorLaunch(pid, kernelName, *args)
-	handler=KernelExecutionHandler(pidtarget, 0 if outstandingLaunch is None else outstandingLaunch.getNumOutstanding())
-	if not outstandingLaunch is None: outstandingLaunch.setHandler(handler)
+		if (activeCores[pid] == False):
+			activeCores[pid]=True
+			doPhysicalCoprocessorLaunch(pid, kernelName, *args)
+			runningCoreIds.append(pid)
+		else:
+			busyPids.append(pid)
+	schuedulerMutex.release()
+	if (len(busyPids) > 0):
+		outstandingLaunch=SpecificCoresOutstandingLaunch(busyPids, kernelName, *args)
+	handler=KernelExecutionHandler(runningCoreIds, 0 if outstandingLaunch is None else outstandingLaunch.getNumOutstanding())
+	if not outstandingLaunch is None:
+		outstandingLaunch.setHandler(handler)
+		schuedulerMutex.acquire()
+		outstandingLaunches.append(outstandingLaunch)
+		schuedulerMutex.release()
 	if isAsync:
 		return handler
 	else:
@@ -429,6 +467,9 @@ def shutdownEpython():
 	global popen, active, outstandingLaunches
 	while len(outstandingLaunches) > 0: pass
 	active=False
+	schedulerCondition.acquire()
+	schedulerCondition.notify()
+	schedulerCondition.release()
 	for pid in range(0,number_of_cores):
 		if not pid == thisCore: send(-1,pid)
 	stopEpython()
@@ -446,17 +487,29 @@ def pollScheduler():
 	while active:
 		for outstanding in outstandingLaunches:
 			pidtarget=[]
-			schuedulerMutex.acquire()
-			try:
-				for launchId in range(0,outstanding.getNumOutstanding()):
-					idx=activeCores.index(False)
-					activeCores[idx]=True
-					pidtarget.append(idx)
-			except ValueError:
-				pass
-			schuedulerMutex.release()
+			if (isinstance(outstanding, AnyCoresOutstandingLaunch)):
+				schuedulerMutex.acquire()
+				try:
+					for launchId in range(0,outstanding.getNumOutstanding()):
+						idx=activeCores.index(False)
+						activeCores[idx]=True
+						pidtarget.append(idx)
+				except ValueError:
+					pass
+				schuedulerMutex.release()
+				if len(pidtarget) > 0:
+					outstanding.setNumOutstanding(outstanding.getNumOutstanding() - len(pidtarget))
+			elif (isinstance(outstanding, SpecificCoresOutstandingLaunch)):
+				schuedulerMutex.acquire()
+				for launchId in outstanding.getOutstandingCores():
+					if (activeCores[launchId] == False):
+						activeCores[launchId]=True
+						pidtarget.append(launchId)
+				schuedulerMutex.release()
+				if len(pidtarget) > 0:
+					outstanding.removeCoreIds(pidtarget)
+
 			if len(pidtarget) > 0:
-				outstanding.setNumOutstanding(outstanding.getNumOutstanding() - len(pidtarget))
 				if outstanding.getNumOutstanding() == 0: outstandingLaunches.remove(outstanding)
 				for pid in pidtarget:
 					doPhysicalCoprocessorLaunch(pid, outstanding.getFunctionName(), *outstanding.getArgs())
@@ -465,6 +518,9 @@ def pollScheduler():
 				break	# This enforces strict ordering of processing kernels in the order that they are scheduled
 			else:
 				break  # This enforces strict ordering of processing kernels in the order that they are scheduled
+		schedulerCondition.acquire()
+		schedulerCondition.wait()
+		schedulerCondition.release()
 
 def initialise():
 	global globalVars
@@ -512,8 +568,7 @@ def initialise():
                         os.mkfifo(fromepython_pipe_name, 0644)
                 except OSError:
                         pass
-		#popen = subprocess.Popen("./epython-host -fullpython -h 1 pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
-		popen = subprocess.Popen("./epython.sh -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		popen = subprocess.Popen("epython -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		thread.start_new_thread(executeOnCoProcessor,())
 		thread.start_new_thread(pollScheduler,())
 		pingEpython()
