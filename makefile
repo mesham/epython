@@ -41,7 +41,7 @@ install:
 	@mkdir -p $(DESTDIR)$(includedir)/epython
 	@cp -R modules $(DESTDIR)$(includedir)/epython/.
 	@echo 'export EPYTHONPATH=$$EPYTHONPATH:$(includedir)/epython/modules:$(shell pwd)' >> ~/.bashrc
-	@echo 'export PYTHONPATH=$$PYTHONPATH:$(includedir)/epython/modules/fullpython:$(shell pwd)' >> ~/.bashrc
+	@echo 'export PYTHONPATH=$$PYTHONPATH:$(includedir)/epython/modules/fullpython' >> ~/.bashrc
 	@echo "ePython installed, start a new bash session by executing bash before running ePython"
 
 uninstall:
