@@ -549,12 +549,12 @@ def initialise():
 				else:
 					kernelsCode+=line
 				firstAddition=True
-			if "define_on_device("  in line:
+			if "define_on_device(" in line or "epython.define_on_device(" in line:
 				var=line.split('(')[1].replace(',',')').split(')')[0]
 				if not var in globalVars:
 					globalVars.append(var)
 					generatedCode+=var+"="+global_definitions[var]+"\nregisterGlobalVariable("+var+")\n"
-			if "@offload" in line:
+			if "@offload" in line or "@epython.offload" in line:
 				runningCoProcessor=True
 				insideKernel=True
 				firstAddition=False
