@@ -70,7 +70,6 @@ struct value_defn processAssembledCode(char*, unsigned int, unsigned int, int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int, int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, char, int);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char, int);
-static unsigned int handleArraySet(char*, unsigned int, unsigned int, int);
 static unsigned int handleIf(char*, unsigned int, unsigned int, int);
 static unsigned int handleFor(char*, unsigned int, unsigned int, int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*, int);
@@ -87,7 +86,6 @@ struct value_defn processAssembledCode(char*, unsigned int, unsigned int);
 static unsigned int handleGoto(char*, unsigned int, unsigned int);
 static unsigned int handleFnCall(char*, unsigned int, unsigned int*, unsigned int, char);
 static unsigned int handleLet(char*, unsigned int, unsigned int, char);
-static unsigned int handleArraySet(char*, unsigned int, unsigned int);
 static unsigned int handleIf(char*, unsigned int, unsigned int);
 static unsigned int handleFor(char*, unsigned int, unsigned int);
 static unsigned int handleNative(char *, unsigned int, unsigned int, struct value_defn*);
@@ -160,7 +158,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0, threadId);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1, threadId);
-		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length, threadId);
 		if (command == STOP_TOKEN) return empty;
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
@@ -197,7 +194,6 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1);
-		if (command == ARRAYSET_TOKEN) i=handleArraySet(assembled, i, length);
 		if (command == STOP_TOKEN) return empty;
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
@@ -383,29 +379,6 @@ static unsigned int handleIf(char * assembled, unsigned int currentPoint, unsign
 	return currentPoint+sizeof(unsigned short)+blockLen;
 }
 
-/**
- * Set an individual element of an array
- */
-#ifdef HOST_INTERPRETER
-static unsigned int handleArraySet(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
-#else
-static unsigned int handleArraySet(char * assembled, unsigned int currentPoint, unsigned int length) {
-#endif
-	unsigned short varId=getUShort(&assembled[currentPoint]);
-	currentPoint+=sizeof(unsigned short);
-#ifdef HOST_INTERPRETER
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
-	int targetIndex=getArrayAccessorIndex(variableSymbol, assembled, &currentPoint, length, threadId);
-	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
-#else
-	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
-	int targetIndex=getArrayAccessorIndex(variableSymbol, assembled, &currentPoint, length);
-	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
-#endif
-	setVariableValue(variableSymbol, value, targetIndex);
-	return currentPoint;
-}
-
 #ifdef HOST_INTERPRETER
 static unsigned int handleAlias(char * assembled, unsigned int currentPoint, unsigned int length, int threadId) {
 #else
@@ -434,19 +407,30 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 #else
 static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsigned int length, char restrictNoAlias) {
 #endif
+	unsigned char identifierType=getUChar(&assembled[currentPoint]);
+	currentPoint+=sizeof(unsigned char);
 	unsigned short varId=getUShort(&assembled[currentPoint]);
 	currentPoint+=sizeof(unsigned short);
 #ifdef HOST_INTERPRETER
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel[threadId], threadId, 1);
+	int targetIndex=-1;
+	if (identifierType==ARRAYACCESS_TOKEN) {
+		targetIndex=getArrayAccessorIndex(variableSymbol, assembled, &currentPoint, length, threadId);
+	}
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length, threadId);
 	if (restrictNoAlias && getVariableSymbol(varId, fnLevel[threadId], threadId, 0)->state==ALIAS) return currentPoint;
 #else
 	struct symbol_node* variableSymbol=getVariableSymbol(varId, fnLevel, 1);
+	int targetIndex=-1;
+	if (identifierType==ARRAYACCESS_TOKEN) {
+		targetIndex=getArrayAccessorIndex(variableSymbol, assembled, &currentPoint, length);
+	}
 	struct value_defn value=getExpressionValue(assembled, &currentPoint, length);
 	if (restrictNoAlias && getVariableSymbol(varId, fnLevel, 0)->state==ALIAS) return currentPoint;
 #endif
 	variableSymbol->value.type=value.type;
-	variableSymbol->value.dtype=value.dtype;
+	// Set the dtype if this is not an array (otherwise it can overwrite an array type with scalar, and array access will always be predefined so should be fine
+	if (identifierType!=ARRAYACCESS_TOKEN) variableSymbol->value.dtype=value.dtype;
 	if (value.dtype == ARRAY || value.dtype > 1) {
 		cpy(variableSymbol->value.data, value.data, sizeof(char*));
 	} else if (value.type == STRING_TYPE) {
@@ -459,7 +443,7 @@ static unsigned int handleLet(char * assembled, unsigned int currentPoint, unsig
 			cpy(variableSymbol->value.data, &ptr, sizeof(char*));
 			cpy(ptr, value.data, sizeof(char*));
 		} else {
-			setVariableValue(variableSymbol, value, -1);
+			setVariableValue(variableSymbol, value, targetIndex);
 		}
 	}
 	if (variableSymbol->value.dtype > 1) variableSymbol->value.dtype-=2;

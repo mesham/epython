@@ -73,7 +73,7 @@ static int areStringsEqualIgnoreCase(char*, char*);
 static unsigned short getVariableId(char*, int);
 static struct memorycontainer* createUnaryExpression(unsigned char token, struct memorycontainer*);
 static struct memorycontainer* createExpression(unsigned char, struct memorycontainer*, struct memorycontainer*);
-static struct memorycontainer* appendLetIfNoAliasStatement(char *, struct memorycontainer*);
+static struct memorycontainer* appendLetIfNoAliasStatement(struct memorycontainer*, struct memorycontainer*);
 
 /**
  * Function entry, used for tracking recursive functions and the call tree
@@ -247,9 +247,9 @@ struct memorycontainer* appendCallFunctionStatement(char* functionName, struct s
 			isArgIdentifier[i]=0;
 			sprintf(varname,"%s#%d", functionName, i);
 			if (assignmentContainer == NULL) {
-				assignmentContainer=appendLetStatement(varname, getExpressionAt(args, i));
+				assignmentContainer=appendLetStatement(createIdentifierExpression(varname, 1), getExpressionAt(args, i));
 			} else {
-				assignmentContainer=concatenateMemory(assignmentContainer, appendLetStatement(varname, getExpressionAt(args, i)));
+				assignmentContainer=concatenateMemory(assignmentContainer, appendLetStatement(createIdentifierExpression(varname, 1), getExpressionAt(args, i)));
 			}
 		} else {
 			isArgIdentifier[i]=1;
@@ -334,9 +334,9 @@ struct memorycontainer* appendGotoStatement(int lineNumber) {
  * termination check at each iteration along with jumping to next iteration if applicable
  */
 struct memorycontainer* appendForStatement(char * identifier, struct memorycontainer* exp, struct memorycontainer* block) {
-	struct memorycontainer* initialLet=appendLetStatement("epy_i_ctr", createIntegerExpression(0));
-	struct memorycontainer* variantLet=appendLetStatement(identifier, createIntegerExpression(0));
-	struct memorycontainer* incrementLet=appendLetStatement("epy_i_ctr", createAddExpression(createIdentifierExpression("epy_i_ctr"), createIntegerExpression(1)));
+	struct memorycontainer* initialLet=appendLetStatement(createIdentifierExpression("epy_i_ctr", 1), createIntegerExpression(0));
+	struct memorycontainer* variantLet=appendLetStatement(createIdentifierExpression(identifier, 1), createIntegerExpression(0));
+	struct memorycontainer* incrementLet=appendLetStatement(createIdentifierExpression("epy_i_ctr", 1), createAddExpression(createIdentifierExpression("epy_i_ctr", 1), createIntegerExpression(1)));
 
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
 	memoryContainer->length=sizeof(unsigned char)*2+sizeof(unsigned short) * 4 + exp->length + (block != NULL ? block->length : 0) +
@@ -520,9 +520,9 @@ void appendNewFunctionStatement(char* functionName, struct stack_t * args, struc
 		} else {
 			struct identifier_exp * idexp=getExpressionIdentifierAt(args, i);
 			if (assignmentContainer == NULL) {
-				assignmentContainer=appendLetIfNoAliasStatement(idexp->identifier, idexp->exp);
+				assignmentContainer=appendLetIfNoAliasStatement(createIdentifierExpression(idexp->identifier,0), idexp->exp);
 			} else {
-				assignmentContainer=concatenateMemory(assignmentContainer, appendLetIfNoAliasStatement(idexp->identifier, idexp->exp));
+				assignmentContainer=concatenateMemory(assignmentContainer, appendLetIfNoAliasStatement(createIdentifierExpression(idexp->identifier,0), idexp->exp));
 			}
 			((unsigned short *) numberArgsContainer->data)[i+1]=getVariableId(idexp->identifier, 1);
 		}
@@ -593,7 +593,7 @@ struct memorycontainer* appendArraySetStatement( char* identifier, struct stack_
 	return memoryContainer;
 }
 
-struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct memorycontainer* expressionContainer, unsigned char operator) {
+struct memorycontainer* appendLetWithOperatorStatement(struct memorycontainer* identifier, struct memorycontainer* expressionContainer, unsigned char operator) {
 	unsigned char token=0;
 	if (operator == 0) {
 		token=ADD_TOKEN;
@@ -610,7 +610,8 @@ struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct
 	} else {
 		fprintf(stderr, "Can not find operator with id of %c\n", operator);
 	}
-	struct memorycontainer* rhs=createExpression(token, createIdentifierExpression(identifier), expressionContainer);
+	struct memorycontainer* identifier_clone=cloneMemory(identifier);
+	struct memorycontainer* rhs=createExpression(token, identifier, expressionContainer);
 	if (operator == 6) {
 		// Floor
 		struct memorycontainer* mathCommand=createIntegerExpression(FLOOR_MATHS_OP);
@@ -619,36 +620,38 @@ struct memorycontainer* appendLetWithOperatorStatement(char * identifier, struct
 		pushExpression(argStack, rhs);
 		rhs=appendNativeCallFunctionStatement(NATIVE_RTL_MATH_STR, argStack, NULL);
 	}
-	return appendLetStatement(identifier, rhs);
+	return appendLetStatement(identifier_clone, rhs);
 }
 
 /**
  * Appends and returns a let statement which sets and declares scalars
  */
-struct memorycontainer* appendLetStatement(char * identifier, struct memorycontainer* expressionContainer) {
+struct memorycontainer* appendLetStatement(struct memorycontainer* identifier, struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + expressionContainer->length;
+	memoryContainer->length=identifier->length+sizeof(unsigned char) + expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	unsigned int position=0;
 
 	position=appendStatement(memoryContainer, LET_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
-	appendMemory(memoryContainer, expressionContainer, position);
+	//position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	position=appendMemory(memoryContainer, identifier, position);
+	position=appendMemory(memoryContainer, expressionContainer, position);
 	return memoryContainer;
 }
 
-static struct memorycontainer* appendLetIfNoAliasStatement(char * identifier, struct memorycontainer* expressionContainer) {
+static struct memorycontainer* appendLetIfNoAliasStatement(struct memorycontainer* identifier, struct memorycontainer* expressionContainer) {
 	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-	memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short) + expressionContainer->length;
+	memoryContainer->length=identifier->length+sizeof(unsigned char)+ expressionContainer->length;
 	memoryContainer->data=(char*) malloc(memoryContainer->length);
 	memoryContainer->lineDefns=NULL;
 
 	unsigned int position=0;
 
 	position=appendStatement(memoryContainer, LETNOALIAS_TOKEN, position);
-	position=appendVariable(memoryContainer, getVariableId(identifier, 1), position);
+	//position=appendVariable(memoryContainer, createIdentifierExpression(getVariableId(identifier, 1),0), position);
+	position=appendMemory(memoryContainer, identifier, position);
 	appendMemory(memoryContainer, expressionContainer, position);
 	return memoryContainer;
 }
@@ -799,17 +802,18 @@ struct memorycontainer* createRealExpression(float number) {
 }
 
 /**
- * Creates an expression wrapping an identifier
+ * Creates an expression wrapping an identifier. We have to use the forceVariableIdentifier as this can be used from a number of context, basically if this is LHS
+ * of an assignment then force it to be an identifier, otherwise don't (as it might be a function variable.)
  */
-struct memorycontainer* createIdentifierExpression(char * identifier) {
+struct memorycontainer* createIdentifierExpression(char * identifier, char forceVariableIdentifier) {
     struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
-    if (doesVariableExist(identifier)) {
+    if (forceVariableIdentifier || doesVariableExist(identifier)) {
         memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
         memoryContainer->data=(char*) malloc(memoryContainer->length);
         memoryContainer->lineDefns=NULL;
 
         int location=appendStatement(memoryContainer, IDENTIFIER_TOKEN, 0);
-        appendVariable(memoryContainer, getVariableId(identifier, 0), location);
+        appendVariable(memoryContainer, getVariableId(identifier, forceVariableIdentifier ? 1 : 0), location);
     } else {
         memoryContainer->length=sizeof(unsigned char)+sizeof(unsigned short);
         memoryContainer->data=(char*) malloc(memoryContainer->length);

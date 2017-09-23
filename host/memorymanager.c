@@ -239,6 +239,15 @@ struct memorycontainer* concatenateMemory(struct memorycontainer* m1, struct mem
 	return memoryContainer;
 }
 
+struct memorycontainer* cloneMemory(struct memorycontainer* m1) {
+	struct memorycontainer* memoryContainer = (struct memorycontainer*) malloc(sizeof(struct memorycontainer));
+	memoryContainer->length=m1->length;
+	memoryContainer->data=malloc(memoryContainer->length);
+	memoryContainer->lineDefns=m1->lineDefns;
+	if (m1->data != NULL && m1->length > 0) memcpy(memoryContainer->data, m1->data, m1->length);
+	return memoryContainer;
+}
+
 /**
  * Appends a statement to some memory and returns the new current location (for next entry)
  */

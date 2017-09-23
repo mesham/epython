@@ -51,7 +51,7 @@ void yyerror (char const *msg) {
 %type <string> ident declareident fn_entry
 %type <integer> unary_operator 
 %type <uchar> opassgn
-%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock
+%type <data> constant expression logical_or_expression logical_and_expression equality_expression relational_expression additive_expression multiplicative_expression value statement statements line lines codeblock elifblock identscalararray identscalararraylhs
 %type <stack> fndeclarationargs fncallargs commaseparray arrayaccessor
 
 %start program 
@@ -84,9 +84,8 @@ statement
 	| IF expression COLON codeblock elifblock { $$=appendIfElseStatement($2, $4, $5); }		
 	| IF expression COLON statements { $$=appendIfStatement($2, $4); }
 	| ELIF expression COLON codeblock { $$=appendIfStatement($2, $4); }		
-    	| ident ASSGN expression { $$=appendLetStatement($1, $3); }
-    	| ident arrayaccessor ASSGN expression { $$=appendArraySetStatement($1, $2, $4); }
-    	| ident opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
+    	| identscalararraylhs ASSGN expression { $$=appendLetStatement($1, $3); }
+    	| identscalararray opassgn expression { $$=appendLetWithOperatorStatement($1, $3, $2); }
 	| PRINT expression { $$=appendNativeCallFunctionStatement("rtl_print", NULL, $2); }	
 	| EXIT LPAREN RPAREN{ $$=appendStopStatement(); }
 	| QUIT LPAREN RPAREN{ $$=appendStopStatement(); }
@@ -208,13 +207,21 @@ commaseparray
 value
 	: constant { $$=$1; }
 	| LPAREN expression RPAREN { $$=$2; }
-	| ident { $$=createIdentifierExpression($1); }
-	| ident arrayaccessor { $$=createIdentifierArrayAccessExpression($1, $2); }
+	| identscalararray { $$=$1; }
 	| ident LPAREN fncallargs RPAREN { $$=appendCallFunctionStatement($1, $3); }
 	| NATIVE ident LPAREN fncallargs RPAREN { $$=appendNativeCallFunctionStatement($2, $4, NULL); }
 	| ID LPAREN ident RPAREN { $$=appendReferenceStatement($3); }
 	| SYMBOL LPAREN ident RPAREN { $$=appendSymbolStatement($3); }
 ;
+
+identscalararray
+	: ident { $$=createIdentifierExpression($1, 0); }
+	| ident arrayaccessor { $$=createIdentifierArrayAccessExpression($1, $2); }
+;
+
+identscalararraylhs
+	: ident { $$=createIdentifierExpression($1, 1); }
+	| ident arrayaccessor { $$=createIdentifierArrayAccessExpression($1, $2); }
 
 ident
 	: IDENTIFIER { $$ = malloc(strlen($1)+1); strcpy($$, $1); }	
