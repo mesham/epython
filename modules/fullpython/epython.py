@@ -17,6 +17,7 @@ if useNumpy: import numpy as np
 
 toepython_pipe_name="/tmp/toepython"
 fromepython_pipe_name="/tmp/fromepython"
+epythonfile_name="/tmp/pythonkernels.py"
 popen=None
 ePythonFunctionTable=None
 number_of_cores=0
@@ -481,7 +482,11 @@ def shutdownEpython():
 	try:
 		os.remove(fromepython_pipe_name)
 	except OSError:
-                pass
+		pass
+	try:
+		os.remove(epythonfile_name)
+	except OSError:
+		pass
 
 def pollScheduler():
 	while active:
@@ -557,7 +562,7 @@ def initialise():
 	if runningCoProcessor:
 		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
-		fo = open("pythonkernels.py", "wb")
+		fo = open(epythonfile_name, "wb")
 		fo.write(importCode+generatedCode+"worker()\n"+kernelsCode);
 		fo.close()
 		try:
@@ -568,7 +573,7 @@ def initialise():
                         os.mkfifo(fromepython_pipe_name, 0644)
                 except OSError:
                         pass
-		popen = subprocess.Popen("epython -fullpython pythonkernels.py", shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		popen = subprocess.Popen("epython -fullpython "+epythonfile_name, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		thread.start_new_thread(executeOnCoProcessor,())
 		thread.start_new_thread(pollScheduler,())
 		pingEpython()
