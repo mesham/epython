@@ -64,17 +64,17 @@ static struct value_defn test_or_wait_for_sent_message(int, char);
 
 void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable) {
+  unsigned char expectedArgs=(fnIdentifier & 0b11100000) >> 5;
+  fnIdentifier=fnIdentifier & 0b00011111;
+  if (expectedArgs < 7 && numArgs != (int) expectedArgs) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 	if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
-		if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		value->type=BOOLEAN_TYPE;
 		value->dtype=SCALAR;
 		int v=fnIdentifier==NATIVE_FN_RTL_ISHOST ? 0 : 1;
 		cpy(value->data, &v, sizeof(int));
 	} else if (fnIdentifier==NATIVE_FN_RTL_PRINT) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		displayToUser(parameters[0], currentSymbolEntries, symbolTable);
 	} else if (fnIdentifier==NATIVE_FN_RTL_NUMDIMS) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		int intNDims=0;
 		if (parameters[0].dtype == ARRAY) {
 			char * ptr;
@@ -88,7 +88,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		value->dtype=SCALAR;
 		cpy(value->data, &intNDims, sizeof(int));
 	} else if (fnIdentifier==NATIVE_FN_RTL_DSIZE) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		int dimSize=0;
 		if (parameters[0].dtype == ARRAY) {
 			int lookupIndex=getInt(parameters[1].data);
@@ -105,48 +104,35 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		value->dtype=SCALAR;
 		cpy(value->data, &dimSize, sizeof(int));
 	} else if (fnIdentifier==NATIVE_FN_RTL_INPUT) {
-		if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=getInputFromUser();
 	} else if (fnIdentifier==NATIVE_FN_RTL_INPUTPRINT) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=getInputFromUserWithString(parameters[0], currentSymbolEntries, symbolTable);
 	} else if (fnIdentifier==NATIVE_FN_RTL_SYNC) {
-		if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		syncCores(1);
 	} else if (fnIdentifier==NATIVE_FN_RTL_GC) {
-		if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		garbageCollect(currentSymbolEntries, symbolTable);
 	} else if (fnIdentifier==NATIVE_FN_RTL_FREE) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		char * ptr;
 		cpy(&ptr, parameters[0].data, sizeof(char*));
 		freeMemoryInHeap(ptr);
 	} else if (fnIdentifier==NATIVE_FN_RTL_SEND || fnIdentifier==NATIVE_FN_RTL_SEND_NB) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		sendData(parameters[0], getInt(parameters[1].data), fnIdentifier==NATIVE_FN_RTL_SEND ? 1 : 0);
 	} else if (fnIdentifier==NATIVE_FN_RTL_RECV) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=recvData(getInt(parameters[0].data));
 	} else if (fnIdentifier==NATIVE_FN_RTL_SENDRECV) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=sendRecvData(parameters[0], getInt(parameters[1].data));
 	} else if (fnIdentifier==NATIVE_FN_RTL_TEST_FOR_SEND || fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=test_or_wait_for_sent_message(getInt(parameters[0].data), fnIdentifier==NATIVE_FN_RTL_WAIT_FOR_SEND ? 1 : 0);
 	} else if (fnIdentifier==NATIVE_FN_RTL_BCAST) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=bcastData(parameters[0], getInt(parameters[1].data), numActiveCores);
 	} else if (fnIdentifier==NATIVE_FN_RTL_PROBE_FOR_MESSAGE) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=probeForMessage(getInt(parameters[0].data));
 	} else if (fnIdentifier==NATIVE_FN_RTL_NUMCORES || fnIdentifier==NATIVE_FN_RTL_COREID) {
-		if (numArgs != 0) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		if (fnIdentifier==NATIVE_FN_RTL_NUMCORES) cpy(value->data, &numActiveCores, sizeof(int));
 		if (fnIdentifier==NATIVE_FN_RTL_COREID) cpy(value->data, &localCoreId, sizeof(int));
 	} else if (fnIdentifier==NATIVE_FN_RTL_REDUCE) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		*value=reduceData(parameters[0], getInt(parameters[1].data), numActiveCores);
 	} else if (fnIdentifier==NATIVE_FN_RTL_ALLOCARRAY || fnIdentifier==NATIVE_FN_RTL_ALLOCSHAREDARRAY) {
 		int totalDataSize=1, i;
@@ -167,7 +153,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 			address+=sizeof(int);
 		}
 	} else if (fnIdentifier==NATIVE_FN_RTL_FLATTEN) {
-		if (numArgs != 2) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		int intNDims=0, i;
 		char * ptr;
 		if (parameters[0].dtype == ARRAY) {
@@ -187,7 +172,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 			cpy(&ptr[sizeof(unsigned char)], &newSize, sizeof(int));
 		}
 	} else if (fnIdentifier==NATIVE_FN_RTL_ARRAYCOPY) {
-		if (numArgs != 5) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		char * tgtptr, *srcptr;
 		int tgtDims, srcDims, len;
 		cpy(&tgtptr, parameters[0].data, sizeof(char*));
@@ -214,7 +198,6 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		char * remoteMemory=(char*) e_get_global_address(row, col, ptr);
 		cpy(value->data, &remoteMemory, sizeof(char*));
 	} else if (fnIdentifier==NATIVE_FN_RTL_DEREFERENCE) {
-		if (numArgs != 1) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		value->type=parameters[0].type & 0x1F;
 		value->dtype=(parameters[0].type >> 5 & 0x3) + 2;
 		cpy(value->data, parameters[0].data, sizeof(char*));
