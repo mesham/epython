@@ -1,8 +1,8 @@
-#Installing and getting to grips with ePython
+# Installing and getting to grips with ePython
 
 Programming the Epiphany chip is actually very simple, and in this walk through we will be using an Epiphany version the Python programming language (ePython) as our technology. Using ePython you can go from being a complete novice to writing and running your own code on the Epiphany co-processor in 60 seconds. This walk through is intended as an introductory guide, and we will initially discuss installation & configuration of ePython, before looking at some code examples which you can then modify to further explore the concepts.
 
-###Installing ePython
+### Installing ePython
 ePython, our version of Python, is open source and available at GitHub. You only need to complete these install commands once, once ePython is installed it can be used as many times as you like. Log into your Parallella board as usual and issue the command
 
 ```
@@ -25,7 +25,7 @@ bash
 
 Congratulations! You have installed ePython and are ready to start programming! 
 
-###Let's get coding!
+### Let's get coding!
 
 Open a text editor and enter the following code, then save this file as hello.py
 
@@ -42,7 +42,7 @@ print "Hello world from core "+coreid()+" out of "+numcores()+" cores"
 
 Line one will import the parallel functions (of which *coreid* and *numcores* are members.) Line two then displays a similar message from each core as the first example, but also includes the ID of each core and total number of cores in the output. We don't have to use all Epiphany cores, one can set the number of cores via the *-d* command line argument, for instance *epython -d 5 hello.py* will only run over five Epiphany cores (you should not select a number greater than the number of physical cores.)
 
-###You're doing great, let's look at something a bit more advanced
+### You're doing great, let's look at something a bit more advanced
 
 We have been printing out information about the cores, but we can also use this in other ways too. The first code example in this section will display an even or odd message depending upon the core's id.
 
@@ -67,6 +67,6 @@ print "Number is "+a
 
 This is an example of a collective communication, where each process collectively works together to produce some final value. Collective communications form a major corner stone of parallel programming and broadcasting values between processes (or Epiphany cores in this case) is a fundamental aspect of many parallel codes running on modern supercomputers. This topic is covered in more depth in the second tutorial.
 
-###Summary
+### Summary
 
 In this walk through we have installed Epiphany Python and then run a few simple, introductory examples to illustrate running codes on the Epiphany co-processor. We have just scratched the surface here and as you can probably imagine, there is far more to explore. ePython comes with complete documentation (doc folder) along with a number of code examples which you can play with.
