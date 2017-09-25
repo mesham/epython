@@ -40,3 +40,91 @@ print handler.wait()
 ```
 
 In the code example above we have added the argument *async=True* to the *offload* decorator, which tells ePython to launch this function in an asynchronous, non-blocking, manner. Instead of returning the values directly from the function call (at line 8) a handler is returned which can be used to track function execution. At line 9 we are telling Python to wait upon handler completion, which will return the actual returned values from each kernel on the Epiphanies. It is also possible to use the *wait_any* call to wait for any return value (and potentially use this whilst other cores complete) as well as the *test* call which will return whether at least one kernel has completed and made its return value is available.
+
+What if you launch multiple kernels without waiting for previous ones to complete? That's absolutely fine as ePython contains a scheduler which will queue up kernel launches until the Epiphany cores are free to execute them.
+
+### Running on a subset of the Epiphany cores
+
+Up until this point we have executed our kernel on all the Epiphany cores, but often you want to limit to a subset of the cores instead. Using arguments to the *offload* directive we can instruct ePython how many and/or what cores to run on.
+
+```python
+from epython import offload
+
+@offload(auto=4)
+def helloworld(a,b):
+  print "Hello World"
+  return a+b
+
+print helloworld(10, 20)
+```
+
+In this example we have added the *auto* argment to the *offload* directive, this tells ePython to run over 4 cores - but you don't care which cores these are so to best select exactly which cores to run over (i.e. idle cores.) Instead of *auto* you can use *target*, for instance *target=[1,5,8]* which will explicitly run the kernel only on cores 1, 5 and 8.
+
+```python
+from epython import offload
+
+@offload
+def helloworld(a,b):
+  print "Hello World"
+  return a+b
+
+h=helloworld(10, 20, target=[9, 10], async=True)
+print h.wait()
+```
+
+In the example above we have done things slightly differently - this *helloworld* function will execute asynchronously and on Epiphany cores 9 and 10 only. But we have instructed ePython to do this by arguments to the function call rather than arguments to the *offload* decorator. This provides additional flexibility, you can think of arguments to the specific function call as overriding the options provided to the decorator. For instance here by default *helloworld* will run on all cores in a blocking manner due to the arguments (or lack thereof) to the *offload* decorator. However we have overridden the behaviour just for this one specific kernel launch to execute asynchronously only on Epiphany cores 9 and 10.
+
+### Short cuts for offload arguments
+
+Remembering the offload arguments for common calls can be a bit of a pain - hence we have also introduced the *offload_multiple* and *offload_single* decorators. These can be thought of exactly the same as the *offload* directive, but set up some pre-defined behaviour. The *offload_multiple* decorator will launch kernels in an asynchronous, non-blocking manner, on a subset of cores (the number given by the *cores* argument.) The *offload_single* decorator will launch the kernel in an asynchronous, non-blocking, manner on any single Epiphany core.
+
+```python
+from epython import offload_multiple, offload_single, waitAll
+
+@offload_multiple(cores=8)
+def adder(a,b):
+  return a+b
+
+@offload_single
+def subtractor(a,b):
+  return a-b
+
+
+h1=adder(10,20)
+h2=subtractor(10,20)
+print waitAll(h1,h2)
+```
+
+In this code snippet we have two functions, an *adder* function that will run over 8 Epiphany cores and a *substractor* function that will run only on one Epiphany core. These are both launched and the *waitAll* ePython call is issued to wait for all provided handlers to complete which also returns the kernel values from the Epiphany.
+
+### Putting it all together to find PI
+
+Back in ([tutorial 2](tutorial2.md)) we ran a code directly on the Epiphany cores through ePython to find the value of PI using the dartboard method. We can modify this code to instead be executed from CPython, with the computational kernel offloaded to the Epiphany cores.
+
+```python
+from epython import offload
+
+@offload
+def findPI(darts, rounds):
+  from random import random
+  from math import pow
+  mypi=0.0
+  i=1
+  while i<=rounds:
+    score=0.0
+    j=1
+    while j<=darts:
+      x=random()
+      y=random()
+      if (pow(x,2) + pow(y,2) < 1.0):
+        score+=1
+      j+=1
+    mypi=mypi+4.0 * (score/darts)
+    i+=1
+  return mypi
+
+pi=sum(findPI(100,10))
+print "Value of PI is "+str((pi/10)/16)
+```
+
+In this code the *findPI* function will run on each Epiphany core - you can see that we are also importing specific module functions in this kernel too to provide us with *random* from the *random* module and the *pow* function from the *math* module (lines 5 and 6.)
