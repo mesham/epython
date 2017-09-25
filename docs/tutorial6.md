@@ -4,7 +4,7 @@ The latest version of ePython makes it possible to take existing Python code and
 
 Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
-**Important: Unlike some other ePython tutorials, all the code snipets here are to be executed under the CPython interpreter (using the *python* command.)**
+**Important:** Unlike some other ePython tutorials, all the code snipets here are to be executed under the CPython interpreter (using the *python* command.)
 
 ### Offloading a Python function
 
