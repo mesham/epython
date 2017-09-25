@@ -25,6 +25,10 @@ Each core will display the Hello world message to the screen along with their co
 
 For more information about first steps with ePython refer [here](docs/tutorial1.md), for more advanced ePython usage then follow the tutorials in the [docs directory](docs) which cover writing parallel Python code on the Epiphany.
 
+## The Epiphany as an accelerator
+
+This version of ePython supports offloading functions from existing Python codes onto the Epiphany using the very simple *offload* decorator. Take a look at [this tutorial](docs/tutorial6.md) for more information and examples.
+
 ## Troubleshooting
 
 Often these are set by default, but if it complains that it can not find e-gcc or the libraries, then you will need to set these environment variables:
