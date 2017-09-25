@@ -1,4 +1,4 @@
-# Offloading kernels from Python to the Epiphany
+# Epiphany as an accelerator: offloading Python kernels
 
 The latest version of ePython makes it possible to take existing Python code and offload specific functions (we tend to call them kernels) to the Epiphany cores. This is really viewing the Epiphany as an accelerator, where codes run on the host (the Parallella) and specific computationally intensive kernels are then offloaded to the accelerator for execution. The good news is that, using ePython, it is super easy to do this!
 
