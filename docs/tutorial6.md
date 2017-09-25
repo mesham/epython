@@ -127,4 +127,4 @@ pi=sum(findPI(100,10))
 print "Value of PI is "+str((pi/10)/16)
 ```
 
-In this code the *findPI* function will run on each Epiphany core - you can see that we are also importing specific module functions in this kernel too to provide us with *random* from the *random* module and the *pow* function from the *math* module (lines 5 and 6.)
+In this code the *findPI* function will run on each Epiphany core - you can see that we are also importing specific module functions in this kernel too to provide us with *random* from the *random* module and the *pow* function from the *math* module (lines 5 and 6.) As an exercise, if you comment out the offload directive (line 3) and replace the last two lines with *print findPI(100,10)/10* then this will run on the host (the Parallella) in CPython only.
