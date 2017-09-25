@@ -1,26 +1,26 @@
-#Geometric decomposition on the Epiphany
+# Geometric decomposition on the Epiphany
 In the previous tutorial (available [here](tutorial2.md)) we concentrated on different ways to pass messages between cores which is one of the core mechanisms of parallelism. We saw that messages can be point to point, where only two cores are involved, or collective where every core is involved. The forms of communication that you select depends upon the problem you are trying to solve, and the example we considered (finding PI via the dartboard method) fitted very well with collective communications.
 
 This tutorial will build upon tutorial two's mechanisms of parallelism in order to take a higher level view of parallel codes by considering some of the common strategies (also known as patterns) that are available to parallel programmers and widely used. This tutorial will concentrate on geometric decomposition, which is also known as domain decomposition.
 
 Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
-###Geometric decomposition
+### Geometric decomposition
 Splitting a problem up geometrically, and allocating different chunks of the data to different cores (or processes) is a very useful technique when there is one key data structure and the major organising principal of parallelism is splitting up of the data itself. In this strategy each core performs (roughly) the same instructions, just operating upon different data. 
 <img src="http://plutocode.ph.unito.it/Doxygen/API-Reference_Guide/UserMa9.gif" width="250" align="left">
 
 The diagram illustrates geometric decomposition in more detail, where an initially large 2D of data is split up into four chunks and each chunk is then distributed onto a different core. One of the key decisions for the parallel programmer is that of **granularity**, i.e. how many and how large these chunks should be. Granularity is very important because we want to maximise the amount of computation each core performs whilst minimising the communication between cores (which is an overhead of parallelism.) It is a trade-off, for instance in the diagram we only have four large chunks so only four cores can be utilised and these might have a very significant amount of computation to perform. At the other extreem, if we were to split the data into very many smaller chunks, then the cost of communication will likely dominate because each core only has a small amount of computation but very many cores results in lots of communications and cores are predominantly waiting for these communications to complete.
 
-###Jacobi iterative method
+### Jacobi iterative method
 We are going to look at an algorithm very commonly used in HPC, namely an iterative method (the Jacobi method) to solve a partial differential equation (PDE.) We will be focussing on Laplace's equation for diffusion, and you can think of a long pipe where we know the value of some pollutant at each end but not throughout the pipe iteself. Based upon this pipe and initial values we want to deduce how the pollution diffuses throughout. In order to solve this problem we split the pipe up into a number of distinct cells and set the values at the left most and right most cells (called the boundary conditions.) For every other cell, the value in that cell depends upon the values held in the neighbouring cells - which themselves depend upon their neighbours. The algorithm works in iterations, where each iteration will update all the unknown values and so progresses towards the final answer. At each iteration we calculate the residual which tells us how far away from the answer the current solution is and we will keep iterating until this residual is small enough to match a predetermined termination accuracy.
 
-###Halo swapping
+### Halo swapping
 In order to parallelise this problem we are going to split up the pipe geometrically and allocate different chunks to different Epiphany cores. I have already mentioned that the value at each cell depends upon its neighbouring cells, this is called the *stencil* and in this case we have a stencil size of one (we we only care about the direct neighbour in each direction.) What this tells us is that the majority of our computation will be local, but the calculation for the first and last points in a chunk (held by a core) will require a non-local neighbour's value (held on a different core.)
 
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/decomposition.jpg" width="400" align="right">
 This is illustrated by the diagram, where the top image illustrates a pipe where we are solving 15 unknown pollution elements (empty boxes) and the left most and right most boundary condition (shaded) values are provided. This is then split up into three chunks in the lower illustration, each with 5 elements (empty boxes), and each chunk is allocated on a different core. It can be seen that for each chunk of data, there are actually seven elements - the five empty elements and one shaded on the left and one shaded on the right. These shaded elements are known as halos (or ghosts) and represent the neighbouring value required for the first and last local elements. A halo swap, where cores communicate neighbouring values, is performed en-mass at the start of each iteration and-so when it comes to the computation all the data a core requires is already present. Halo swapping results in fewer, larger messages (which is far more efficient than many smaller messages) and is a very common technique employed by HPC programmers.
 
-###ePython code
+### ePython code
 Now we have looked at some of the fundamental concepts underlying geometric decomposition and our example, it is time to get to the code!
 
 ```python
@@ -118,7 +118,7 @@ No surprises so far, but remember at the start of the tutorial we discussed the 
 
 If you double the global problem size (**weak scaling**) to 200 via the *DATA_SIZE* variable and rerun with 8 and 16 cores then you will see that 16 cores is faster than 8 cores in this scenario because there is still plenty of computational work for each core to perform at that granularity. In your home directory is a utility called *ztemp.sh*, which reports the heat of your Parallella, run this when the board is idle (for a baseline), then run the Jacobi example and, depending on how good your cooling solution is, you should see an increase in temperature when you run *ztemp.sh* again.
 
-###Summary
+### Summary
 In this tutorial we have looked at geometric decomposition (also known as domain decomposition) which is a very common strategy for parallelism when your code is oriented around some key data structure(s) which can easily be split up. Iterative methods are very commonly used on supercomputers for solving systems of linear equations (such as Laplace's PDE here) and Jacobi is one of these methods. Iterative methods, as well as many other computational algorithms, lend themselves towards geometric decomposition and this way of splitting the problem up feels very natural in these cases.
 
 More information about Geometric decomposition can be found [here](http://parlab.eecs.berkeley.edu/wiki/patterns/geometric_decomposition) and more information about iterative methods can be found [here](http://www.maa.org/press/periodicals/loci/joma/iterative-methods-for-solving-iaxi-ibi-introduction-to-the-iterative-methods)
