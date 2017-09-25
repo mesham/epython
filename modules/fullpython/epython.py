@@ -401,19 +401,19 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 		except ValueError:
 			outstandingLaunch=AnyCoresOutstandingLaunch(myAuto-kernelinstance, kernelName, *args)
 		schuedulerMutex.release()
-	elif myAll:
-		pidtarget=range(0,number_of_cores)
-		pidtarget.remove(thisCore)
 	elif not myTarget is None:
 		if isinstance(myTarget, list):
 			pidtarget=myTarget
 		else:
 			pidtarget=[myTarget]
+	elif myAll:
+		pidtarget=range(0,number_of_cores)
+		pidtarget.remove(thisCore)
 	schuedulerMutex.acquire()
 	busyPids=[]
 	runningCoreIds=[]
 	for pid in pidtarget:
-		if (activeCores[pid] == False):
+		if (not myAuto is None or activeCores[pid] == False):
 			activeCores[pid]=True
 			doPhysicalCoprocessorLaunch(pid, kernelName, *args)
 			runningCoreIds.append(pid)
@@ -455,7 +455,7 @@ def offload(test_func=None,async=False,target=None, auto=None, all=True, device=
 		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
-def offload_single(test_func, device=ALL_DEVICES):
+def offload_single(test_func=None, device=ALL_DEVICES):
 	return offload(test_func=test_func, async=True, target=None, auto=1, all=False, device=device)
 
 def offload_multiple(test_func=None, cores=None, device=ALL_DEVICES):
