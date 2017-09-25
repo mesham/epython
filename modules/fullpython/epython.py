@@ -538,6 +538,7 @@ def initialise():
 	global_definitions={}
 	with open(sys.argv[0], 'rU') as f:
 		for line in f:
+			if line.isspace(): continue
 			if not line.startswith((' ', '\t')):
 				if (re.search(r'\w+=.+',line)):
 					global_definitions[line.split('=')[0]]=line.split('=')[1]
