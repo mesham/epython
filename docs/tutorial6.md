@@ -1,6 +1,6 @@
 # Offloading kernels from Python to the Epiphany
 
-The latest version of ePython makes it possible to take existing Python code and offload specific functions (we tend to call them kernels) to the Epiphany cores. From a programming perspective this is very simple to do and get an example up and running which is what we will be looking at in this tutorial.
+The latest version of ePython makes it possible to take existing Python code and offload specific functions (we tend to call them kernels) to the Epiphany cores. This is really viewing the Epiphany as an accelerator, where codes run on the host (the Parallella) and specific computationally intensive kernels are then offloaded to the accelerator for execution. The good news is that, using ePython, it is super easy to do this!
 
 Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
@@ -128,3 +128,9 @@ print "Value of PI is "+str((pi/10)/16)
 ```
 
 In this code the *findPI* function will run on each Epiphany core - you can see that we are also importing specific module functions in this kernel too to provide us with *random* from the *random* module and the *pow* function from the *math* module (lines 5 and 6.) As an exercise, if you comment out the offload directive (line 3) and replace the last two lines with *print findPI(100,10)/10* then this will run on the host (the Parallella) in CPython only.
+
+### Summary
+
+In this tutorial we have looked at offloading specific functions (we often call then kernels) in an existing Python code onto the Epiphany. This is really useful, not least because ePython only supports a subset of the Python language - so being able to offload the computational kernels whilst keeping everything else unchanged on the host can make things far easier.
+
+However this is not quite the full story! What kills performance is copying data to and from an accelerator (i.e. arguments to and return values from the Epiphany kernels.) In the next tutorial we will look at other, data focused, calls to allow us to declare accelerator resident data which kernels can then use without having to copy that data to and from the Epiphany continually.
