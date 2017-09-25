@@ -1,9 +1,9 @@
-#Python task farms on the Epiphany
+# Python task farms on the Epiphany
 Splitting problems up into tasks and running these concurrently over a number of cores is a popular approach to parallelism. In recent year this has becoming more and more popular and is seen as one of the ways in which parallel codes might be written for future machines with very large numbers of processing cores. In this tutorial we are going to look at this task approach and using ePython it is very simple to send tasks around between the Epiphany cores.
 
 Before going any further, if you have not yet used or installed ePython then it is worth following the first tutorial ([here](tutorial1.md)) which walks you though installing ePython and running a simple "hello world" example on the Epiphany cores. If you installed ePython a while ago then it is worth ensuring that you are running the latest version, instructions for upgrading are available [here](installupgrade.md)
 
-###Remote procedure calls
+### Remote procedure calls
 Remote Procedure Calls (RPC) is where a core will call a function to execute on another core, providing the arguments to that function and then obtaining any results from its execution. In Python functions are known as *first class*, which means that they can be refered to like any other value and even communicated between the Epiphany cores.
 
 ```python
@@ -28,7 +28,7 @@ In this code core 0 there is a function called *functionToRun*, which takes one 
 
 In this approach we can communicate any functions, any number of arguments and send returned values back from any cores. However there is a problem with how we have written this, namely the fact that for core 0 this is blocking, i.e. it sits idle and waits for the returned value whilst the function is being executed on core 1. This isn't ideal and not particularly parallel because there might be other functions which core 0 wants to execute on other cores.
 
-###The taskfarm module
+### The taskfarm module
 We have seen so far that sending functions around is a nice way of executing them on other cores, but if these are possibly going to produce results and send them back we don't want to be stalling and waiting for the results. ePython comes with the *taskfarm* module which provides a way of farming tasks out to other cores and avoiding this issue of blocking for results. So now we are going to rewrite the first example but instead using functions from the *taskfarm* module:
 
 ```python
@@ -57,7 +57,7 @@ The first function call *initTaskFarm* will initialise the task farm and the arg
 
 As an exercise extend thsi example to run multiple functions over multiple worker cores (hint, if you get stuck then have a look at the [task_farm_example.py] (../examples/task_farm_example.py) which illustrates how to do this.
 
-###Master worker
+### Master worker
 <img src="https://raw.githubusercontent.com/mesham/epython/master/docs/masterworker.png" width=300 align="right">
 In the previous section we used the terminology of "master" and "worker", this is a common approach in parallelism where one core (in this case that with the ID provided to the *initTaskFarm* function) is a master, dishing out work to all other other cores which are workers. You can see this in the diagram to the right, where the master sends out tasks and data to the workers which then execute these and send back any results and inform the master they have completed (and hence can accept another task.) Many parallel problems can be split up into this approach of master and worker, we have rewritten the estimation of PI via Monte Carlo example of ([tutorial 2](tutorial2.md)) to instead use tasks, the *taskfarm* module and this general parallelisation strategy of master-worker.
 
@@ -98,5 +98,5 @@ In the code core 0 is the master, this then remotely executes the *simulateDarts
 
 For reasons of simplicity for the example we are just executing the *simulateDarts* function once on each worker core, if you look at the PI example of ([tutorial 2](tutorial2.md)) in more detail you will see that this works in rounds. As an exercise extend the example to include these rounds so there are multiple function calls on each core. Once you have got a simple version of this working then instead of waiting for every function in each round to complete before moving onto the next round, consider how you might use the *testFunctionFinish* to poll all workers and simply re-assign more work (i.e. calls to the *simulateDarts* function) as they become idle.
 
-###Summary
+### Summary
 In this tutorial we have look at the concepts of tasks, remote procedure calls, task farms and master worker. It is often possible to rewrite many existing parallel codes in terms of distinct tasks which can be executed concurrently and this can form an alternative approach to parallelism. Whilst, for simplicity, we have focused on running a single task many times over all the cores (homogeneous), it is easy to see how one can provide additional functions and run tasks heterogeneously, i.e. very different tasks on different Epiphany cores. This can work well for some work loads and the tasks themselves can become quite complex and irregular, for instance involving communications.
