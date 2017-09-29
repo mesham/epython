@@ -245,10 +245,10 @@ def sync():
 	os.close(rp)
 
 def ishost():
-		return true
+		return True
 
 def isdevice():
-		return false
+		return False
 
 def receiveKernelReturnValue(coreId):
 	length=recv(coreId)
@@ -297,10 +297,10 @@ class KernelExecutionHandler:
 	def setNumberScheduled(self, num_scheduled):
 		self.num_scheduled=num_scheduled
 	def test(self):
-		if self.num_scheduled > 0 : return false
+		if self.num_scheduled > 0 : return False
 		for pid in self.running_coreids:
-			if not probe(pid): return false
-		return true
+			if not probe(pid): return False
+		return True
 
 def testKernelCompletion(pid):
 	if (isinstance(pid, KernelExecutionHandler)):
