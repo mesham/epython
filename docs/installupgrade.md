@@ -1,4 +1,4 @@
-#Installing ePython
+# Installing ePython
 
 To install ePython you need to checkout a version from the repository, build it and then install it. Firstly, log into your Parallella and issue
 
@@ -22,7 +22,7 @@ bash
 
 Congratulations! You have installed ePython and are ready to start programming! 
 
-#Upgrading ePython
+# Upgrading ePython
 
 ePython is actively being developed, so new features and bug fixes are being added to the code. Because of this, and to ensure you can run the latest examples, it is useful to periodically ensure you have the latest ePython and if not upgrade your version. The process is similar to the installation process, ensure you are in the *epython* directory (you might need to issue *cd epython*) and then issue:
 
