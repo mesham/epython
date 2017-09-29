@@ -270,14 +270,14 @@ class KernelExecutionHandler:
 		self.appendRunningCoreIds(handler_to_append.getRunningCoreIds())
 		self.num_scheduled+=handler_to_append.getNumberScheduled()
 	def getRunningCoreIds(self):
-		return self.running_coreids
+		return sorted(self.running_coreids)
 	def appendRunningCoreIds(self, cids):
 		self.running_coreids.extend(cids)
 	def wait(self):
 		while (self.num_scheduled > 0) : pass
 		returnVals=[]
 		index=0
-		for pid in self.running_coreids:
+		for pid in sorted(self.running_coreids):
 			returnVals.append(receiveKernelReturnValue(pid))
 			index+=1
 		return returnVals
