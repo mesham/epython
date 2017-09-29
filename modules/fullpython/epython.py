@@ -372,7 +372,7 @@ class SpecificCoresOutstandingLaunch(OutstandingLaunch):
 def copy_from_device(var, target=None, async=False):
 	try:
 		varId=globalVars.index(var)
-		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
+		return issueKernelLaunches("copyFromGlobal", async, target, None, True if target == None else False, [varId])
 	except ValueError:
 		print "Error, can not find global variable " +str(var)+" for copying from the device"
 		quit()
