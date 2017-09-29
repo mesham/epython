@@ -1,6 +1,6 @@
 # Epiphany as an accelerator: managing device data
 
-In ([tutorial 6](tutorial6.md)) we looked at using the *offload* decorator on functions (or kernels) to execute them on Epiphany cores. So far we have assumed that data is copied in (via function arguments) for each kernel execution and then copied back to the host (via the return value) once code has finished executing on the Epiphany. Transfering data from host to device and back again is actually really expensive - in the world of GPUs you need to be really careful that the cost of data transfer does not outweigh the computational benefits of the accelertor. 
+In [tutorial 6](tutorial6.md) we looked at using the *offload* decorator on functions (or kernels) to execute them on Epiphany cores. So far we have assumed that data is copied in (via function arguments) for each kernel execution and then copied back to the host (via the return value) once code has finished executing on the Epiphany. Transfering data from host to device and back again is actually really expensive - in the world of GPUs you need to be really careful that the cost of data transfer does not outweigh the computational benefits of the accelertor. 
 
 In addition to offloading functions, it is also possible to define and manage what we call device resident data - i.e. variables that are allocated on each Epiphany core and stay in memory between kernels runs.
 
