@@ -115,3 +115,38 @@ print h.wait()
 In the code snipet here we define an array of size 100 on each Epiphany core and then fill this up with random numbers on the host. The *copy_to_device* function is issued to update this on cores 0 to 9, but this is done asynchronously so that the call completes immediately without waiting for data to have been physically copied. At this point you MUST NOT update the host variable *a* (until the call has completed) as it is actively copying data in the background. Whilst the copying is on going, the *add* function is launched on core 11 and then we use *h.wait()* to wait on the handler *h* which is tracking the asynchronous data copying (at this point you can then change *a* on the device.)
 
 Similarly at line 20 we asynchronously copy the data held in *a* from Epiphany core 0, completion is tested for at line 22 and waited on (and then displayed) at line 23. You can see that this feels very similar to the way we launch kernels asynchronously and on a subset of the Epiphany cores - this is no accident and actually behind the scenes it uses the exact same mechanism.
+
+### Chaining data transfer and kernal launches
+
+It is often useful to chain data transfers and kernel launches, so that you can asynchronously kick off all the aspects that need to run on the Epiphany (data transfers and kernel runs) at a single point, then go ahead and do other stuff on the host. Crticically when you do this you need to be confident that the data transfer will complete before the kernel executes. The good news is that in ePython the order of launch is guaranteed to be the order in which operations are scheduled, such that if *A*, *B* and *C* are scheduled to run on a specific Epiphany core then we guarantee that they will execute in that order.
+
+```python
+from epython import offload, define_on_device, copy_to_device, waitAll
+from random import random
+
+a=[0]*100
+
+define_on_device(a)
+
+for i in range(100):
+  a[i]=random()
+  
+@offload(async=True)
+def addAllA():
+  i=0
+  value=0
+  while i < size(a):
+    value+=a[i]
+    i+=1
+  return value
+
+h1=copy_to_device("a", a, async=True, target=[1])
+h2=addAllA(target=[0,1])
+print waitAll(h1,h2)
+```
+
+The code snippet of this section illustates this concept, where an asynchronous data copy is started on core 1 (returning the handle *h1*.) Then the *addAllA* kernel is launched on cores 0 and 1 asynchronously and we wait for both handles at line 22. Due to the ordering of launch, ePython guarantees that the *addAllA* kernel will only execute on core 1 once the data transfer has completed to that core. There is no data transfer to core 0, so the kernel will launch immediately and return 0.
+
+### Summary
+
+In this tutorial we have looked at offloading parts of Python codes onto Epiphany cores in more detail. Carefully managing device resident data, often with asynchronous data copying, can provide significant performance benefits over simply copying all data on every kernel launch. For more information you can refer to the Jacobi offload example (here (../examples/jacobi_offload.py)) which uses device resident data. In this example you can see we launch the two kernels for every iteration which is quite slow (we are constantly launching kernels on the Epiphany cores rather than computation!) As an exercise modify the code so that it moves the iteration loop into the kernel, so that kernels only need to launched once for the entire run.
