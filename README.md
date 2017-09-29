@@ -29,7 +29,7 @@ def helloworld():
 helloworld()
 ```
 
-Execute *python hello2.py* and again you will see the Hello world message on the screen. This is very different from the previous example, because the code is running via CPython on the host and simply offloading this function (*helloworld*) to each Epiphany core. If you comment out the *offload* directive and rerun you will see the host display the message instead. ake a look at [this tutorial](docs/tutorial6.md) for more information and examples about this.
+Execute *python hello2.py* and again you will see the Hello world message on the screen. This is very different from the previous example, because the code is running via CPython on the host and simply offloading this function (*helloworld*) to each Epiphany core. If you comment out the *offload* directive and rerun you will see the host display the message instead. Take a look at [this tutorial](docs/tutorial6.md) for more information and examples around offloading.
 
 ## Troubleshooting
 
