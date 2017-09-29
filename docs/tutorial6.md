@@ -99,7 +99,7 @@ In this code snippet we have two functions, an *adder* function that will run ov
 
 ### Putting it all together to find PI
 
-Back in ([tutorial 2](tutorial2.md)) we ran a code directly on the Epiphany cores through ePython to find the value of PI using the dartboard method. We can modify this code to instead be executed from CPython, with the computational kernel offloaded to the Epiphany cores.
+Back in [tutorial 2](tutorial2.md) we ran a code directly on the Epiphany cores through ePython to find the value of PI using the dartboard method. We can modify this code to instead be executed from CPython, with the computational kernel offloaded to the Epiphany cores.
 
 ```python
 from epython import offload
@@ -133,4 +133,4 @@ In this code the *findPI* function will run on each Epiphany core - you can see 
 
 In this tutorial we have looked at offloading specific functions (we often call then kernels) in an existing Python code onto the Epiphany. This is really useful, not least because ePython only supports a subset of the Python language - so being able to offload the computational kernels whilst keeping everything else unchanged on the host can make things far easier.
 
-However this is not quite the full story! What kills performance is copying data to and from an accelerator (i.e. arguments to and return values from the Epiphany kernels.) In the ([next tutorial](tutorial7.md)) we look at other, data focused, calls to allow us to declare accelerator resident data which kernels can then use without having to copy that data to and from the Epiphany continually.
+However this is not quite the full story! What kills performance is copying data to and from an accelerator (i.e. arguments to and return values from the Epiphany kernels.) In the [next tutorial](tutorial7.md) we look at other, data focused, calls to allow us to declare accelerator resident data which kernels can then use without having to copy that data to and from the Epiphany continually.
