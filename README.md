@@ -4,30 +4,32 @@ This is a Python interpreter designed for low memory many core chips such as the
 ePython has been developed by <a href="https://www.epcc.ed.ac.uk/about/staff/dr-nick-brown">Nick Brown</a> and is [licenced](LICENCE) under BSD-2.
 
 ## Installation
-Type make
-If you wish to install it (into the bin directory) then sudo make install followed by starting a new bash session (execute bash at the command line.)
-
-If you do not install it then you can still run epython from the current directory, as ./epython.sh but ensure that epython-device.elf is in the current directory when you run the interpreter. The epython.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
-
-In order to include files (required for parallel functions) you must either run your Python codes in the same directory as the executables (and the modules directory) and/or export the EPYTHONPATH environment variable to point to the modules directory. When including files, by default ePython will search in the current directory, any subdirectory called modules and then the EPYTHONPATH variable, which follows the same syntax as the PATH variable.
-
-Issuing export export EPYTHONPATH=$EPYTHONPATH:`pwd` in the epython directory will set this to point to the current directory. You can also modify your ~/.bashrc file to contain a similiar command.
+ePython comes pre-installed with the latest Parallella Linux image so it should be all set up and ready to go as soon as you switch the machine on. If you do want to manually install ePython then execute *make* and then *sudo make install* at the command line. Importantly you will then need to start a new bash session (either log out and log back in, or execute *bash* at the command line.
 
 For more information about installing ePython refer [here](docs/tutorial1.md), for upgrading ePython refer [here](docs/installupgrade.md)
 
 ## Hello world
-Create a file called hello, then put in the lines
+Create a file called hello.py:
+
+```python
 print "Hello world"
+```
 
-save it, and execute epython hello (or ./epython.sh hello if you have not done make install.)
+Now execute *epython hello.py* , each core will display the Hello world message on the screen. This is an example of running code directly on the Epiphany cores and more information can be found [here](docs/tutorial1.md)
 
-Each core will display the Hello world message to the screen along with their core id
+You can also use ePython to offload kernels to the Epiphany and use it as an accelerator. For instance create a file called hello2.py:
 
-For more information about first steps with ePython refer [here](docs/tutorial1.md), for more advanced ePython usage then follow the tutorials in the [docs directory](docs) which cover writing parallel Python code on the Epiphany.
+```python
+from epython import offload
 
-## The Epiphany as an accelerator
+@offload
+def helloworld():
+   print "Hello World"
+    
+helloworld()
+```
 
-This version of ePython supports offloading functions from existing Python codes onto the Epiphany using the very simple *offload* decorator. Take a look at [this tutorial](docs/tutorial6.md) for more information and examples.
+Execute *python hello2.py* and again you will see the Hello world message on the screen. This is very different from the previous example, because the code is running via CPython on the host and simply offloading this function (*helloworld*) to each Epiphany core. If you comment out the *offload* directive and rerun you will see the host display the message instead. ake a look at [this tutorial](docs/tutorial6.md) for more information and examples about this.
 
 ## Troubleshooting
 
@@ -38,13 +40,17 @@ export EPIPHANY_HOME=/opt/adapteva/esdk
 
 (you might want to place this in your .bashrc file)
 
-## 64 cores
+## More advanced installation
 
-ePython has been developed and tested on a 16 core Epiphany machine, if you have a 64 core chip machine then it should work (still on 16 cores), and it should be trivial to edit the source and linker script to support the full 64 cores.
+If you do not install ePython then you can still run epython from the current directory, as ./epython.sh but ensure that epython-device.elf is in the current directory when you run the interpreter. The epython.sh script will detect whether to run as sudo (earlier versions of the parallella OS) or not (later versions.)
+
+In order to include files (required for parallel functions) you must either run your Python codes in the same directory as the executables (and the modules directory) and/or export the EPYTHONPATH environment variable to point to the modules directory. When including files, by default ePython will search in the current directory, any subdirectory called modules and then the EPYTHONPATH variable, which follows the same syntax as the PATH variable.
+
+Issuing export EPYTHONPATH=$EPYTHONPATH:`pwd`/modules in the epython directory will set this to point to the current directory. You can also modify your ~/.bashrc file to contain a similiar command. For offload support you will need to export PYTHONPATH=$PYTHONPATH:`pwd`/modules/fullpython
 
 ## Rebuilding the parser/lexer
 To rebuild the parser and lexer too, then execute *make full*
 
 ## SREC and ELF
 
-The device executable is built in both SREC and ELF format, as of 2016 the loading of SREC on the Epiphany is deprecated and will be removed from later SDK releases. You can choose which to load via the -elf and -srec command line arguments. ELF is the default for ePython, apart from very old Epiphany SDK versions which support SREC.
+The device executable is built in both SREC and ELF format, as of 2016 the loading of SREC on the Epiphany is deprecated and will be removed from later SDK releases. You can choose which to load via the -elf and -srec command line arguments. ELF is the default for ePython, apart from old Epiphany SDK versions which support SREC.
