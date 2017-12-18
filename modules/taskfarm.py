@@ -1,13 +1,12 @@
 import parallel
 import array
 
-_remoteFunctionCallState=0
+_remoteFunctionCallState=array(numcores())
 _masterTask=0
 
 def initTaskFarm(masterTask):
 	_masterTask=masterTask
 	if (coreid()==masterTask):
-		_remoteFunctionCallState=array(numcores())
 		_remoteFunctionCallState[masterTask]=false
 
 def shutdownTaskFarm():
