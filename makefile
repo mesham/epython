@@ -21,7 +21,7 @@ epiphany-full: clean epiphany-device-build
 	@mv host/epython-host .
 	
 epiphany-device-build:	
-	@cd device; $(MAKE)
+	@cd devices/epiphany; $(MAKE)
 	@mv devices/epiphany/epython-epiphany.srec .
 	@mv devices/epiphany/epython-epiphany.elf .
 
