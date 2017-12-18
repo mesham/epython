@@ -27,7 +27,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 #include <e-lib.h>
-#include "shared.h"
+#include "epiphany-shared.h"
 
 extern volatile e_barrier_t  syncbarriers[TOTAL_CORES], collectivebarriers[TOTAL_CORES];
 extern e_barrier_t  *sync_tgt_bars[TOTAL_CORES], *collective_tgt_bars[TOTAL_CORES];

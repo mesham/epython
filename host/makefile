@@ -5,7 +5,7 @@ LIBS=-lm -lpthread
 
 ifeq ($(STANDALONE),1)
 CFLAGS+= -DHOST_STANDALONE -I../devices/host
-else if ($(EPIPHANY),1)
+else ifeq ($(EPIPHANY),1)
 CFLAGS+= -DEPIPHANY_TARGET -I../devices/epiphany -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
 OBJECTS+=epiphany-support.o
 CC=arm-linux-gnueabihf-gcc
@@ -19,8 +19,11 @@ endif
 YFLAGS := -d
 LFLAGS :=
 
-epython: $(OBJECTS)
+epython: clean_interpreter $(OBJECTS)
 	$(CC) $(LDFLAGS) -o epython-host $(OBJECTS) $(LIBS)
+
+clean_interpreter:
+	$(RM) ../interpreter/interpreter.o
 
 full: lexer parser epython
 

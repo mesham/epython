@@ -55,10 +55,7 @@ volatile struct shared_basic * basicState;
 volatile int total_threads, hostCoresBasePid;
 pthread_mutex_t barrier_mutex;
 volatile int * flip_barrier_array, * flop_barrier_array;
-
-#ifdef HOST_STANDALONE
 volatile unsigned int * pb;
-#endif
 
 static struct value_defn getInputFromUser(int);
 static struct value_defn getInputFromUserWithString(struct value_defn, int);

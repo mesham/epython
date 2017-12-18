@@ -1,9 +1,9 @@
 CC=e-gcc
-CFLAGS=-I ../../interpreter -Os -fno-exceptions -freg-struct-return -fno-default-inline
+CFLAGS=-I . -I ../../interpreter -Os -fno-exceptions -freg-struct-return -fno-default-inline -DEPIPHANY_TARGET
 LDFLAGS=-T linker.ldf -Wl,--gc-sections
 
 all: clean epython-epiphany.elf
-epython-device.elf: main.o epiphany-runtime.o ../../interpreter/interpreter.o
+epython-epiphany.elf: main.o epiphany-runtime.o ../../interpreter/interpreter.o
 bins = epython-epiphany.elf
 
 .PHONE: check

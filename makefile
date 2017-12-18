@@ -12,23 +12,15 @@ standalone-full: clean
 	@cd host; $(MAKE) full STANDALONE=1
 	@mv host/epython-host .
 
-epiphany: clean 
+epiphany: clean epiphany-device-build
 	@cd host; $(MAKE) epython EPIPHANY=1
 	@mv host/epython-host .
 
-full: clean 
+epiphany-full: clean epiphany-device-build
 	@cd host; $(MAKE) full EPIPHANY=1
 	@mv host/epython-host .
-
-host-build:
-	@cd host; $(MAKE) epython
-	@mv host/epython-host .
-
-host-full:
-	@cd host; $(MAKE) full
-	@mv host/epython-host .
 	
-device-build:	
+epiphany-device-build:	
 	@cd device; $(MAKE)
 	@mv devices/epiphany/epython-epiphany.srec .
 	@mv devices/epiphany/epython-epiphany.elf .
