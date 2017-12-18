@@ -4,10 +4,10 @@ OBJECTS := lexer.o parser.o main.o memorymanager.o byteassembler.o stack.o misc.
 LIBS=-lm -lpthread
 
 ifeq ($(STANDALONE),1)
-CFLAGS+= -DHOST_STANDALONE
-else
-CFLAGS+= -I../ -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
-OBJECTS+=device-support.o
+CFLAGS+= -DHOST_STANDALONE -I../devices/host
+else if ($(EPIPHANY),1)
+CFLAGS+= -DEPIPHANY_TARGET -I../devices/epiphany -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
+OBJECTS+=epiphany-support.o
 CC=arm-linux-gnueabihf-gcc
 LDFLAGS=-L ${EPIPHANY_HOME}/tools/host/lib
 LIBS+=-le-hal -lrt

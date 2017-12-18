@@ -41,9 +41,12 @@
 #include "byteassembler.h"
 #include "python_interoperability.h"
 #include "misc.h"
-#ifndef HOST_STANDALONE
-#include "shared.h"
-#include "device-support.h"
+
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-shared.h"
+#include "epiphany-support.h"
+#elif defined(HOST_STANDALONE)
+#include "host-shared.h"
 #endif
 
 // Wrapper for the context which is passed into a thread
@@ -90,7 +93,7 @@ static void * runSpecificHostProcess(void*);
 static void appendIncludedSourceFileToStore(char*);
 static int hasSourceFileAlreadyBeenIncluded(char*);
 static void* runCodeForFullPythonInteractivity(void*);
-#ifndef HOST_STANDALONE
+#ifdef EPIPHANY_TARGET
 static void* runCodeOnEpiphany(void*);
 #endif
 
@@ -114,7 +117,7 @@ int main (int argc, char *argv[]) {
 	if (configuration->compiledByteFilename != NULL) {
 		writeOutByteCode(configuration->compiledByteFilename);
 	} else {
-#ifndef HOST_STANDALONE
+#if defined(EPIPHANY_TARGET)
 		pthread_t epiphany_management_thread, fullPythonInteractivityThread;
 		struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
 		struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
@@ -129,7 +132,7 @@ int main (int argc, char *argv[]) {
 			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
 		runCodeOnHost(configuration, deviceState);
-#else
+#elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
 		standAloneState->symbol_size=getNumberEntriesInSymbolTable();
@@ -145,7 +148,7 @@ int main (int argc, char *argv[]) {
 		runCodeOnHost(configuration, standAloneState);
 #endif
 		pthread_exit(NULL);
-#ifndef HOST_STANDALONE
+#ifdef EPIPHANY_TARGET
 		finaliseCores();
 #endif
 	}
@@ -166,7 +169,7 @@ static void doParse(char * contents) {
 	yyparse();
 }
 
-#ifndef HOST_STANDALONE
+#ifdef EPIPHANY_TARGET
 /*
  * Runs the code on the Epiphany cores, acts as a monitor whilst it is running and then finalises the cores afterwards
  */
@@ -366,10 +369,10 @@ static char* getIncludeFileWithPath(char * filename) {
 static void displayParsedBasicInfo() {
 	int memSize=getMemoryFilledSize();
 	int symbolEntries=getNumberEntriesInSymbolTable();
-#ifndef HOST_STANDALONE
+#if defined(EPIPHANY_TARGET)
 	printf("%d bytes for code, %lu bytes for symbol table (%d entries), %d bytes free\n",
 			memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries, (0x8000-CORE_DATA_START)-(memSize+(symbolEntries*5)));
-#else
+#elif defined(HOST_STANDALONE)
 	printf("%d bytes for code, %lu bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
 #endif
 }

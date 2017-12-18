@@ -35,13 +35,18 @@
 #include <pthread.h>
 #include <signal.h>
 #include "python_interoperability.h"
-#include "../shared.h"
 #include "configuration.h"
 #include "interpreter.h"
 #include "host-functions.h"
 #include "functions.h"
 #include "misc.h"
 #include "memorymanager.h"
+
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-shared.h"
+#elif defined(HOST_STANDALONE)
+#include "host-shared.h"
+#endif
 
 #define LISTENER_PIPE_NAME "/tmp/toepython"
 #define WRITER_PIPE_NAME "/tmp/fromepython"

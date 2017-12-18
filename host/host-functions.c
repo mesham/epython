@@ -36,8 +36,13 @@
 #include "basictokens.h"
 #include "interpreter.h"
 #include "host-functions.h"
-#include "device-support.h"
 #include "misc.h"
+
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-shared.h"
+#elif defined(HOST_STANDALONE)
+#include "host-shared.h"
+#endif
 
 struct hostHeapNodes {
     char* ptr;

@@ -12,9 +12,13 @@ standalone-full: clean
 	@cd host; $(MAKE) full STANDALONE=1
 	@mv host/epython-host .
 
-epiphany: clean host-build device-build
+epiphany: clean 
+	@cd host; $(MAKE) epython EPIPHANY=1
+	@mv host/epython-host .
 
-full: clean host-full device-build
+full: clean 
+	@cd host; $(MAKE) full EPIPHANY=1
+	@mv host/epython-host .
 
 host-build:
 	@cd host; $(MAKE) epython
@@ -26,17 +30,17 @@ host-full:
 	
 device-build:	
 	@cd device; $(MAKE)
-	@mv device/epython-device.srec .
-	@mv device/epython-device.elf .
+	@mv devices/epiphany/epython-epiphany.srec .
+	@mv devices/epiphany/epython-epiphany.elf .
 
 clean: 
 	@cd interpreter; rm -f *.o *.d
 	@cd host; $(MAKE) clean
-	@cd device; $(MAKE) clean
+	@cd devices/epiphany; $(MAKE) clean
 
 install:
 	@mkdir -p $(DESTDIR)$(bindir)
-	@cp epython-host epython-device.srec epython-device.elf $(DESTDIR)$(bindir)
+	@cp epython-host epython-epiphany.srec epython-epiphany.elf $(DESTDIR)$(bindir)
 	@cp epython.sh $(DESTDIR)$(bindir)/epython
 	@mkdir -p $(DESTDIR)$(includedir)/epython
 	@cp -R modules $(DESTDIR)$(includedir)/epython/.
@@ -46,7 +50,7 @@ install:
 
 uninstall:
 	@rm $(DESTDIR)$(bindir)/epython-host
-	@rm $(DESTDIR)$(bindir)/epython-device.srec
-	@rm $(DESTDIR)$(bindir)/epython-device.elf
+	@rm $(DESTDIR)$(bindir)/epython-epiphany.srec
+	@rm $(DESTDIR)$(bindir)/epython-epiphany.elf
 	@rm $(DESTDIR)$(bindir)/epython
 	@rm $(DESTDIR)$(includedir)/epython/modules/*.py

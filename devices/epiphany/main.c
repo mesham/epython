@@ -25,7 +25,7 @@
  */
 
 #include <e-lib.h>
-#include "shared.h"
+#include "epiphany-shared.h"
 #include "interpreter.h"
 #include "main.h"
 #include "functions.h"

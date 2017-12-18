@@ -28,7 +28,7 @@
 #include "main.h"
 #include "basictokens.h"
 #include "interpreter.h"
-#include "shared.h"
+#include "epiphany-shared.h"
 #include <e-lib.h>
 
 volatile static unsigned int sharedStackEntries=0, localStackEntries=0;

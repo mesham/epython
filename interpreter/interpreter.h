@@ -27,7 +27,11 @@
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
 
-#include "../shared.h"
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-shared.h"
+#elif defined(HOST_STANDALONE)
+#include "host-shared.h"
+#endif
 
 #define INT_TYPE 0
 #define REAL_TYPE 1
@@ -54,9 +58,9 @@
 // or array.) In host mode this is 8 bytes as often pointers are 64bit, but on Epiphany only 4 byte as 32 bit pointers
 struct value_defn {
 	char type, dtype;
-#ifdef HOST_STANDALONE
+#if defined(HOST_STANDALONE)
 	char data[8];
-#else
+#elif defined(EPIPHANY_TARGET)
 	char data[4];
 #endif
 };
@@ -68,11 +72,11 @@ struct symbol_node {
 	struct value_defn value __attribute__((aligned(8)));
 };
 
-#ifdef HOST_INTERPRETER
+#if defined(HOST_INTERPRETER)
 extern volatile char * stopInterpreter;
 void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
-#else
+#elif defined(EPIPHANY_TARGET)
 extern char stopInterpreter;
 void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 #endif

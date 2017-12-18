@@ -24,25 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../shared.h"
-#include "configuration.h"
+#ifndef HOST_SHARED_H_
+#define HOST_SHARED_H_
 
-#ifndef DEVICE_SUPPORT_H_
-#define DEVICE_SUPPORT_H_
+#define TOTAL_CORES 16
 
-extern volatile unsigned int * pb;
+struct core_ctrl {
+	unsigned int core_run, core_busy, core_command;
+	char *symbol_table, *stack_start, *heap_start,
+			*shared_heap_start, *shared_stack_start, *postbox_start,
+			*host_shared_data_start;
+	char data[15];
+	char active;
+} __attribute__((aligned(8)));
 
-#define EPIPHANY_BINARY_FILE "epython-device"
-// Binary directory path for finding epython device binary, needs trailing slash
-#define BIN_PATH "/usr/bin/"
+struct shared_basic {
+	struct core_ctrl core_ctrl[16];
+	unsigned int length, num_procs, baseHostPid;
+	unsigned short symbol_size;
+	char *edata, *data, *esdata, allInSharedMemory, codeOnCores;
+} __attribute__((aligned(8)));
 
-// Memory location for each core where we start the symbol table, bytecode, data area etc...
-#define CORE_DATA_START 0x6000
-// If the length of Python byte code is greater than this then place in shared memory (unless overridden by command line)
-#define CORE_CODE_MAX_SIZE 2048
-
-struct shared_basic * loadCodeOntoEpiphany(struct interpreterconfiguration*);
-void monitorCores(struct shared_basic*, struct interpreterconfiguration*);
-void finaliseCores(void);
-
-#endif /* DEVICE_SUPPORT_H_ */
+#endif /* HOST_SHARED_H_ */

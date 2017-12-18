@@ -8,7 +8,11 @@
 #ifndef HOST_FUNCTIONS_H_
 #define HOST_FUNCTIONS_H_
 
-#include "../shared.h"
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-shared.h"
+#elif defined(HOST_STANDALONE)
+#include "host-shared.h"
+#endif
 
 void initHostCommunicationData(int, struct shared_basic*, int);
 void sendData(struct value_defn, int, char, int, int);

@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "configuration.h"
-#ifndef HOST_STANDALONE
-#include "device-support.h"
-#else
+#if defined(EPIPHANY_TARGET)
+#include "epiphany-support.h"
+#elif defined(HOST_STANDALONE)
 #define TOTAL_CORES 1
 #endif
 
@@ -65,9 +65,9 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		displayHelp();
 		exit(0);
 	} else {
-#ifdef HOST_STANDALONE
+#if defined(HOST_STANDALONE)
 		configuration->hostProcs=1;
-#else
+#elif defined(EPIPHANY_TARGET)
 		configuration->hostProcs=0;
 #endif
 		configuration->coreProcs=0;
@@ -168,7 +168,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 			fprintf(stderr, "You must supply a file to run as an argument, see -h for details\n");
 			exit(0);
 		}
-#ifndef HOST_STANDALONE
+#ifdef EPIPHANY_TARGET
 		for (i=0;i<16;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
 #endif
 	}
@@ -223,7 +223,7 @@ static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, 
 static void displayHelp() {
 	printf("Epiphany Python version %s\n", VERSION_IDENT);
 	printf("epython [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
-#ifndef HOST_STANDALONE
+#ifdef EPIPHANY_TARGET
 	printf("-c placement   Specify core placement; can be a single id, all, a range (a:b) or a list (a,b,c,d)\n");
 	printf("-d processes   Specify number of process on the device\n");
 	printf("-h processes   Specify number of process on the host\n");

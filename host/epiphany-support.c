@@ -38,9 +38,9 @@
 #include "memorymanager.h"
 #include "byteassembler.h"
 #include "interpreter.h"
-#include "device-support.h"
+#include "epiphany-support.h"
 #include "configuration.h"
-#include "shared.h"
+#include "epiphany-shared.h"
 #include "misc.h"
 
 #define SYMBOL_TABLE_EXTRA 2
