@@ -45,6 +45,9 @@
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-shared.h"
 #include "epiphany-support.h"
+#elif defined(SPARTAN_TARGET)
+#include "spartan-support.h"
+#include "spartan-shared.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif
@@ -132,6 +135,9 @@ int main (int argc, char *argv[]) {
 			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
 		runCodeOnHost(configuration, deviceState);
+#elif defined(SPARTAN_TARGET)
+        pthread_t spartan_management_thread, fullPythonInteractivityThread;
+        loadCodeOntoSpartan(configuration);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));

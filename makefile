@@ -19,6 +19,14 @@ epiphany: clean epiphany-device-build
 epiphany-full: clean epiphany-device-build
 	@cd host; $(MAKE) full EPIPHANY=1
 	@mv host/epython-host .
+
+spartan: clean
+	@cd host; $(MAKE) epython SPARTAN=1
+	@mv host/epython-host epython-spartan
+
+spartan-full: clean
+	@cd host; $(MAKE) full SPARTAN=1
+	@mv host/epython-host epython-spartan
 	
 epiphany-device-build:	
 	@cd devices/epiphany; $(MAKE)

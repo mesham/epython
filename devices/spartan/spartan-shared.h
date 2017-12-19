@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Nick Brown
+ * Copyright (c) 2015, Nick Brown
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,19 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PYTHONINTEROPERABILITY_H_
-#define PYTHONINTEROPERABILITY_H_
+#ifndef SPARTAN_SHARED_H_
+#define SPARTAN_SHARED_H_
 
-#if defined(EPIPHANY_TARGET)
-#include "epiphany-shared.h"
-#elif defined(SPARTAN_TARGET)
-#include "spartan-shared.h"
-#elif defined(HOST_STANDALONE)
-#include "host-shared.h"
-#endif
-#include "configuration.h"
-#include <pthread.h>
+#define TOTAL_CORES 1
 
-void runFullPythonInteractivityOnHost(struct interpreterconfiguration*, struct shared_basic*, pthread_t*, char);
+struct core_ctrl {
+	unsigned int core_run, core_busy, core_command;
+	char *symbol_table, *stack_start, *heap_start,
+			*shared_heap_start, *shared_stack_start, *postbox_start,
+			*host_shared_data_start;
+	char data[15];
+	char active;
+} __attribute__((aligned(8)));
 
-#endif /* CONFIGURATION_H_ */
+struct shared_basic {
+	struct core_ctrl core_ctrl[16];
+	unsigned int length, num_procs, baseHostPid;
+	unsigned short symbol_size;
+	char *edata, *data, *esdata, allInSharedMemory, codeOnCores;
+} __attribute__((aligned(8)));
+
+#endif /* SPARTAN_SHARED_H_ */

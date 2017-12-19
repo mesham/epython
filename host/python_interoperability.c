@@ -44,6 +44,8 @@
 
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-shared.h"
+#elif defined(SPARTAN_TARGET)
+#include "spartan-shared.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif

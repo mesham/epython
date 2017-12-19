@@ -29,6 +29,8 @@
 
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-shared.h"
+#elif defined(SPARTAN_TARGET)
+#include "spartan-shared.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif
@@ -60,6 +62,8 @@ struct value_defn {
 	char type, dtype;
 #if defined(HOST_STANDALONE)
 	char data[8];
+#elif defined(SPARTAN_TARGET)
+  char data[8];
 #elif defined(EPIPHANY_TARGET)
 	char data[4];
 #endif
