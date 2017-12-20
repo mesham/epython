@@ -52,7 +52,9 @@ void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
   set_blocking (fd, 0);                // set no blocking
 
   transmitIntegerToSpartan(fd, getMemoryFilledSize());
+  tcdrain(fd);
 
+  write (fd, getAssembledCode(), getMemoryFilledSize());
   tcdrain(fd);
 
   char buf [100];
