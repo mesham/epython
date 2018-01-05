@@ -37,6 +37,7 @@
 #include "memorymanager.h"
 
 #define BUFFER_SIZE 1024
+#define DEBUG_SPARTAN 0
 
 static char * portname = "/dev/ttyUSB1";
 static char * buffer;
@@ -49,16 +50,16 @@ static int blockForMessage(int);
 static char getCommand(int);
 
 void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
-  int fd = open (portname, O_RDWR | O_NOCTTY | O_SYNC);
-  if (fd < 0) {
+  spartan_fd = open (portname, O_RDWR | O_NOCTTY | O_SYNC);
+  if (spartan_fd < 0) {
     printf("error %d opening %s: %s", errno, portname, strerror (errno));
     return;
   }
 
   buffer=(char*) malloc(BUFFER_SIZE);
 
-  set_interface_attribs (spartan_fd, B9600, 0);  // set speed to 115,200 bps, 8n1 (no parity)
-  set_blocking (spartan_fd, 0);                // set no blocking
+  set_interface_attribs (spartan_fd, B9600, 0);
+  set_blocking (spartan_fd, 0);
 
   transmitIntegerToSpartan(spartan_fd, getMemoryFilledSize());
   tcdrain(spartan_fd);
@@ -73,14 +74,21 @@ void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
   while (waitingForBooted != 0x01) {
     waitingForBooted=getCommand(spartan_fd);
   }
+#if DEBUG_SPARTAN == 1
   printf("Spartan loaded byte code and executing\n");
-  close(spartan_fd);
+#endif
 }
 
 void monitorSpartan(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
   while (1==1) {
     char commandReceived=getCommand(spartan_fd);
-    if (commandReceived == 0x02) return;
+    if (commandReceived == 0x02) {
+#if DEBUG_SPARTAN == 1
+        printf("Exit command from Spartan\n");
+#endif
+        close(spartan_fd);
+        return;
+    }
   }
 }
 
