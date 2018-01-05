@@ -25,10 +25,12 @@
  */
 
 #include "configuration.h"
+#include "spartan-shared.h"
 
 #ifndef SPARTAN_SUPPORT_H_
 #define SPARTAN_SUPPORT_H_
 
 void loadCodeOntoSpartan(struct interpreterconfiguration*);
+void monitorSpartan(struct shared_basic *, struct interpreterconfiguration*);
 
 #endif /* SPARTAN_SUPPORT_H_ */

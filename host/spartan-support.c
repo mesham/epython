@@ -30,16 +30,23 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "spartan-support.h"
 #include "configuration.h"
 #include "memorymanager.h"
 
-static char *portname = "/dev/ttyUSB1";
+#define BUFFER_SIZE 1024
+
+static char * portname = "/dev/ttyUSB1";
+static char * buffer;
+static int buffer_entries, buffer_point, spartan_fd;
 
 static int set_interface_attribs(int, int, int);
 static void set_blocking(int, int);
 static void transmitIntegerToSpartan(int, int);
+static int blockForMessage(int);
+static char getCommand(int);
 
 void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
   int fd = open (portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -48,22 +55,48 @@ void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
     return;
   }
 
-  set_interface_attribs (fd, B9600, 0);  // set speed to 115,200 bps, 8n1 (no parity)
-  set_blocking (fd, 0);                // set no blocking
+  buffer=(char*) malloc(BUFFER_SIZE);
 
-  transmitIntegerToSpartan(fd, getMemoryFilledSize());
-  tcdrain(fd);
+  set_interface_attribs (spartan_fd, B9600, 0);  // set speed to 115,200 bps, 8n1 (no parity)
+  set_blocking (spartan_fd, 0);                // set no blocking
 
-  write (fd, getAssembledCode(), getMemoryFilledSize());
-  tcdrain(fd);
+  transmitIntegerToSpartan(spartan_fd, getMemoryFilledSize());
+  tcdrain(spartan_fd);
 
-  char buf [100];
-  int n = read (fd, buf, sizeof buf);
-  while (n == 0) {
-    n=read (fd, buf, sizeof buf);
+  write(spartan_fd, getAssembledCode(), getMemoryFilledSize());
+  tcdrain(spartan_fd);
+
+  buffer_entries=0;
+  buffer_point=0;
+
+  char waitingForBooted=0x00;
+  while (waitingForBooted != 0x01) {
+    waitingForBooted=getCommand(spartan_fd);
   }
-  printf("Message back: %c (size %d)\n", buf[0], n);
-  close(fd);
+  printf("Spartan loaded byte code and executing\n");
+  close(spartan_fd);
+}
+
+void monitorSpartan(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
+  while (1==1) {
+    char commandReceived=getCommand(spartan_fd);
+    if (commandReceived == 0x02) return;
+  }
+}
+
+static char getCommand(int fd) {
+  int buffer_idx=blockForMessage(fd);
+  return buffer[buffer_idx];
+}
+
+static int blockForMessage(int fd) {
+  if (buffer_point < buffer_entries) {
+    buffer_point++;
+  } else {
+    buffer_entries=buffer_point=0;
+    while (buffer_entries == 0) buffer_entries=read(fd, buffer, BUFFER_SIZE);
+  }
+  return buffer_point;
 }
 
 static void transmitIntegerToSpartan(int fd, int to_send) {

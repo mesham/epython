@@ -100,6 +100,10 @@ static void* runCodeForFullPythonInteractivity(void*);
 static void* runCodeOnEpiphany(void*);
 #endif
 
+#if defined(SPARTAN_TARGET)
+static void* runCodeOnSpartan(void*);
+#endif
+
 /*
  * Host program entry point, bootstraps reading configuration, lexing & parsing (if applicable) and running the code
  */
@@ -136,8 +140,12 @@ int main (int argc, char *argv[]) {
 		}
 		runCodeOnHost(configuration, deviceState);
 #elif defined(SPARTAN_TARGET)
-        pthread_t spartan_management_thread, fullPythonInteractivityThread;
-        loadCodeOntoSpartan(configuration);
+    pthread_t spartan_management_thread, fullPythonInteractivityThread;
+    loadCodeOntoSpartan(configuration);
+    struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
+		w->configuration=configuration;
+		//w->deviceState=deviceState;
+		pthread_create(&spartan_management_thread, NULL, runCodeOnSpartan, (void*)w);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
@@ -182,6 +190,14 @@ static void doParse(char * contents) {
 static void* runCodeOnEpiphany(void * raw_wrapper) {
 	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
 	monitorCores(wrapper->deviceState, wrapper->configuration);
+	return NULL;
+}
+#endif
+
+#if defined(SPARTAN_TARGET)
+static void* runCodeOnSpartan(void * raw_wrapper) {
+	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
+	monitorSpartan(wrapper->deviceState, wrapper->configuration);
 	return NULL;
 }
 #endif
