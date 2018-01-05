@@ -88,6 +88,10 @@ void monitorSpartan(struct shared_basic * basicState, struct interpreterconfigur
 #endif
         close(spartan_fd);
         return;
+    } else if (commandReceived == 0x03) {
+#if DEBUG_SPARTAN == 1
+        printf("Print command from Spartan\n");
+#endif
     }
   }
 }
