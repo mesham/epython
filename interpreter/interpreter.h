@@ -80,7 +80,7 @@ struct symbol_node {
 extern volatile char * stopInterpreter;
 void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
-#elif defined(EPIPHANY_TARGET)
+#else
 extern char stopInterpreter;
 void runIntepreter(char*, unsigned int, unsigned short, int, int, int);
 #endif
