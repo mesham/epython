@@ -30,6 +30,9 @@
 #include "interpreter.h"
 #include "microblaze-shared.h"
 
+#define NULL 0
+typedef unsigned int size_t; // Microblaze is 32 bit hence we can get away with this
+
 volatile static unsigned int sharedStackEntries=0, localStackEntries=0;
 volatile static unsigned char communication_data[6];
 
@@ -48,7 +51,6 @@ static struct value_defn recvDataFromHostProcess(int);
 static struct value_defn recvDataFromDeviceCore(int);
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn, int);
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn, int);
-static void performBarrier(volatile e_barrier_t[], e_barrier_t*[]);
 static char* copyStringToSharedMemoryAndSetLocation(char*, int, int, struct symbol_node*);
 static struct value_defn doGetInputFromUser();
 static int stringCmp(char*, char*);
@@ -192,9 +194,10 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		value->dtype=parameters[0].dtype;
 		char * ptr;
 		cpy(&ptr, parameters[0].data, sizeof(char*));
-		int row=localCoreId/e_group_config.group_cols;
-		int col=localCoreId-(row*e_group_config.group_cols);
-		char * remoteMemory=(char*) e_get_global_address(row, col, ptr);
+		// TODO - need to go from MB address space to another space
+		//int row=localCoreId/e_group_config.group_cols;
+		//int col=localCoreId-(row*e_group_config.group_cols);
+		char * remoteMemory=NULL; //(char*) e_get_global_address(row, col, ptr);
 		cpy(value->data, &remoteMemory, sizeof(char*));
 	} else if (fnIdentifier==NATIVE_FN_RTL_DEREFERENCE) {
 		value->type=parameters[0].type & 0x1F;
@@ -722,14 +725,6 @@ static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, i
  * Synchronises all cores
  */
 void syncCores(int global) {
-	// TODO
-}
-
-/**
- * Performs a barrier, based on the version in elib but works over a subset of cores (based on coreid) and when
- * core 0 is not in use
- */
-static void performBarrier(volatile e_barrier_t barrier_array[], e_barrier_t  * target_barrier_array[]) {
 	// TODO
 }
 

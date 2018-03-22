@@ -29,6 +29,9 @@
 #include "main.h"
 #include "functions.h"
 
+volatile struct shared_basic * sharedData;
+int myId, lowestCoreId;
+
 /**
  * Core entry point, sets the stuff up and then runs the interpreter
  */

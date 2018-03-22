@@ -26,13 +26,9 @@
 
 #ifndef MAIN_H_
 #define MAIN_H_
-#include <e-lib.h>
-#include "epiphany-shared.h"
+#include "microblaze-shared.h"
 
-extern volatile e_barrier_t  syncbarriers[TOTAL_CORES], collectivebarriers[TOTAL_CORES];
-extern e_barrier_t  *sync_tgt_bars[TOTAL_CORES], *collective_tgt_bars[TOTAL_CORES];
 extern volatile struct shared_basic * sharedData;
-extern volatile unsigned char syncValues[TOTAL_CORES];
 extern int myId, lowestCoreId;
 
 #endif /* MAIN_H_ */
