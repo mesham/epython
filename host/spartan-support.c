@@ -35,9 +35,10 @@
 #include "spartan-support.h"
 #include "configuration.h"
 #include "memorymanager.h"
+#include "basictokens.h"
 
 #define BUFFER_SIZE 1024
-#define DEBUG_SPARTAN 0
+#define DEBUG_SPARTAN 1
 
 static char * portname = "/dev/ttyUSB1";
 static char * buffer;
@@ -48,6 +49,7 @@ static void set_blocking(int, int);
 static void transmitIntegerToSpartan(int, int);
 static int blockForMessage(int);
 static char getCommand(int);
+static void handle_print(int);
 
 void loadCodeOntoSpartan(struct interpreterconfiguration* configuration) {
   spartan_fd = open (portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -92,7 +94,36 @@ void monitorSpartan(struct shared_basic * basicState, struct interpreterconfigur
 #if DEBUG_SPARTAN == 1
         printf("Print command from Spartan\n");
 #endif
+        handle_print(spartan_fd);
+    } else {
+#if DEBUG_SPARTAN == 1
+        printf("Unknown command from Spartan 0x%x\n", commandReceived);
+#endif
     }
+  }
+}
+
+static void handle_print(int fd) {
+  char valueType=getCommand(fd);
+  if (valueType == INTEGER_TOKEN || valueType == REAL_TOKEN) {
+    char recv_val[4];
+    int i=0;
+    for (i=0;i<4;i++) recv_val[i]=getCommand(fd);
+    if (valueType == INTEGER_TOKEN) {
+      printf("[Device] %d\n", *((int*) recv_val));
+    } else {
+      printf("[Device] %f\n", *((float*) recv_val));
+    }
+  } else if (valueType == STRING_TOKEN) {
+    char buffer[200];
+    int idx=0;
+    buffer[idx]=getCommand(fd);
+    while (buffer[idx] != '\0') {
+      idx++;
+      buffer[idx]=getCommand(fd);
+      if (idx == 199) break;
+    }
+    printf("[Device] %s\n", buffer);
   }
 }
 
@@ -102,7 +133,7 @@ static char getCommand(int fd) {
 }
 
 static int blockForMessage(int fd) {
-  if (buffer_point < buffer_entries) {
+  if (buffer_point < buffer_entries-1) {
     buffer_point++;
   } else {
     buffer_entries=buffer_point=0;
