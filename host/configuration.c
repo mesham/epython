@@ -32,6 +32,8 @@
 #include "configuration.h"
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-support.h"
+#elif defined(MICROBLAZE_TARGET)
+#include "microblaze-support.h"
 #elif defined(HOST_STANDALONE)
 #define TOTAL_CORES 1
 #endif

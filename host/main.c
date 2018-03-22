@@ -45,6 +45,9 @@
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-shared.h"
 #include "epiphany-support.h"
+#elif defined(MICROBLAZE_TARGET)
+#include "microblaze-support.h"
+#include "microblaze-shared.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif
@@ -97,6 +100,10 @@ static void* runCodeForFullPythonInteractivity(void*);
 static void* runCodeOnEpiphany(void*);
 #endif
 
+#ifdef MICROBLAZE_TARGET
+static void* runCodeOnMicroblaze(void*);
+#endif
+
 /*
  * Host program entry point, bootstraps reading configuration, lexing & parsing (if applicable) and running the code
  */
@@ -132,6 +139,13 @@ int main (int argc, char *argv[]) {
 			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
 		}
 		runCodeOnHost(configuration, deviceState);
+#elif defined(MICROBLAZE_TARGET)
+    pthread_t microblaze_management_thread, fullPythonInteractivityThread;
+    loadCodeOntoMicroblaze(configuration);
+    struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
+		w->configuration=configuration;
+		//w->deviceState=deviceState;
+		pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
@@ -177,6 +191,14 @@ static void* runCodeOnEpiphany(void * raw_wrapper) {
 	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
 	monitorCores(wrapper->deviceState, wrapper->configuration);
 	return NULL;
+}
+#endif
+
+#ifdef MICROBLAZE_TARGET
+static void* runCodeOnMicroblaze(void * raw_wrapper) {
+  struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
+  monitorMicroblaze(wrapper->deviceState, wrapper->configuration);
+  return NULL;
 }
 #endif
 

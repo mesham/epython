@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Nick Brown
+ * Copyright (c) 2018, Nick Brown
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,19 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PYTHONINTEROPERABILITY_H_
-#define PYTHONINTEROPERABILITY_H_
-
-#if defined(EPIPHANY_TARGET)
-#include "epiphany-shared.h"
-#elif defined(MICROBLAZE_TARGET)
-#include "microblaze-shared.h"
-#elif defined(HOST_STANDALONE)
-#include "host-shared.h"
-#endif
+#include "microblaze-support.h"
 #include "configuration.h"
-#include <pthread.h>
 
-void runFullPythonInteractivityOnHost(struct interpreterconfiguration*, struct shared_basic*, pthread_t*, char);
+void loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
 
-#endif /* CONFIGURATION_H_ */
+}
+
+void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration * configuration) {
+
+}

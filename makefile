@@ -12,6 +12,14 @@ standalone-full: clean
 	@cd host; $(MAKE) full STANDALONE=1
 	@mv host/epython-host .
 
+microblaze: clean
+	@cd host; $(MAKE) epython MICROBLAZE=1
+	@mv host/epython-host epython-microblaze
+
+microblaze-full: clean
+	@cd host; $(MAKE) full MICROBLAZE=1
+	@mv host/epython-host epython-microblaze
+
 epiphany: clean epiphany-device-build
 	@cd host; $(MAKE) epython EPIPHANY=1
 	@mv host/epython-host .

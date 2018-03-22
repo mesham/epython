@@ -29,6 +29,8 @@
 
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-shared.h"
+#elif defined(MICROBLAZE_TARGET)
+#include "microblaze-shared.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif
@@ -62,6 +64,8 @@ struct value_defn {
 	char data[8];
 #elif defined(EPIPHANY_TARGET)
 	char data[4];
+#elif defined(MICROBLAZE_TARGET)
+  char data[4];
 #endif
 };
 
