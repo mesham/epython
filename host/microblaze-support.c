@@ -76,17 +76,17 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
 
   shared_buffer=(char*) cma_alloc(SHARED_MEMORY_SIZE, 0);
-  unsigned int physical_address=cma_get_phy_addr((void*) data_buffer);
-  writeMMIO(memory, 0xF004, &physical_address, 4);
+  unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
+  writeMMIO(microblaze_memory, 0xF004, &physical_address, 4);
   int busy_flag=1;
-  writeMMIO(memory, 0xF000, &busy_flag, 4);
+  writeMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
 
   basicCode=(void*) shared_buffer;
   basicCode->length=getMemoryFilledSize();
 
   writeGPIO(reset_pin, 0); // Run code on Microblaze
   while (busy_flag != 0) {
-    readMMIO(memory, 0xF000, &busy_flag, 4);
+    readMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
   }
   return basicCode;
 }
@@ -135,7 +135,7 @@ static void writeMMIO(struct mmio_state * state, unsigned int offset, void * dat
   memcpy(&(state->buffer[offset]), data, size_data);
 }
 
-static void readMMIO(struct mmio_state * state, unsigned int offset, void * data, unsigned int el_to_read) {
+static void readMMIO(struct mmio_state * state, unsigned int offset, void * data, unsigned int size_data) {
   memcpy(data, &(state->buffer[offset]), size_data);
 }
 
@@ -163,14 +163,14 @@ static struct gpio_state * openGPIO(int index, char * direction) {
 }
 
 static void writeGPIO(struct gpio_state * state, int val) {
-  FILE * file_handle=fopen(state->filename, direction==0 ? "w" : "r");
+  FILE * file_handle=fopen(state->filename, state->direction==0 ? "w" : "r");
   fprintf(file_handle, "%d", val);
   fclose(file_handle);
 }
 
 static int readGPIO(struct gpio_state * state) {
-  FILE * file_handle=fopen(state->filename, direction==0 ? "w" : "r");
-  int val=fgetc(state->file_handle);
+  FILE * file_handle=fopen(state->filename, state->direction==0 ? "w" : "r");
+  int val=fgetc(file_handle);
   fclose(file_handle);
   return val;
 }
