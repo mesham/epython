@@ -142,10 +142,10 @@ int main (int argc, char *argv[]) {
 #elif defined(MICROBLAZE_TARGET)
     pthread_t microblaze_management_thread, fullPythonInteractivityThread;
     loadCodeOntoMicroblaze(configuration);
-    struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
-		w->configuration=configuration;
+    //struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
+		//w->configuration=configuration;
 		//w->deviceState=deviceState;
-		pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
+		//pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
@@ -164,6 +164,8 @@ int main (int argc, char *argv[]) {
 		pthread_exit(NULL);
 #ifdef EPIPHANY_TARGET
 		finaliseCores();
+#elif defined(MICROBLAZE_TARGET)
+    finaliseMicroblaze();
 #endif
 	}
 	free(configuration->intentActive);

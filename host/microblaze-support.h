@@ -30,7 +30,8 @@
 #ifndef MICROBLAZE_SUPPORT_H_
 #define MICROBLAZE_SUPPORT_H_
 
-void loadCodeOntoMicroblaze(struct interpreterconfiguration*);
+struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration*);
 void monitorMicroblaze(struct shared_basic *, struct interpreterconfiguration*);
+void finaliseMicroblaze(void);
 
 #endif /* MICROBLAZE_SUPPORT_H_ */
