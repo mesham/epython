@@ -105,7 +105,7 @@ static void place_ePythonVMOnMicroblaze(char * exec_name) {
   int handle=open(exec_name, O_RDONLY);
   struct stat st;
   fstat(handle, &st);
-  int code_size =ceil(st.st_size /getpagesize()) * getpagesize();
+  int code_size =ceil(st.st_size / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE);
   char * exec_buffer=(char*) malloc(code_size);
   read(handle, exec_buffer, code_size);
   writeMMIO(microblaze_memory, 0, exec_buffer, code_size);
@@ -116,7 +116,7 @@ static void place_ePythonVMOnMicroblaze(char * exec_name) {
 static struct mmio_state * createMMIO(unsigned int address_base, unsigned int length) {
   struct mmio_state * state=(struct mmio_state *) malloc(sizeof(struct mmio_state));
   // Align the base address with the pages
-  state->virt_base = address_base & ~(getpagesize() - 1);
+  state->virt_base = address_base & ~(sysconf(_SC_PAGESIZE) - 1);
   state->virt_offset = address_base - state->virt_base;
   state->length=length;
   state->address_base=address_base;
