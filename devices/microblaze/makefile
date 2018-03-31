@@ -1,6 +1,8 @@
 CC=mb-gcc
-CFLAGS=-I . -I ../../interpreter -Os -fno-exceptions -freg-struct-return -fno-default-inline -DMICROBLAZE_TARGET
-LDFLAGS=
+MB_BASE_DIR=/home/xilinx/pynq/lib/pmod/bsp_iop_pmod
+MB_LIB_DIR=iop_pmoda_mb/lib
+CFLAGS=-I . -I ../../interpreter -Os -fno-exceptions -freg-struct-return -fno-default-inline -mlittle-endian -mcpu=v10.0 -mxl-soft-mul -Wl,--no-relax -DMICROBLAZE_TARGET
+LDFLAGS=-Wl,-T -Wl,$(MB_BASE_DIR)/lscript.ld -L$(MB_BASE_DIR)/$(MB_LIB_DIR) -mlittle-endian -mcpu=v10.0 -mxl-soft-mul -Wl,--no-relax
 
 all: clean epython-microblaze.elf
 epython-microblaze.elf: main.o microblaze-runtime.o ../../interpreter/interpreter.o
