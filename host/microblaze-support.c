@@ -40,7 +40,8 @@
 #define PROGRAM_NAME "epython-microblaze.bin"
 #define ADDRESS_BASE 0x40000000
 #define ADDRESS_RANGE 65536
-#define SHARED_MEMORY_SIZE 1024 * 1024
+#define SHARED_MEMORY_SIZE 1024 * 1024 * 32
+#define SYMBOL_TABLE_EXTRA 2
 
 struct gpio_state {
   int index, direction; // direction is 0 for out and 1 for everything else (specifically in)
@@ -53,6 +54,8 @@ struct mmio_state {
   unsigned int length, address_base, virt_base, virt_offset;
 };
 
+static void initialiseMicroblaze();
+static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
 static struct mmio_state * createMMIO(unsigned int, unsigned int);
 static void closeMMIO(struct mmio_state*);
@@ -68,23 +71,33 @@ struct mmio_state * microblaze_memory;
 char * shared_buffer;
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
-  struct shared_basic * basicCode;
-  reset_pin=openGPIO(960, "out");
-  microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
-
-  writeGPIO(reset_pin, 1); // Reset Microblaze
-  place_ePythonVMOnMicroblaze(PROGRAM_NAME);
-
   shared_buffer=(char*) cma_alloc(SHARED_MEMORY_SIZE, 0);
-  unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, 0xF004, &physical_address, 4);
-  int busy_flag=1;
+  struct shared_basic * basicCode=(void*) shared_buffer;
+  int codeOnCore=0;
+
+  basicCode->length=getMemoryFilledSize();
+  if (configuration->forceCodeOnCore) {
+		codeOnCore=1;
+	} else if (configuration->forceCodeOnShared) {
+		codeOnCore=0;
+	} else {
+		codeOnCore=basicCode->length <= CORE_CODE_MAX_SIZE;
+		if (!codeOnCore) {
+			printf("Warning: Your code size of %d bytes exceeds the %d byte limit for placement on cores so storing in shared memory\n", basicCode->length, CORE_CODE_MAX_SIZE);
+		}
+	}
+	basicCode->symbol_size=getNumberEntriesInSymbolTable();
+	basicCode->allInSharedMemory=configuration->forceDataOnShared;
+	basicCode->codeOnCores=codeOnCore==1;
+	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
+	basicCode->baseHostPid=configuration->coreProcs;
+
+	placeByteCode(basicCode, codeOnCore);
+	initialiseMicroblaze();
+
+  int busy_flag=6667;
   writeMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
 
-  basicCode=(void*) shared_buffer;
-  basicCode->length=getMemoryFilledSize();
-
-  writeGPIO(reset_pin, 0); // Run code on Microblaze
   while (busy_flag != 0) {
     readMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
   }
@@ -99,6 +112,31 @@ void finaliseMicroblaze(void) {
   cma_free(shared_buffer);
   closeMMIO(microblaze_memory);
   closeGPIO(reset_pin);
+}
+
+static void initialiseMicroblaze() {
+  reset_pin=openGPIO(960, "out");
+  microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
+
+  writeGPIO(reset_pin, 1); // Reset Microblaze
+  place_ePythonVMOnMicroblaze(PROGRAM_NAME);
+  writeGPIO(reset_pin, 0); // Run code on Microblaze
+
+  unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
+  writeMMIO(microblaze_memory, 0xF004, &physical_address, 4);
+}
+
+static void placeByteCode(struct shared_basic * basicState, int codeOnCore) {
+	basicState->data=(void*) (SHARED_CODE_AREA_START+ADDRESS_BASE);
+	basicState->esdata=(void*) (SHARED_CODE_AREA_START+(ADDRESS_BASE | 0x20000000));
+	memcpy(basicState->data, getAssembledCode(), basicState->length);
+	if (!codeOnCore) {
+		basicState->edata=basicState->esdata;
+	} else {
+		// Place code after symbol table
+		basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*
+				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA));
+	}
 }
 
 static void place_ePythonVMOnMicroblaze(char * exec_name) {
