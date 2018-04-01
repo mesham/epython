@@ -74,6 +74,7 @@ static void closeGPIO(struct gpio_state*);
 struct gpio_state * reset_pin, * interupt_pin;
 struct mmio_state * microblaze_memory;
 char * shared_buffer;
+static short active[TOTAL_CORES];
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   allocateSharedBuffer();
@@ -121,9 +122,9 @@ static void initialiseMicroblaze(void) {
   microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
 
   writeGPIO(reset_pin, 1); // Reset Microblaze
-  int empty=0;
-  writeMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &empty, 4);
+  int data_flag=0;
+  writeMMIO(microblaze_memory, MAILBOX_START, &data_flag, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &data_flag, 4);
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
   // Clear the interupt
@@ -132,16 +133,15 @@ static void initialiseMicroblaze(void) {
 
   // Copy the physical address of shared memory onto the Microblaze so it can access it
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, MAILBOX_START+8, &physical_address, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &physical_address, 4);
 
   // Now handshakes with the Microblaze to ensure it is started
-  int empty=0;
-  while (empty == 0) {
-    readMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
+  data_flag=0;
+  while (data_flag == 0) {
+    readMMIO(microblaze_memory, MAILBOX_START, &data_flag, 4);
   }
 
   int busy_flag=1;
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   while (busy_flag != 0) {
     readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   }
