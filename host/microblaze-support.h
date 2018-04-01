@@ -31,6 +31,7 @@
 #define MICROBLAZE_SUPPORT_H_
 
 #define CORE_DATA_START 0x6000
+#define CORE_CODE_MAX_SIZE 2048
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration*);
 void monitorMicroblaze(struct shared_basic *, struct interpreterconfiguration*);

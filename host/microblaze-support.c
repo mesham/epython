@@ -34,13 +34,14 @@
 #include <sys/stat.h>
 #include "libxlnk_cma.h"
 #include "microblaze-support.h"
+#include "interpreter.h"
 #include "memorymanager.h"
 #include "configuration.h"
 
 #define PROGRAM_NAME "epython-microblaze.bin"
 #define ADDRESS_BASE 0x40000000
 #define ADDRESS_RANGE 65536
-#define SHARED_MEMORY_SIZE 1024 * 1024 * 32
+#define SHARED_MEMORY_SIZE 1024*1024*32
 #define SYMBOL_TABLE_EXTRA 2
 
 struct gpio_state {
@@ -54,7 +55,9 @@ struct mmio_state {
   unsigned int length, address_base, virt_base, virt_offset;
 };
 
-static void initialiseMicroblaze();
+void _xlnk_reset();
+static void allocateSharedBuffer(void);
+static void initialiseMicroblaze(void);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
 static struct mmio_state * createMMIO(unsigned int, unsigned int);
@@ -66,7 +69,7 @@ static void writeGPIO(struct gpio_state*, int);
 static int readGPIO(struct gpio_state*);
 static void closeGPIO(struct gpio_state*);
 
-struct gpio_state * reset_pin;
+struct gpio_state * reset_pin, * interupt_pin;
 struct mmio_state * microblaze_memory;
 char * shared_buffer;
 
@@ -95,12 +98,17 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	placeByteCode(basicCode, codeOnCore);
 	initialiseMicroblaze();
 
-  int busy_flag=6667;
-  writeMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
-
-  while (busy_flag != 0) {
-    readMMIO(microblaze_memory, 0xF000, &busy_flag, 4);
+  int empty=0;
+  while (empty == 0) {
+    readMMIO(microblaze_memory, 0xF000, &empty, 4);
   }
+
+  int busy_flag=1;
+  writeMMIO(microblaze_memory, 0xF004, &busy_flag, 4);
+  while (busy_flag != 0) {
+    readMMIO(microblaze_memory, 0xF004, &busy_flag, 4);
+  }
+
   return basicCode;
 }
 
@@ -114,29 +122,49 @@ void finaliseMicroblaze(void) {
   closeGPIO(reset_pin);
 }
 
-static void initialiseMicroblaze() {
+static void initialiseMicroblaze(void) {
   reset_pin=openGPIO(960, "out");
+  interupt_pin=openGPIO(964, "out");
   microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
 
   writeGPIO(reset_pin, 1); // Reset Microblaze
+  int empty=0;
+  writeMMIO(microblaze_memory, 0xF000, &empty, 4);
+  writeMMIO(microblaze_memory, 0xF004, &empty, 4);
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
+  writeGPIO(interupt_pin, 1);
+  writeGPIO(interupt_pin, 0);
 
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, 0xF004, &physical_address, 4);
+  writeMMIO(microblaze_memory, 0xF008, &physical_address, 4);
+}
+
+static void allocateSharedBuffer(void) {
+  _xlnk_reset();  // Reset the link which should free up any previously allocated but not freed memory
+  unsigned int page_size=sysconf(_SC_PAGESIZE);
+  if (SHARED_MEMORY_SIZE >= page_size*cma_pages_available()) {
+    fprintf(stderr, "Unable to allocate shared memory as %d bytes is needed but only %d bytes available\n", SHARED_MEMORY_SIZE, page_size*cma_pages_available());
+    exit(EXIT_FAILURE);
+  }
+  shared_buffer=(char*) cma_alloc(SHARED_MEMORY_SIZE, 0);
+  if (shared_buffer == 0) {
+    fprintf(stderr, "Unable to allocate shared memory, allocator returned error\n");
+    exit(EXIT_FAILURE);
+  }
 }
 
 static void placeByteCode(struct shared_basic * basicState, int codeOnCore) {
-	basicState->data=(void*) (SHARED_CODE_AREA_START+ADDRESS_BASE);
-	basicState->esdata=(void*) (SHARED_CODE_AREA_START+(ADDRESS_BASE | 0x20000000));
-	memcpy(basicState->data, getAssembledCode(), basicState->length);
-	if (!codeOnCore) {
-		basicState->edata=basicState->esdata;
-	} else {
-		// Place code after symbol table
-		basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*
-				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA));
-	}
+  basicState->data=(void*) (shared_buffer+SHARED_CODE_AREA_START);
+  basicState->esdata=(void*) ((cma_get_phy_addr((void*) shared_buffer) + SHARED_CODE_AREA_START) | 0x20000000);
+  memcpy(basicState->data, getAssembledCode(), basicState->length);
+  if (!codeOnCore) {
+    basicState->edata=basicState->esdata;
+  } else {
+    // Place code after symbol table
+    basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*
+        (sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA));
+  }
 }
 
 static void place_ePythonVMOnMicroblaze(char * exec_name) {
