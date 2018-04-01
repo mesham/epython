@@ -57,11 +57,20 @@ struct mmio_state {
   unsigned int length, address_base, virt_base, virt_offset;
 };
 
+struct timeval tval_before[TOTAL_CORES];
+struct gpio_state * reset_pin, * interupt_pin;
+struct mmio_state * microblaze_memory;
+char * shared_buffer;
+int totalActive;
+static short active[TOTAL_CORES];
+volatile unsigned int * pb;
+
 void _xlnk_reset();
 static void allocateSharedBuffer(void);
 static void initialiseMicroblaze(void);
 static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
 static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
+static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
 static void deactivateCore(struct interpreterconfiguration*, int);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
@@ -73,13 +82,6 @@ static struct gpio_state * openGPIO(int, char*);
 static void writeGPIO(struct gpio_state*, int);
 static int readGPIO(struct gpio_state*);
 static void closeGPIO(struct gpio_state*);
-
-struct gpio_state * reset_pin, * interupt_pin;
-struct mmio_state * microblaze_memory;
-char * shared_buffer;
-int totalActive;
-static short active[TOTAL_CORES];
-volatile unsigned int * pb;
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   allocateSharedBuffer();
@@ -106,13 +108,14 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   initialiseCores(basicCode, codeOnCore, configuration);
 	placeByteCode(basicCode, codeOnCore);
 	initialiseMicroblaze();
+	startApplicableCores(basicCode, configuration);
 
 	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
+	int i;
 	for (i=0;i<TOTAL_CORES;i++) {
 		pb[i]=1;
 	}
 
-  totalActive=TOTAL_CORES;
   return basicCode;
 }
 
@@ -210,6 +213,21 @@ static void initialiseMicroblaze(void) {
     readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   }
   // When happy with it working correctly, can probably remove this handshaking
+}
+
+static void startApplicableCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
+	unsigned int i;
+	for (i=0;i<TOTAL_CORES;i++) {
+		if (configuration->intentActive[i]) {
+			if (configuration->displayTiming) gettimeofday(&tval_before[i], NULL);
+			basicState->core_ctrl[i].core_run=1;
+			basicState->core_ctrl[i].active=1;
+			active[i]=1;
+			totalActive++;
+		} else {
+			basicState->core_ctrl[i].active=0;
+		}
+	}
 }
 
 static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct interpreterconfiguration* configuration) {
