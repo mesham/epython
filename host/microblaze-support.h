@@ -30,7 +30,7 @@
 #ifndef MICROBLAZE_SUPPORT_H_
 #define MICROBLAZE_SUPPORT_H_
 
-#define CORE_DATA_START 0xA008
+#define CORE_DATA_START 0xA00C
 #define CORE_CODE_MAX_SIZE 2048
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration*);

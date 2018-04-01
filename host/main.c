@@ -60,7 +60,7 @@ struct hostRunningThreadWrapper {
 	int hostThreadId, numberProcesses, hostStartPoint;
 };
 
-struct epiphanyMonitorThreadWrapper {
+struct monitorThreadWrapper {
 	struct interpreterconfiguration* configuration;
 	struct shared_basic * deviceState;
 };
@@ -127,7 +127,7 @@ int main (int argc, char *argv[]) {
 #if defined(EPIPHANY_TARGET)
 		pthread_t epiphany_management_thread, fullPythonInteractivityThread;
 		struct shared_basic * deviceState=loadCodeOntoEpiphany(configuration);
-		struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
+		struct monitorThreadWrapper * w = (struct monitorThreadWrapper*) malloc(sizeof(struct monitorThreadWrapper));
 		w->configuration=configuration;
 		w->deviceState=deviceState;
 		pthread_create(&epiphany_management_thread, NULL, runCodeOnEpiphany, (void*)w);
@@ -142,10 +142,10 @@ int main (int argc, char *argv[]) {
 #elif defined(MICROBLAZE_TARGET)
     pthread_t microblaze_management_thread, fullPythonInteractivityThread;
     loadCodeOntoMicroblaze(configuration);
-    //struct epiphanyMonitorThreadWrapper * w = (struct epiphanyMonitorThreadWrapper*) malloc(sizeof(struct epiphanyMonitorThreadWrapper));
-		//w->configuration=configuration;
-		//w->deviceState=deviceState;
-		//pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
+    struct monitorThreadWrapper * w = (struct monitorThreadWrapper*) malloc(sizeof(struct monitorThreadWrapper));
+		w->configuration=configuration;
+		w->deviceState=deviceState;
+		pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
@@ -190,7 +190,7 @@ static void doParse(char * contents) {
  * Runs the code on the Epiphany cores, acts as a monitor whilst it is running and then finalises the cores afterwards
  */
 static void* runCodeOnEpiphany(void * raw_wrapper) {
-	struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
+	struct monitorThreadWrapper * wrapper=(struct monitorThreadWrapper*) raw_wrapper;
 	monitorCores(wrapper->deviceState, wrapper->configuration);
 	return NULL;
 }
@@ -198,7 +198,7 @@ static void* runCodeOnEpiphany(void * raw_wrapper) {
 
 #ifdef MICROBLAZE_TARGET
 static void* runCodeOnMicroblaze(void * raw_wrapper) {
-  struct epiphanyMonitorThreadWrapper * wrapper=(struct epiphanyMonitorThreadWrapper*) raw_wrapper;
+  struct monitorThreadWrapper * wrapper=(struct monitorThreadWrapper*) raw_wrapper;
   monitorMicroblaze(wrapper->deviceState, wrapper->configuration);
   return NULL;
 }

@@ -60,6 +60,8 @@ void _xlnk_reset();
 static void allocateSharedBuffer(void);
 static void initialiseMicroblaze(void);
 static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
+static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
+static void deactivateCore(struct interpreterconfiguration*, int);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
 static struct mmio_state * createMMIO(unsigned int, unsigned int);
@@ -106,7 +108,14 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 }
 
 void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration * configuration) {
-
+  int i;
+	while (totalActive > 0) {
+		for (i=0;i<TOTAL_CORES;i++) {
+			if (active[i]) {
+				checkStatusFlagsOfCore(basicState, configuration, i);
+			}
+		}
+	}
 }
 
 void finaliseMicroblaze(void) {
@@ -114,6 +123,51 @@ void finaliseMicroblaze(void) {
   closeMMIO(microblaze_memory);
   closeGPIO(reset_pin);
   closeGPIO(interupt_pin);
+}
+
+/**
+ * Checks whether the core has sent some command to the host and actions this command if so
+ */
+static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct interpreterconfiguration* configuration, int coreId) {
+	char updateCoreWithComplete=0;
+	if (basicState->core_ctrl[coreId].core_busy == 0) {
+		if (basicState->core_ctrl[coreId].core_run == 0) {
+			deactivateCore(configuration, coreId);
+		} else if (basicState->core_ctrl[coreId].core_command == 1) {
+			//displayCoreMessage(coreId, &basicState->core_ctrl[coreId]);
+			//updateCoreWithComplete=1;
+		} else if (basicState->core_ctrl[coreId].core_command == 2) {
+			//inputCoreMessage(coreId, &basicState->core_ctrl[coreId]);
+			//updateCoreWithComplete=1;
+		} else if (basicState->core_ctrl[coreId].core_command == 3) {
+			//raiseError(coreId, &basicState->core_ctrl[coreId]);
+			//updateCoreWithComplete=1;
+		} else if (basicState->core_ctrl[coreId].core_command == 4) {
+			//stringConcatenate(coreId, &basicState->core_ctrl[coreId]);
+			//updateCoreWithComplete=1;
+		} else if (basicState->core_ctrl[coreId].core_command >= 1000) {
+			//performMathsOp(&basicState->core_ctrl[coreId]);
+			//updateCoreWithComplete=1;
+		}
+		if (updateCoreWithComplete) {
+			basicState->core_ctrl[coreId].core_command=0;
+			basicState->core_ctrl[coreId].core_busy=++pb[coreId];
+		}
+	}
+}
+
+/**
+ * Called when a core informs the host it has finished, optionally displays timing information
+ */
+static void deactivateCore(struct interpreterconfiguration* configuration, int coreId) {
+	if (configuration->displayTiming) {
+		struct timeval tval_after, tval_result;
+		gettimeofday(&tval_after, NULL);
+		timeval_subtract(&tval_result, &tval_after, &tval_before[coreId]);
+		printf("Core %d completed in %ld.%06ld seconds\n", coreId, (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+	}
+	active[coreId]=0;
+	totalActive--;
 }
 
 static void initialiseMicroblaze(void) {
@@ -125,6 +179,7 @@ static void initialiseMicroblaze(void) {
   int data_flag=0;
   writeMMIO(microblaze_memory, MAILBOX_START, &data_flag, 4);
   writeMMIO(microblaze_memory, MAILBOX_START+4, &data_flag, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+8, &data_flag, 4); // The id, this is 0 for now as only one MB
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
   // Clear the interupt
@@ -145,6 +200,7 @@ static void initialiseMicroblaze(void) {
   while (busy_flag != 0) {
     readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   }
+  // When happy with it working correctly, can probably remove this handshaking
 }
 
 static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct interpreterconfiguration* configuration) {
