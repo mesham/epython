@@ -141,7 +141,7 @@ int main (int argc, char *argv[]) {
 		runCodeOnHost(configuration, deviceState);
 #elif defined(MICROBLAZE_TARGET)
     pthread_t microblaze_management_thread, fullPythonInteractivityThread;
-    loadCodeOntoMicroblaze(configuration);
+    struct shared_basic * deviceState=loadCodeOntoMicroblaze(configuration);
     struct monitorThreadWrapper * w = (struct monitorThreadWrapper*) malloc(sizeof(struct monitorThreadWrapper));
 		w->configuration=configuration;
 		w->deviceState=deviceState;

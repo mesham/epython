@@ -32,6 +32,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include "libxlnk_cma.h"
 #include "microblaze-support.h"
 #include "interpreter.h"
@@ -76,7 +77,9 @@ static void closeGPIO(struct gpio_state*);
 struct gpio_state * reset_pin, * interupt_pin;
 struct mmio_state * microblaze_memory;
 char * shared_buffer;
+int totalActive;
 static short active[TOTAL_CORES];
+volatile unsigned int * pb;
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   allocateSharedBuffer();
@@ -104,6 +107,12 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	placeByteCode(basicCode, codeOnCore);
 	initialiseMicroblaze();
 
+	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
+	for (i=0;i<TOTAL_CORES;i++) {
+		pb[i]=1;
+	}
+
+  totalActive=TOTAL_CORES;
   return basicCode;
 }
 
