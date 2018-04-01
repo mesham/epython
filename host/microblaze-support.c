@@ -43,6 +43,7 @@
 #define ADDRESS_RANGE 65536
 #define SHARED_MEMORY_SIZE 1024*1024*32
 #define SYMBOL_TABLE_EXTRA 2
+#define MAILBOX_START 0xA000
 
 struct gpio_state {
   int index, direction; // direction is 0 for out and 1 for everything else (specifically in)
@@ -74,7 +75,7 @@ struct mmio_state * microblaze_memory;
 char * shared_buffer;
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
-  shared_buffer=(char*) cma_alloc(SHARED_MEMORY_SIZE, 0);
+  allocateSharedBuffer();
   struct shared_basic * basicCode=(void*) shared_buffer;
   int codeOnCore=0;
 
@@ -100,13 +101,13 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 
   int empty=0;
   while (empty == 0) {
-    readMMIO(microblaze_memory, 0xF000, &empty, 4);
+    readMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
   }
 
   int busy_flag=1;
-  writeMMIO(microblaze_memory, 0xF004, &busy_flag, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   while (busy_flag != 0) {
-    readMMIO(microblaze_memory, 0xF004, &busy_flag, 4);
+    readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
   }
 
   return basicCode;
@@ -129,15 +130,15 @@ static void initialiseMicroblaze(void) {
 
   writeGPIO(reset_pin, 1); // Reset Microblaze
   int empty=0;
-  writeMMIO(microblaze_memory, 0xF000, &empty, 4);
-  writeMMIO(microblaze_memory, 0xF004, &empty, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &empty, 4);
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
   writeGPIO(interupt_pin, 1);
   writeGPIO(interupt_pin, 0);
 
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, 0xF008, &physical_address, 4);
+  writeMMIO(microblaze_memory, MAILBOX_START+8, &physical_address, 4);
 }
 
 static void allocateSharedBuffer(void) {
@@ -171,7 +172,7 @@ static void place_ePythonVMOnMicroblaze(char * exec_name) {
   int handle=open(exec_name, O_RDONLY);
   struct stat st;
   fstat(handle, &st);
-  int code_size =ceil(st.st_size / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE);
+  int code_size = (int) (ceil(((double) st.st_size) / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE));
   char * exec_buffer=(char*) malloc(code_size);
   read(handle, exec_buffer, code_size);
   writeMMIO(microblaze_memory, 0, exec_buffer, code_size);
