@@ -59,6 +59,7 @@ struct mmio_state {
 void _xlnk_reset();
 static void allocateSharedBuffer(void);
 static void initialiseMicroblaze(void);
+static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
 static struct mmio_state * createMMIO(unsigned int, unsigned int);
@@ -96,19 +97,9 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 	basicCode->baseHostPid=configuration->coreProcs;
 
+  initialiseCores(basicCode, codeOnCore, configuration);
 	placeByteCode(basicCode, codeOnCore);
 	initialiseMicroblaze();
-
-  int empty=0;
-  while (empty == 0) {
-    readMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
-  }
-
-  int busy_flag=1;
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
-  while (busy_flag != 0) {
-    readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
-  }
 
   return basicCode;
 }
@@ -121,6 +112,7 @@ void finaliseMicroblaze(void) {
   cma_free(shared_buffer);
   closeMMIO(microblaze_memory);
   closeGPIO(reset_pin);
+  closeGPIO(interupt_pin);
 }
 
 static void initialiseMicroblaze(void) {
@@ -134,11 +126,53 @@ static void initialiseMicroblaze(void) {
   writeMMIO(microblaze_memory, MAILBOX_START+4, &empty, 4);
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
+  // Clear the interupt
   writeGPIO(interupt_pin, 1);
   writeGPIO(interupt_pin, 0);
 
+  // Copy the physical address of shared memory onto the Microblaze so it can access it
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
   writeMMIO(microblaze_memory, MAILBOX_START+8, &physical_address, 4);
+
+  // Now handshakes with the Microblaze to ensure it is started
+  int empty=0;
+  while (empty == 0) {
+    readMMIO(microblaze_memory, MAILBOX_START, &empty, 4);
+  }
+
+  int busy_flag=1;
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
+  while (busy_flag != 0) {
+    readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
+  }
+}
+
+static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct interpreterconfiguration* configuration) {
+  char * core_shared_mem_address=cma_get_phy_addr((void*) shared_buffer) | 0x20000000;
+	unsigned int i, j;
+	char allActive=1;
+	for (i=0;i<TOTAL_CORES;i++) {
+		for (j=0;j<15;j++) basicState->core_ctrl[i].data[j]=0;
+		basicState->core_ctrl[i].core_run=0;
+		basicState->core_ctrl[i].core_busy=0;
+		basicState->core_ctrl[i].core_command=0;
+		basicState->core_ctrl[i].symbol_table=(void*) CORE_DATA_START;
+		basicState->core_ctrl[i].postbox_start=(void*) (CORE_DATA_START+(basicState->symbol_size*
+				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA))+(codeOnCore?basicState->length:0));
+		if (!configuration->forceDataOnShared) {
+			// If on core then store after the symbol table and code
+			basicState->core_ctrl[i].stack_start=basicState->core_ctrl[i].postbox_start+100;
+			basicState->core_ctrl[i].heap_start=basicState->core_ctrl[i].stack_start+LOCAL_CORE_STACK_SIZE;
+		} else {
+			basicState->core_ctrl[i].stack_start=SHARED_DATA_AREA_START+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*)core_shared_mem_address;
+			basicState->core_ctrl[i].heap_start=basicState->core_ctrl[i].stack_start+SHARED_STACK_DATA_AREA_PER_CORE;
+		}
+		basicState->core_ctrl[i].shared_stack_start=SHARED_DATA_AREA_START+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*)core_shared_mem_address;
+		basicState->core_ctrl[i].shared_heap_start=basicState->core_ctrl[i].shared_stack_start+SHARED_STACK_DATA_AREA_PER_CORE;
+		basicState->core_ctrl[i].host_shared_data_start=SHARED_DATA_AREA_START+SHARED_STACK_DATA_AREA_PER_CORE+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*) shared_buffer;
+		active[i]=0;
+		if (!configuration->intentActive[i]) allActive=0;
+	}
 }
 
 static void allocateSharedBuffer(void) {
@@ -157,7 +191,7 @@ static void allocateSharedBuffer(void) {
 
 static void placeByteCode(struct shared_basic * basicState, int codeOnCore) {
   basicState->data=(void*) (shared_buffer+SHARED_CODE_AREA_START);
-  basicState->esdata=(void*) ((cma_get_phy_addr((void*) shared_buffer) + SHARED_CODE_AREA_START) | 0x20000000);
+  basicState->esdata=(void*) ((cma_get_phy_addr((void*) shared_buffer) | 0x20000000) + SHARED_CODE_AREA_START);
   memcpy(basicState->data, getAssembledCode(), basicState->length);
   if (!codeOnCore) {
     basicState->edata=basicState->esdata;
