@@ -80,7 +80,6 @@ char * shared_buffer;
 int totalActive;
 static short active[TOTAL_CORES];
 volatile unsigned int * pb;
-struct config_gpio_node head_gpio_config = NULL;
 struct config_gpio_node * head_gpio_config = NULL;
 struct config_memory_node * head_memory_config=NULL;
 
@@ -733,7 +732,7 @@ static int parseConfiguration(char * filename) {
       struct config_gpio_node *n=(struct config_gpio_node *) malloc(sizeof(struct config_gpio_node));
       n->next=head_gpio_config;
       n->index=port_number;
-      n->name=(char*) malloc(strlen(propertyname+1));
+      n->name=(char*) malloc(strlen(propertyname)+1);
       strcpy(n->name, propertyname);
       head_gpio_config=n;
     } else if (!in_property && strstr(line_buffer, "create_bd_addr_seg") != NULL && strstr(line_buffer, "[get_bd_addr_spaces ps7_0/Data]") != NULL){
