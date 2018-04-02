@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -40,9 +41,11 @@
 #include "memorymanager.h"
 #include "configuration.h"
 
+#define OVERLAY_TCL_FILE "/opt/python3.6/lib/python3.6/site-packages/pynq/overlays/base/base.tcl"
+#define RESET_PIN_CONFIG_KEY "mb_iop_pmoda_reset"
+#define INTERUPT_PIN_CONFIG_KEY "mb_iop_pmoda_intr_ack"
+#define MICROBLAZE_MEMORY_CONFIG_KEY "iop_pmoda/mb_bram_ctrl"
 #define PROGRAM_NAME "epython-microblaze.bin"
-#define ADDRESS_BASE 0x40000000
-#define ADDRESS_RANGE 65536
 #define SHARED_MEMORY_SIZE 1024*1024*32
 #define SYMBOL_TABLE_EXTRA 2
 #define MAILBOX_START 0xA000
@@ -58,6 +61,18 @@ struct mmio_state {
   unsigned int length, address_base, virt_base, virt_offset;
 };
 
+struct config_gpio_node {
+  int index;
+  char * name;
+  struct config_gpio_node * next;
+};
+
+struct config_memory_node {
+  unsigned int address, range;
+  char * name;
+  struct config_memory_node * next;
+};
+
 struct timeval tval_before[TOTAL_CORES];
 struct gpio_state * reset_pin, * interupt_pin;
 struct mmio_state * microblaze_memory;
@@ -65,6 +80,9 @@ char * shared_buffer;
 int totalActive;
 static short active[TOTAL_CORES];
 volatile unsigned int * pb;
+struct config_gpio_node head_gpio_config = NULL;
+struct config_gpio_node * head_gpio_config = NULL;
+struct config_memory_node * head_memory_config=NULL;
 
 void _xlnk_reset();
 static void allocateSharedBuffer(void);
@@ -91,8 +109,17 @@ static int readGPIO(struct gpio_state*);
 static void closeGPIO(struct gpio_state*);
 static void timeval_subtract(struct timeval*, struct timeval*,  struct timeval*);
 static char * allocateChunkInSharedHeapMemory(size_t, struct core_ctrl *);
+static int parseConfiguration(char *);
+static void cleanConfigurationRecords();
+static struct config_gpio_node* findGPIOConfigRecord(char*);
+static struct config_memory_node* findMemoryConfigRecord(char*);
+static char *trim(char *);
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
+  if (parseConfiguration(OVERLAY_TCL_FILE) == -1) {
+    fprintf(stderr, "Error opening overlay TCL file %s\n", OVERLAY_TCL_FILE);
+    exit(EXIT_FAILURE);
+  }
   allocateSharedBuffer();
   struct shared_basic * basicCode=(void*) shared_buffer;
   int codeOnCore=0;
@@ -117,6 +144,7 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   initialiseCores(basicCode, codeOnCore, configuration);
 	placeByteCode(basicCode, codeOnCore);
 	initialiseMicroblaze();
+	cleanConfigurationRecords();
 	startApplicableCores(basicCode, configuration);
 
 	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
@@ -145,6 +173,8 @@ void finaliseMicroblaze(void) {
   closeGPIO(reset_pin);
   closeGPIO(interupt_pin);
 }
+
+
 
 /**
  * Checks whether the core has sent some command to the host and actions this command if so
@@ -434,9 +464,25 @@ static void deactivateCore(struct interpreterconfiguration* configuration, int c
 }
 
 static void initialiseMicroblaze(void) {
-  reset_pin=openGPIO(960, "out");
-  interupt_pin=openGPIO(964, "out");
-  microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
+  struct config_gpio_node * reset_pin_config=findGPIOConfigRecord(RESET_PIN_CONFIG_KEY);
+  if (reset_pin_config == NULL) {
+    fprintf(stderr, "Can not find reset pin with name %s in TCL file\n", RESET_PIN_CONFIG_KEY);
+    exit(EXIT_FAILURE);
+  }
+  struct config_gpio_node * interupt_pin_config=findGPIOConfigRecord(INTERUPT_PIN_CONFIG_KEY);
+  if (interupt_pin_config == NULL) {
+    fprintf(stderr, "Can not find interupt pin with name %s in TCL file\n", INTERUPT_PIN_CONFIG_KEY);
+    exit(EXIT_FAILURE);
+  }
+  reset_pin=openGPIO(reset_pin_config->index + 960, "out");
+  interupt_pin=openGPIO(interupt_pin_config->index + 960, "out");
+
+  struct config_memory_node * microblaze_memory_config=findMemoryConfigRecord(MICROBLAZE_MEMORY_CONFIG_KEY);
+  if (microblaze_memory_config == NULL) {
+    fprintf(stderr, "Can not find memory configuration entry %s in TCL file\n", MICROBLAZE_MEMORY_CONFIG_KEY);
+    exit(EXIT_FAILURE);
+  }
+  microblaze_memory=createMMIO(microblaze_memory_config->address, microblaze_memory_config->range);
 
   writeGPIO(reset_pin, 1); // Reset Microblaze
 
@@ -626,4 +672,116 @@ static void timeval_subtract(struct timeval *result, struct timeval *x,  struct 
      tv_usec is certainly positive. */
   result->tv_sec = x->tv_sec - y->tv_sec;
   result->tv_usec = x->tv_usec - y->tv_usec;
+}
+
+static void cleanConfigurationRecords() {
+  struct config_gpio_node * n=head_gpio_config, *p;
+	while (n != NULL) {
+		free(n->name);
+		p=n;
+		n=n->next;
+		free(p);
+	}
+	head_gpio_config=NULL;
+
+	struct config_memory_node * n2=head_memory_config, *p2;
+	while (n2 != NULL) {
+		free(n2->name);
+		p2=n2;
+		n2=n2->next;
+		free(p2);
+	}
+	head_memory_config=NULL;
+}
+
+static struct config_gpio_node * findGPIOConfigRecord(char * name) {
+  struct config_gpio_node * n=head_gpio_config;
+	while (n != NULL) {
+		if (strcmp(n->name, name) == 0) return n;
+		n=n->next;
+	}
+	return NULL;
+}
+
+static struct config_memory_node * findMemoryConfigRecord(char * name) {
+  struct config_memory_node * n=head_memory_config;
+	while (n != NULL) {
+		if (strcmp(n->name, name) == 0) return n;
+		n=n->next;
+	}
+	return NULL;
+}
+
+static int parseConfiguration(char * filename) {
+  int port_number=-1;
+  int in_property=0, i;
+  char line_buffer[500];
+  FILE * f=fopen(filename, "r");
+  if (f == NULL) return -1;
+  while (fgets(line_buffer, 500, f) != NULL)  {
+    char * location;
+    if (in_property && (location = strstr(line_buffer, "CONFIG.DIN_FROM {")) != NULL) {
+      char * endBrace=strstr(line_buffer, "}");
+      endBrace[0]='\0';
+      port_number=atoi(&location[17]);
+    } else if ((location=strstr(line_buffer, "set_property -dict [")) != NULL) {
+      in_property=1;
+    } else if (in_property && (location=strstr(line_buffer, "] $")) != NULL) {
+      char * propertyname=&location[3];
+      propertyname=trim(propertyname);
+      in_property=0;
+      struct config_gpio_node *n=(struct config_gpio_node *) malloc(sizeof(struct config_gpio_node));
+      n->next=head_gpio_config;
+      n->index=port_number;
+      n->name=(char*) malloc(strlen(propertyname+1));
+      strcpy(n->name, propertyname);
+      head_gpio_config=n;
+    } else if (!in_property && strstr(line_buffer, "create_bd_addr_seg") != NULL && strstr(line_buffer, "[get_bd_addr_spaces ps7_0/Data]") != NULL){
+      struct config_memory_node * n = (struct config_memory_node*) malloc(sizeof(struct config_memory_node));
+      n->next=head_memory_config;
+      char * data_start=trim(line_buffer);
+      char * token = strtok(data_start, " ");
+      for (i=0;i<2;i++) {
+        if (token == NULL) break;
+        token = strtok(NULL, " ");
+      }
+      if (token != NULL) n->range=(int)strtol(token, NULL, 0);
+      for (i=0;i<2;i++) {
+	      if (token == NULL) break;
+	      token = strtok(NULL, " ");
+	    }
+	    if (token != NULL) n->address=(int)strtol(token, NULL, 0);
+	    for (i=0;i<4;i++) {
+	      if (token == NULL) break;
+	      token = strtok(NULL, " ");
+	    }
+	    if (token != NULL) {
+        char * r=strchr(token, '/');
+        if (r != NULL) {
+          r=strchr(&r[1], '/');
+          if (r != NULL) {
+            r[0]='\0';
+            n->name=(char*) malloc(strlen(token)+1);
+            strcpy(n->name, token);
+          }
+        }
+	    }
+	    head_memory_config=n;
+    }
+  }
+  fclose(f);
+  return 0;
+}
+
+static char *trim(char *str) {
+  char *end;
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+  if (*str == 0)  return str;
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+  // Write new null terminator
+  *(end+1) = 0;
+  return str;
 }
