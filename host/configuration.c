@@ -172,6 +172,8 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		}
 #ifdef EPIPHANY_TARGET
 		for (i=0;i<16;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
+#elif defined(MICROBLAZE_TARGET)
+    for (i=0;i<1;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
 #endif
 	}
 }
