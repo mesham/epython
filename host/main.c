@@ -146,6 +146,7 @@ int main (int argc, char *argv[]) {
 		w->configuration=configuration;
 		w->deviceState=deviceState;
 		pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
+		runCodeOnHost(configuration, deviceState);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
 		struct shared_basic * standAloneState=(struct shared_basic*) malloc(sizeof(struct shared_basic));
