@@ -43,16 +43,16 @@ int main() {
   myId=data[0];
   sharedData=(struct shared_basic *) (data[1] | 0x20000000);
 
-  if (sharedData->codeOnCores) {
-    cpy(sharedData->edata, sharedData->esdata, sharedData->length);
-  }
-
   if (sharedData->core_ctrl[myId].core_run == 0) {
     microblaze_invalidate_dcache_range((u32) &(sharedData->core_ctrl[myId].core_run), 4);
     while (sharedData->core_ctrl[myId].core_run == 0) { }
   }
   sharedData->core_ctrl[myId].core_busy=1;
 	sharedData->core_ctrl[myId].core_run=1;
+
+  if (sharedData->codeOnCores) {
+    cpy(sharedData->edata, sharedData->esdata, sharedData->length);
+  }
 
   runIntepreter(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
   sharedData->core_ctrl[myId].core_busy=0;
