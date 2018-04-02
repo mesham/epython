@@ -12,11 +12,11 @@ standalone-full: clean
 	@cd host; $(MAKE) full STANDALONE=1
 	@mv host/epython-host .
 
-microblaze: clean
+microblaze: clean microblaze-device-build
 	@cd host; $(MAKE) epython MICROBLAZE=1
 	@mv host/epython-host epython-microblaze
 
-microblaze-full: clean
+microblaze-full: clean microblaze-device-build
 	@cd host; $(MAKE) full MICROBLAZE=1
 	@mv host/epython-host epython-microblaze
 
@@ -32,6 +32,10 @@ epiphany-device-build:
 	@cd devices/epiphany; $(MAKE)
 	@mv devices/epiphany/epython-epiphany.srec .
 	@mv devices/epiphany/epython-epiphany.elf .
+
+microblaze-device-build:
+	@cd devices/microblaze; $(MAKE)
+	@mv devices/microblaze/epython-microblaze.bin .
 
 clean: 
 	@cd interpreter; rm -f *.o *.d
