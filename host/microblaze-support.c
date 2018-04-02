@@ -82,6 +82,7 @@ static struct gpio_state * openGPIO(int, char*);
 static void writeGPIO(struct gpio_state*, int);
 static int readGPIO(struct gpio_state*);
 static void closeGPIO(struct gpio_state*);
+static void timeval_subtract(struct timeval*, struct timeval*,  struct timeval*);
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   allocateSharedBuffer();
@@ -365,4 +366,26 @@ static void closeGPIO(struct gpio_state * state) {
   fclose(handle);
   free(state->filename);
   free(state);
+}
+
+/**
+ * Helper timeval subtraction for core timing information
+ */
+static void timeval_subtract(struct timeval *result, struct timeval *x,  struct timeval *y) {
+  /* Perform the carry for the later subtraction by updating y. */
+  if (x->tv_usec < y->tv_usec) {
+    int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+    y->tv_usec -= 1000000 * nsec;
+    y->tv_sec += nsec;
+  }
+  if (x->tv_usec - y->tv_usec > 1000000) {
+    int nsec = (y->tv_usec - x->tv_usec) / 1000000;
+    y->tv_usec += 1000000 * nsec;
+    y->tv_sec -= nsec;
+  }
+
+  /* Compute the time remaining to wait.
+     tv_usec is certainly positive. */
+  result->tv_sec = x->tv_sec - y->tv_sec;
+  result->tv_usec = x->tv_usec - y->tv_usec;
 }

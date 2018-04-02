@@ -8,7 +8,7 @@ CFLAGS+= -DHOST_STANDALONE -I../devices/host
 else ifeq ($(MICROBLAZE),1)
 CFLAGS+= -DMICROBLAZE_TARGET  -I../devices/microblaze
 OBJECTS+=microblaze-support.o
-LIBS+=-lsds_lib
+LIBS+=-lsds_lib -lrt
 else ifeq ($(EPIPHANY),1)
 CFLAGS+= -DEPIPHANY_TARGET -I../devices/epiphany -I ${EPIPHANY_HOME}/tools/host/include -D__HOST__ -Dasm=__asm__ -Drestrict=
 OBJECTS+=epiphany-support.o
