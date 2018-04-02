@@ -40,15 +40,12 @@ int myId, lowestCoreId;
  */
 int main() {
   volatile int * data=(int*) BOOTSTRAP_MAILBOX_ADDR;
-  data[0]=1;
-  while (data[1] == 0) { }
-  myId=data[2];
+  myId=data[0];
   sharedData=(struct shared_basic *) (data[1] | 0x20000000);
 
   if (sharedData->codeOnCores) {
     cpy(sharedData->edata, sharedData->esdata, sharedData->length);
   }
-  data[1]=0;
 
   if (sharedData->core_ctrl[myId].core_run == 0) {
     microblaze_invalidate_dcache_range((u32) &(sharedData->core_ctrl[myId].core_run), 4);

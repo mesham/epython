@@ -71,6 +71,7 @@ static void initialiseMicroblaze(void);
 static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
 static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
 static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
+static void displayCoreMessage(int, struct core_ctrl*);
 static void deactivateCore(struct interpreterconfiguration*, int);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
@@ -147,8 +148,8 @@ static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct inte
 		if (basicState->core_ctrl[coreId].core_run == 0) {
 			deactivateCore(configuration, coreId);
 		} else if (basicState->core_ctrl[coreId].core_command == 1) {
-			//displayCoreMessage(coreId, &basicState->core_ctrl[coreId]);
-			//updateCoreWithComplete=1;
+			displayCoreMessage(coreId, &basicState->core_ctrl[coreId]);
+			updateCoreWithComplete=1;
 		} else if (basicState->core_ctrl[coreId].core_command == 2) {
 			//inputCoreMessage(coreId, &basicState->core_ctrl[coreId]);
 			//updateCoreWithComplete=1;
@@ -167,6 +168,40 @@ static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct inte
 			basicState->core_ctrl[coreId].core_busy=++pb[coreId];
 		}
 	}
+}
+
+/**
+ * Displays a message from the core
+ */
+static void __attribute__((optimize("O0"))) displayCoreMessage(int coreId, struct core_ctrl * core) {
+	if (((core->data[0] >> 7) & 1) == 1) {
+		int y;
+    memcpy(&y, &(core->data[1]), sizeof(int));
+    char t=core->data[0] & 0x1F;
+    char dt=core->data[0] >> 5 & 0x3;
+		printf("[device %d] 0x%x points to %s %s\n", coreId, y,
+    t==0 ? "integer" : t==1 ? "floating point" : t==2 ? "boolean" : t==3 ? "none" : t==4 ? "function" : "unknown", dt==0 ? "scalar" : "array");
+	} else if (core->data[0] == 0) {
+		int y;
+    memcpy(&y, &(core->data[1]), sizeof(int));
+		printf("[device %d] %d\n", coreId, y);
+	} else if (core->data[0] == 1) {
+		float y;
+    memcpy(&y, &(core->data[1]), sizeof(float));
+		printf("[device %d] %f\n", coreId, y);
+	} else if (core->data[0] == 3) {
+		int y;
+    memcpy(&y, &(core->data[1]), sizeof(int));
+		printf("[device %d] %s\n", coreId, y> 0 ? "true" : "false");
+	} else if (core->data[0] == 4) {
+		printf("[device %d] NONE\n", coreId);
+	} else if (core->data[0] == 2) {
+		unsigned int relativeLocation;
+		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+		char * message=core->host_shared_data_start+relativeLocation;
+		printf("[device %d] %s\n", coreId, message);
+	}
+	fflush(stdout);
 }
 
 /**
@@ -189,31 +224,19 @@ static void initialiseMicroblaze(void) {
   microblaze_memory=createMMIO(ADDRESS_BASE, ADDRESS_RANGE);
 
   writeGPIO(reset_pin, 1); // Reset Microblaze
-  int data_flag=0;
-  writeMMIO(microblaze_memory, MAILBOX_START, &data_flag, 4);
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &data_flag, 4);
-  writeMMIO(microblaze_memory, MAILBOX_START+8, &data_flag, 4); // The id, this is 0 for now as only one MB
+
+  // Set up boostrapper mailbox, this is telling the MB what ID it is and the address of the shared memory
+  int myid_flag=0;
+  writeMMIO(microblaze_memory, MAILBOX_START, &myid_flag, 4); // The id, this is 0 for now as only one MB
+  // Copy the physical address of shared memory onto the Microblaze so it can access it
+  unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
+  writeMMIO(microblaze_memory, MAILBOX_START+4, &physical_address, 4);
+
   place_ePythonVMOnMicroblaze(PROGRAM_NAME);
   writeGPIO(reset_pin, 0); // Run code on Microblaze
   // Clear the interupt
   writeGPIO(interupt_pin, 1);
   writeGPIO(interupt_pin, 0);
-
-  // Copy the physical address of shared memory onto the Microblaze so it can access it
-  unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &physical_address, 4);
-
-  // Now handshakes with the Microblaze to ensure it is started
-  data_flag=0;
-  while (data_flag == 0) {
-    readMMIO(microblaze_memory, MAILBOX_START, &data_flag, 4);
-  }
-
-  int busy_flag=1;
-  while (busy_flag != 0) {
-    readMMIO(microblaze_memory, MAILBOX_START+4, &busy_flag, 4);
-  }
-  // When happy with it working correctly, can probably remove this handshaking
 }
 
 static void startApplicableCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
