@@ -42,12 +42,16 @@
 #include "configuration.h"
 
 #define OVERLAY_TCL_FILE "/opt/python3.6/lib/python3.6/site-packages/pynq/overlays/base/base.tcl"
+#define PROGRAM_NAME "epython-microblaze.bin"
+#define GPIO_DIR "/sys/class/gpio"
+
 #define RESET_PIN_CONFIG_KEY "mb_iop_pmoda_reset"
 #define INTERUPT_PIN_CONFIG_KEY "mb_iop_pmoda_intr_ack"
 #define MICROBLAZE_MEMORY_CONFIG_KEY "iop_pmoda/mb_bram_ctrl"
-#define PROGRAM_NAME "epython-microblaze.bin"
+
 #define SHARED_MEMORY_SIZE 1024*1024*32
 #define SYMBOL_TABLE_EXTRA 2
+#define GPIO_MIN_USER_PIN 54
 #define MAILBOX_START 0xA000
 
 struct gpio_state {
@@ -113,6 +117,7 @@ static void cleanConfigurationRecords();
 static struct config_gpio_node* findGPIOConfigRecord(char*);
 static struct config_memory_node* findMemoryConfigRecord(char*);
 static char *trim(char *);
+static int getBaseGPIONumber(char*);
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   if (parseConfiguration(OVERLAY_TCL_FILE) == -1) {
@@ -473,8 +478,15 @@ static void initialiseMicroblaze(void) {
     fprintf(stderr, "Can not find interupt pin with name %s in TCL file\n", INTERUPT_PIN_CONFIG_KEY);
     exit(EXIT_FAILURE);
   }
-  reset_pin=openGPIO(reset_pin_config->index + 960, "out");
-  interupt_pin=openGPIO(interupt_pin_config->index + 960, "out");
+
+  int chipId=getBaseGPIONumber(GPIO_DIR);
+  if (chipId == -1) {
+    fprintf(stderr, "Can not find a GPIO chip id in directory %s\n", GPIO_DIR);
+    exit(EXIT_FAILURE);
+  }
+
+  reset_pin=openGPIO(reset_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
+  interupt_pin=openGPIO(interupt_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
 
   struct config_memory_node * microblaze_memory_config=findMemoryConfigRecord(MICROBLAZE_MEMORY_CONFIG_KEY);
   if (microblaze_memory_config == NULL) {
@@ -783,4 +795,23 @@ static char *trim(char *str) {
   // Write new null terminator
   *(end+1) = 0;
   return str;
+}
+
+static int getBaseGPIONumber(char * searchDir) {
+  int id_number=-1;
+  struct dirent *dir;
+  DIR * d = opendir(searchDir);
+  if (d) {
+    while ((dir = readdir(d)) != NULL) {
+      if (dir->d_type == DT_DIR) {
+        char * location=strstr(dir->d_name, "gpiochip");
+        if (location != NULL) {
+			    id_number=atoi(&location[8]);
+			    break;
+        }
+	    }
+    }
+    closedir(d);
+  }
+  return id_number;
 }
