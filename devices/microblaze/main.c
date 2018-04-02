@@ -28,6 +28,9 @@
 #include "interpreter.h"
 #include "main.h"
 #include "functions.h"
+#include "mb_interface.h"
+
+#define BOOTSTRAP_MAILBOX_ADDR 0xA000
 
 volatile struct shared_basic * sharedData;
 int myId, lowestCoreId;
@@ -36,6 +39,26 @@ int myId, lowestCoreId;
  * Core entry point, sets the stuff up and then runs the interpreter
  */
 int main() {
-	//runIntepreter(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
-	return 0;
+  volatile int * data=(int*) BOOTSTRAP_MAILBOX_ADDR;
+  data[0]=1;
+  while (data[1] == 0) { }
+  int myId=data[2];
+  struct shared_basic * sharedData=(struct shared_basic *) (data[1] | 0x20000000);
+
+  if (sharedData->codeOnCores) {
+    cpy(sharedData->edata, sharedData->esdata, sharedData->length);
+  }
+  data[1]=0;
+
+  if (sharedData->core_ctrl[myId].core_run == 0) {
+    microblaze_invalidate_dcache_range((u32) &(sharedData->core_ctrl[myId].core_run), 4);
+    while (sharedData->core_ctrl[myId].core_run == 0) { }
+  }
+  sharedData->core_ctrl[myId].core_busy=1;
+	sharedData->core_ctrl[myId].core_run=1;
+
+  runIntepreter(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
+  sharedData->core_ctrl[myId].core_busy=0;
+	sharedData->core_ctrl[myId].core_run=0;
+  return 0;
 }
