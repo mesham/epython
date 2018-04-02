@@ -36,6 +36,7 @@
 #include "libxlnk_cma.h"
 #include "microblaze-support.h"
 #include "interpreter.h"
+#include "misc.h"
 #include "memorymanager.h"
 #include "configuration.h"
 
@@ -73,6 +74,7 @@ static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfi
 static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
 static void displayCoreMessage(int, struct core_ctrl*);
 static void inputCoreMessage(int, struct core_ctrl*);
+static int getTypeOfInput(char*);
 static void performMathsOp(struct core_ctrl*);
 static void raiseError(int, struct core_ctrl*);
 static void stringConcatenate(int, struct core_ctrl*);
@@ -259,15 +261,14 @@ static char * allocateChunkInSharedHeapMemory(size_t size, struct core_ctrl * co
   while (1==1) {
     memcpy(&chunkLength, heapPtr, sizeof(unsigned int));
     memcpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
-    if (!chunkInUse && chunkLength >= size) {
-      char * splitChunk=(char*) (heapPtr + size + headersize);
+    if (!chunkInUse && chunkLength >= (size + headersize)) {
+      char * splitChunk=(char*) (heapPtr + ((chunkLength + headersize) - (size + headersize)));
       splitChunkLength=chunkLength - size - headersize;
-      memcpy(splitChunk, &splitChunkLength, sizeof(unsigned int));
-      memcpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
-      chunkLength=size;
       memcpy(heapPtr, &chunkLength, sizeof(unsigned int));
+      chunkLength=size;
+      cpy(splitChunk, &chunkLength, sizeof(unsigned int));
       chunkInUse=1;
-      memcpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
+      cpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
       return heapPtr + headersize;
     } else {
       heapPtr+=chunkLength + headersize;
