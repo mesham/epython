@@ -72,6 +72,10 @@ static void initialiseCores(struct shared_basic*, int, struct interpreterconfigu
 static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
 static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
 static void displayCoreMessage(int, struct core_ctrl*);
+static void inputCoreMessage(int, struct core_ctrl*);
+static void performMathsOp(struct core_ctrl*);
+static void raiseError(int, struct core_ctrl*);
+static void stringConcatenate(int, struct core_ctrl*);
 static void deactivateCore(struct interpreterconfiguration*, int);
 static void placeByteCode(struct shared_basic*, int);
 static void place_ePythonVMOnMicroblaze(char*);
@@ -84,6 +88,7 @@ static void writeGPIO(struct gpio_state*, int);
 static int readGPIO(struct gpio_state*);
 static void closeGPIO(struct gpio_state*);
 static void timeval_subtract(struct timeval*, struct timeval*,  struct timeval*);
+static char * allocateChunkInSharedHeapMemory(size_t, struct core_ctrl *);
 
 struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* configuration) {
   allocateSharedBuffer();
@@ -151,23 +156,140 @@ static void checkStatusFlagsOfCore(struct shared_basic * basicState, struct inte
 			displayCoreMessage(coreId, &basicState->core_ctrl[coreId]);
 			updateCoreWithComplete=1;
 		} else if (basicState->core_ctrl[coreId].core_command == 2) {
-			//inputCoreMessage(coreId, &basicState->core_ctrl[coreId]);
-			//updateCoreWithComplete=1;
+			inputCoreMessage(coreId, &basicState->core_ctrl[coreId]);
+			updateCoreWithComplete=1;
 		} else if (basicState->core_ctrl[coreId].core_command == 3) {
-			//raiseError(coreId, &basicState->core_ctrl[coreId]);
-			//updateCoreWithComplete=1;
+			raiseError(coreId, &basicState->core_ctrl[coreId]);
+			updateCoreWithComplete=1;
 		} else if (basicState->core_ctrl[coreId].core_command == 4) {
-			//stringConcatenate(coreId, &basicState->core_ctrl[coreId]);
-			//updateCoreWithComplete=1;
+			stringConcatenate(coreId, &basicState->core_ctrl[coreId]);
+			updateCoreWithComplete=1;
 		} else if (basicState->core_ctrl[coreId].core_command >= 1000) {
-			//performMathsOp(&basicState->core_ctrl[coreId]);
-			//updateCoreWithComplete=1;
+			performMathsOp(&basicState->core_ctrl[coreId]);
+			updateCoreWithComplete=1;
 		}
 		if (updateCoreWithComplete) {
 			basicState->core_ctrl[coreId].core_command=0;
 			basicState->core_ctrl[coreId].core_busy=++pb[coreId];
 		}
 	}
+}
+
+/**
+ * Concatenates two strings, or a string and integer/real together with necessary conversions
+ */
+static void __attribute__((optimize("O0"))) stringConcatenate(int coreId, struct core_ctrl * core) {
+	char * newString, *str1, *str2;
+	unsigned int relativeLocation;
+	if (core->data[0]==STRING_TYPE && core->data[5]==STRING_TYPE) {
+        memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+		str1=core->host_shared_data_start+relativeLocation;
+
+		memcpy(&relativeLocation, &core->data[6], sizeof(unsigned int));
+		str2=core->host_shared_data_start+relativeLocation;
+
+		int totalLen=strlen(str1)+strlen(str2)+1;
+		newString=(char*) malloc(totalLen);
+		sprintf(newString,"%s%s", str1, str2);
+	} else if (core->data[0]==STRING_TYPE) {
+		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+		str1=core->host_shared_data_start+relativeLocation;
+
+		int totalLen=strlen(str1)+21;
+		newString=(char*) malloc(totalLen);
+		if (((core->data[5] >> 7) & 1) == 1) {
+			int v;
+			memcpy(&v, &core->data[6], sizeof(int));
+			sprintf(newString,"%s0x%x", str1, v);
+		} else if (core->data[5]==INT_TYPE) {
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
+			sprintf(newString,"%s%d", str1, d);
+		} else if (core->data[5]==BOOLEAN_TYPE) {
+			int d;
+			memcpy(&d, &core->data[6], sizeof(int));
+			sprintf(newString,"%s%s", str1, d > 0?"true":"false");
+		} else if (core->data[5]==NONE_TYPE) {
+			sprintf(newString, "%sNONE", str1);
+		} else if (core->data[5]==REAL_TYPE) {
+			float f;
+			memcpy(&f, &core->data[6], sizeof(float));
+			sprintf(newString,"%s%f", str1, f);
+		}
+	} else {
+		memcpy(&relativeLocation, &core->data[6], sizeof(unsigned int));
+		str2=core->host_shared_data_start+relativeLocation;
+
+		int totalLen=strlen(str2)+21;
+		newString=(char*) malloc(totalLen);
+		if (((core->data[0] >> 7) & 1) == 1) {
+			int v;
+			memcpy(&v, &core->data[1], sizeof(int));
+			sprintf(newString,"0x%x%s", v, str2);
+		} else if (core->data[0]==INT_TYPE) {
+			int d;
+			memcpy(&d, &core->data[1], sizeof(int));
+			sprintf(newString,"%d%s", d, str2);
+		} else if (core->data[0]==BOOLEAN_TYPE) {
+			int d;
+			memcpy(&d, &core->data[1], sizeof(int));
+			sprintf(newString,"%s%s", d > 0?"true":"false", str2);
+		} else if (core->data[0]==NONE_TYPE) {
+			sprintf(newString, "NONE%s", str2);
+		} else if (core->data[0]==REAL_TYPE) {
+			float f;
+			memcpy(&f, &core->data[1], sizeof(float));
+			sprintf(newString,"%f%s", f, str2);
+		}
+	}
+	char * target=allocateChunkInSharedHeapMemory(strlen(newString) + 1, core);
+	strcpy(target, newString);
+	relativeLocation=target-core->host_shared_data_start;
+	memcpy(&core->data[11], &relativeLocation, sizeof(unsigned int));
+	free(newString);
+}
+
+static char * allocateChunkInSharedHeapMemory(size_t size, struct core_ctrl * core) {
+  unsigned char chunkInUse;
+  unsigned int chunkLength, splitChunkLength;
+  char * heapPtr=core->host_shared_data_start;
+
+  size_t headersize=sizeof(unsigned char) + sizeof(unsigned int);
+  size_t lenStride=sizeof(unsigned int);
+  while (1==1) {
+    memcpy(&chunkLength, heapPtr, sizeof(unsigned int));
+    memcpy(&chunkInUse, &heapPtr[lenStride], sizeof(unsigned char));
+    if (!chunkInUse && chunkLength >= size) {
+      char * splitChunk=(char*) (heapPtr + size + headersize);
+      splitChunkLength=chunkLength - size - headersize;
+      memcpy(splitChunk, &splitChunkLength, sizeof(unsigned int));
+      memcpy(&splitChunk[lenStride], &chunkInUse, sizeof(unsigned char));
+      chunkLength=size;
+      memcpy(heapPtr, &chunkLength, sizeof(unsigned int));
+      chunkInUse=1;
+      memcpy(&heapPtr[lenStride], &chunkInUse, sizeof(unsigned char));
+      return heapPtr + headersize;
+    } else {
+      heapPtr+=chunkLength + headersize;
+      if (heapPtr  >= core->host_shared_data_start + SHARED_HEAP_DATA_AREA_PER_CORE) {
+        break;
+      }
+    }
+  }
+  return NULL;
+}
+
+/**
+ * The core has raised an error
+ */
+static void raiseError(int coreId, struct core_ctrl * core) {
+  unsigned char errorCode;
+  memcpy(&errorCode, &core->data[1], sizeof(unsigned char));
+  char* errorMessage=translateErrorCodeToMessage(errorCode);
+  if (errorMessage != NULL) {
+    fprintf(stderr, "Error from core %d: %s\n", coreId, errorMessage);
+    free(errorMessage);
+  }
 }
 
 /**
@@ -202,6 +324,98 @@ static void __attribute__((optimize("O0"))) displayCoreMessage(int coreId, struc
 		printf("[device %d] %s\n", coreId, message);
 	}
 	fflush(stdout);
+}
+
+/**
+ * Inputs a message from the user, with some optional displayed message.
+ */
+static void __attribute__((optimize("O0"))) inputCoreMessage(int coreId, struct core_ctrl * core) {
+	char inputvalue[1000];
+	unsigned int relativeLocation;
+	if (core->data[0] == STRING_TYPE) {
+		memcpy(&relativeLocation, &core->data[1], sizeof(unsigned int));
+		char * message=core->host_shared_data_start+relativeLocation;
+		printf("[device %d] %s", coreId, message);
+	} else {
+		printf("device %d> ", coreId);
+	}
+	errorCheck(scanf("%[^\n]", inputvalue), "Getting user input");
+	int inputType=getTypeOfInput(inputvalue);
+	// The following 2 lines cleans up the input so it is ready for the next input call
+	int c;
+	while ( (c = getchar()) != '\n' && c != EOF ) { }
+
+	if (inputType==INT_TYPE) {
+		core->data[0]=INT_TYPE;
+		int iv=atoi(inputvalue);
+		memcpy(&core->data[1], &iv, sizeof(int));
+	} else if (inputType==REAL_TYPE) {
+		core->data[0]=REAL_TYPE;
+		float fv=atof(inputvalue);
+		memcpy(&core->data[1], &fv, sizeof(float));
+	} else {
+		core->data[0]=STRING_TYPE;
+		char * target=allocateChunkInSharedHeapMemory(strlen(inputvalue) + 1, core);
+		strcpy(target, inputvalue);
+		relativeLocation=target-core->host_shared_data_start;
+		memcpy(&core->data[1], &relativeLocation, sizeof(unsigned int));
+	}
+}
+
+/**
+ * Determines the type of input from the user (is it an integer, real or string)
+ */
+static int getTypeOfInput(char * input) {
+	unsigned int i;
+	char allNumbers=1, hasDecimal=0;
+	for (i=0;i<strlen(input);i++) {
+		if (!isdigit(input[i])) {
+			if (input[i] == '.') {
+				hasDecimal=1;
+			} else {
+				allNumbers=0;
+			}
+		}
+	}
+	if (allNumbers && !hasDecimal) return INT_TYPE;
+	if (allNumbers && hasDecimal) return REAL_TYPE;
+	return STRING_TYPE;
+}
+
+/**
+ * Performs some maths operation
+ */
+static void performMathsOp(struct core_ctrl * core) {
+	if (core->core_command-1000 == RANDOM_MATHS_OP) {
+		core->data[0]=INT_TYPE;
+		int r=rand();
+		memcpy(&core->data[1], &r, sizeof(int));
+	} else {
+		float fvalue=0.0, r=0.0;
+		int ivalue;
+		if (core->data[0]==REAL_TYPE) {
+            memcpy(&fvalue, &core->data[1], sizeof(float));
+		} else if (core->data[0]==INT_TYPE) {
+		    memcpy(&ivalue, &core->data[1], sizeof(int));
+		    fvalue=(float) ivalue;
+		}
+		if (core->core_command-1000 == SQRT_MATHS_OP) r=sqrtf(fvalue);
+		if (core->core_command-1000 == SIN_MATHS_OP) r=sinf(fvalue);
+		if (core->core_command-1000 == COS_MATHS_OP) r=cosf(fvalue);
+		if (core->core_command-1000 == TAN_MATHS_OP) r=tanf(fvalue);
+		if (core->core_command-1000 == ASIN_MATHS_OP) r=asinf(fvalue);
+		if (core->core_command-1000 == ACOS_MATHS_OP) r=acosf(fvalue);
+		if (core->core_command-1000 == ATAN_MATHS_OP) r=atanf(fvalue);
+		if (core->core_command-1000 == SINH_MATHS_OP) r=sinhf(fvalue);
+		if (core->core_command-1000 == COSH_MATHS_OP) r=coshf(fvalue);
+		if (core->core_command-1000 == TANH_MATHS_OP) r=tanhf(fvalue);
+		if (core->core_command-1000 == FLOOR_MATHS_OP) r=floorf(fvalue);
+		if (core->core_command-1000 == CEIL_MATHS_OP) r=ceilf(fvalue);
+		if (core->core_command-1000 == LOG_MATHS_OP) r=logf(fvalue);
+		if (core->core_command-1000 == LOG10_MATHS_OP) r=log10f(fvalue);
+		core->data[0]=REAL_TYPE;
+		memcpy(&core->data[1], &r, sizeof(float));
+	}
 }
 
 /**
