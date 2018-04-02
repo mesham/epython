@@ -25,6 +25,7 @@
  */
 
 #include <math.h>
+#include <dirent.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -800,16 +801,18 @@ static char *trim(char *str) {
 static int getBaseGPIONumber(char * searchDir) {
   int id_number=-1;
   struct dirent *dir;
+  struct stat path_stat;
   DIR * d = opendir(searchDir);
   if (d) {
     while ((dir = readdir(d)) != NULL) {
-      if (dir->d_type == DT_DIR) {
+      stat(dir->d_name, &path_stat);
+        if (S_ISDIR(path_stat.st_mode)) {
         char * location=strstr(dir->d_name, "gpiochip");
         if (location != NULL) {
-			    id_number=atoi(&location[8]);
-			    break;
+          id_number=atoi(&location[8]);
+          break;
         }
-	    }
+      }
     }
     closedir(d);
   }
