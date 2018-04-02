@@ -628,11 +628,23 @@ void clearFreedStackFrames(char* targetPointer) {
  * Sends data to some other core and blocks on this being received
  */
 static void sendData(struct value_defn to_send, int target, char blocking) {
-	// TODO
+	if (to_send.type == STRING_TYPE) raiseError(ERR_ONLY_SEND_INT_AND_REAL);
+	if (target < getLargestCoreId(target)) {
+		sendDataToDeviceCore(to_send, target, blocking);
+	} else {
+    if (!blocking) raiseError(ERR_NBSEND_NOT_SUPPORTED);
+		sendDataToHostProcess(to_send, target);
+	}
 }
 
 static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarget) {
-	// TODO
+	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
+	sharedData->core_ctrl[myId].data[5]=to_send.type;
+	cpy(&sharedData->core_ctrl[myId].data[6], to_send.data, 4);
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=5;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
 }
 
 static void sendDataToDeviceCore(struct value_defn to_send, int target, char blocking) {
@@ -681,8 +693,15 @@ static struct value_defn recvData(int source) {
 }
 
 static struct value_defn recvDataFromHostProcess(int hostSource) {
-  // TODO
-	struct value_defn to_recv;
+  struct value_defn to_recv;
+	cpy(sharedData->core_ctrl[myId].data, &hostSource, 4);
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=6;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
+	to_recv.type=sharedData->core_ctrl[myId].data[5];
+	cpy(to_recv.data, &sharedData->core_ctrl[myId].data[6], 4);
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -710,8 +729,17 @@ static struct value_defn sendRecvData(struct value_defn to_send, int target) {
 }
 
 static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, int hostProcessTarget) {
-  // TODO
-	struct value_defn receivedData;
+  struct value_defn receivedData;
+	cpy(sharedData->core_ctrl[myId].data, &hostProcessTarget, 4);
+	sharedData->core_ctrl[myId].data[5]=to_send.type;
+	cpy(&sharedData->core_ctrl[myId].data[6], to_send.data, 4);
+	unsigned int pb=sharedData->core_ctrl[myId].core_busy;
+	sharedData->core_ctrl[myId].core_command=7;
+	sharedData->core_ctrl[myId].core_busy=0;
+	while (sharedData->core_ctrl[myId].core_busy==0 || sharedData->core_ctrl[myId].core_busy<=pb) { }
+	receivedData.type=sharedData->core_ctrl[myId].data[11];
+	cpy(receivedData.data, &sharedData->core_ctrl[myId].data[12], 4);
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
@@ -732,16 +760,60 @@ void syncCores(int global) {
  * Broadcasts data, if this is the source then send it, all cores return the data (even the source)
  */
 static struct value_defn bcastData(struct value_defn to_send, int source, int totalProcesses) {
-  // TODO
-	return to_send;
+  if (myId==source) {
+		int i, totalActioned=0;
+		for (i=0;i<TOTAL_CORES && totalActioned<totalProcesses;i++) {
+			if (sharedData->core_ctrl[i].active) {
+				totalActioned++;
+				if (i == myId) continue;
+				sendData(to_send, i, 1);
+			}
+		}
+		return to_send;
+	} else {
+		return recvData(source);
+	}
 }
 
 /**
  * Reduction of data amongst the cores with some operator
  */
 static struct value_defn reduceData(struct value_defn to_send, int rop, int totalProcesses) {
-  // TODO
-	struct value_defn returnValue;
+  struct value_defn returnValue, retrieved;
+	int i, intV, tempInt, totalActioned=0;
+	float floatV, tempFloat;
+	if (to_send.type==INT_TYPE) {
+		cpy(&intV, to_send.data, sizeof(int));
+	} else {
+		cpy(&floatV, to_send.data, sizeof(int));
+	}
+	for (i=0;i<TOTAL_CORES && totalActioned<totalProcesses;i++) {
+		if (sharedData->core_ctrl[i].active) {
+			totalActioned++;
+			if (i == myId) continue;
+			retrieved=sendRecvData(to_send, i);
+			if (to_send.type==INT_TYPE) {
+				cpy(&tempInt, retrieved.data, sizeof(int));
+				if (rop==0) intV+=tempInt;
+				if (rop==1 && tempInt < intV) intV=tempInt;
+				if (rop==2 && tempInt > intV) intV=tempInt;
+				if (rop==3) intV*=tempInt;
+			} else {
+				cpy(&tempFloat, retrieved.data, sizeof(float));
+				if (rop==0) floatV+=tempFloat;
+				if (rop==1 && tempFloat < floatV) floatV=tempFloat;
+				if (rop==2 && tempFloat > floatV) floatV=tempFloat;
+				if (rop==3) floatV*=tempFloat;
+			}
+		}
+	}
+	returnValue.type=to_send.type;
+	returnValue.dtype=SCALAR;
+	if (to_send.type==INT_TYPE) {
+		cpy(returnValue.data, &intV, sizeof(int));
+	} else {
+		cpy(returnValue.data, &floatV, sizeof(float));
+	}
 	return returnValue;
 }
 
