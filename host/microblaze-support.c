@@ -386,7 +386,7 @@ static int getTypeOfInput(char * input) {
 /**
  * Performs some maths operation
  */
-static void performMathsOp(struct core_ctrl * core) {
+static void __attribute__((optimize("O0"))) performMathsOp(struct core_ctrl * core) {
 	if (core->core_command-1000 == RANDOM_MATHS_OP) {
 		core->data[0]=INT_TYPE;
 		int r=rand();
@@ -395,7 +395,7 @@ static void performMathsOp(struct core_ctrl * core) {
 		float fvalue=0.0, r=0.0;
 		int ivalue;
 		if (core->data[0]==REAL_TYPE) {
-            memcpy(&fvalue, &core->data[1], sizeof(float));
+        memcpy(&fvalue, &core->data[1], sizeof(float));
 		} else if (core->data[0]==INT_TYPE) {
 		    memcpy(&ivalue, &core->data[1], sizeof(int));
 		    fvalue=(float) ivalue;
