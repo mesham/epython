@@ -32,8 +32,10 @@
 #include "configuration.h"
 #if defined(EPIPHANY_TARGET)
 #include "epiphany-support.h"
+#include "epiphany-shared.h"
 #elif defined(MICROBLAZE_TARGET)
 #include "microblaze-support.h"
+#include "microblaze-shared.h"
 #elif defined(HOST_STANDALONE)
 #define TOTAL_CORES 1
 #endif
@@ -69,7 +71,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 	} else {
 #if defined(HOST_STANDALONE)
 		configuration->hostProcs=1;
-#elif defined(EPIPHANY_TARGET)
+#elif defined(EPIPHANY_TARGET) || defined(MICROBLAZE_TARGET)
 		configuration->hostProcs=0;
 #endif
 		configuration->coreProcs=0;
@@ -82,12 +84,12 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 				configuration->displayStats=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-pp")) {
 				configuration->displayPPCode=1;
-                        } else if (areStringsEqualIgnoreCase(argv[i], "-srec")) {
+      } else if (areStringsEqualIgnoreCase(argv[i], "-srec")) {
 				configuration->loadElf=0;
-		                configuration->loadSrec=1;
+        configuration->loadSrec=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-elf")) {
 				configuration->loadElf=1;
-		                configuration->loadSrec=0;
+        configuration->loadSrec=0;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-t")) {
 				configuration->displayTiming=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-fullpython")) {
@@ -134,7 +136,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 					exit(0);
 				} else {
 					int j, device_procs=atoi(argv[++i]);
-					for (j=0;j<16;j++) {
+					for (j=0;j<TOTAL_CORES;j++) {
 						configuration->intentActive[j]=j<device_procs ? 1 : 0;
 					}
 				}
@@ -170,10 +172,8 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 			fprintf(stderr, "You must supply a file to run as an argument, see -h for details\n");
 			exit(0);
 		}
-#ifdef EPIPHANY_TARGET
-		for (i=0;i<16;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
-#elif defined(MICROBLAZE_TARGET)
-    for (i=0;i<3;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
+#if defined(EPIPHANY_TARGET) || defined(MICROBLAZE_TARGET)
+		for (i=0;i<TOTAL_CORES;i++) if (configuration->intentActive[i]) configuration->coreProcs++;
 #endif
 	}
 }
@@ -185,12 +185,12 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, char * info) {
 	int i;
 	if (areStringsEqualIgnoreCase(info, "all")) {
-		for (i=0;i<16;i++) configuration->intentActive[i]=1;
+		for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=1;
 	} else {
 		if (strchr(info, ',') != NULL) {
 			char vn[5];
 			int s;
-			for (i=0;i<16;i++) configuration->intentActive[i]=0;
+			for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=0;
 			while (strchr(info, ',') != NULL) {
 				s=strchr(info, ',')-info;
 				memcpy(vn, info, s);
@@ -207,7 +207,7 @@ static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, 
 			vn[s]='\0';
 			int from=atoi(vn);
 			int to=atoi(strchr(info, ':')+1);
-			for (i=0;i<16;i++) {
+			for (i=0;i<TOTAL_CORES;i++) {
 				if (i >= from && i<= to) {
 					configuration->intentActive[i]=1;
 				} else {
@@ -215,7 +215,7 @@ static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, 
 				}
 			}
 		} else {
-			for (i=0;i<16;i++) configuration->intentActive[i]=0;
+			for (i=0;i<TOTAL_CORES;i++) configuration->intentActive[i]=0;
 			configuration->intentActive[atoi(info)]=1;
 		}
 	}
