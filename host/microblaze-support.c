@@ -64,10 +64,10 @@
 #define MAILBOX_START 0xA000
 
 static int max_cores=3;
-static char * core_program_name[3] = {PROGRAM_NAME, PROGRAM_NAME, PROGRAM_NAME};
-static char * core_reset_pin_key[3] = {RESET_PIN_CONFIG_KEY_PMODA, RESET_PIN_CONFIG_KEY_PMODB, RESET_PIN_CONFIG_KEY_ARDUINO};
-static char * core_interupt_pin_key[3] = {INTERUPT_PIN_CONFIG_KEY_PMODA, INTERUPT_PIN_CONFIG_KEY_PMODB, INTERUPT_PIN_CONFIG_KEY_ARDUINO};
-static char * core_mb_memory_key[3] = {MICROBLAZE_MEMORY_CONFIG_KEY_PMODA, MICROBLAZE_MEMORY_CONFIG_KEY_PMODB, MICROBLAZE_MEMORY_CONFIG_KEY_ARDUINO}
+static char * core_program_names[3] = {PROGRAM_NAME, PROGRAM_NAME, PROGRAM_NAME};
+static char * core_reset_pin_keys[3] = {RESET_PIN_CONFIG_KEY_PMODA, RESET_PIN_CONFIG_KEY_PMODB, RESET_PIN_CONFIG_KEY_ARDUINO};
+static char * core_interupt_pin_keys[3] = {INTERUPT_PIN_CONFIG_KEY_PMODA, INTERUPT_PIN_CONFIG_KEY_PMODB, INTERUPT_PIN_CONFIG_KEY_ARDUINO};
+static char * core_mb_memory_keys[3] = {MICROBLAZE_MEMORY_CONFIG_KEY_PMODA, MICROBLAZE_MEMORY_CONFIG_KEY_PMODB, MICROBLAZE_MEMORY_CONFIG_KEY_ARDUINO};
 
 struct gpio_state {
   int index, direction; // direction is 0 for out and 1 for everything else (specifically in)
@@ -170,7 +170,7 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	placeByteCode(basicCode, codeOnCore);
 	int i;
 	for (i=0;i<configuration->coreProcs;i++) {
-	  initialiseMicroblaze();
+	  initialiseMicroblaze(i);
 	}
 	cleanConfigurationRecords();
 	startApplicableCores(basicCode, configuration);
@@ -497,14 +497,14 @@ static void deactivateCore(struct interpreterconfiguration* configuration, int c
 }
 
 static void initialiseMicroblaze(int core_index) {
-  struct config_gpio_node * reset_pin_config=findGPIOConfigRecord(RESET_PIN_CONFIG_KEY);
+  struct config_gpio_node * reset_pin_config=findGPIOConfigRecord(core_reset_pin_keys[core_index]);
   if (reset_pin_config == NULL) {
-    fprintf(stderr, "Can not find reset pin with name %s in TCL file\n", RESET_PIN_CONFIG_KEY);
+    fprintf(stderr, "Can not find reset pin with name %s in TCL file\n", core_reset_pin_keys[core_index]);
     exit(EXIT_FAILURE);
   }
-  struct config_gpio_node * interupt_pin_config=findGPIOConfigRecord(INTERUPT_PIN_CONFIG_KEY);
+  struct config_gpio_node * interupt_pin_config=findGPIOConfigRecord(core_interupt_pin_keys[core_index]);
   if (interupt_pin_config == NULL) {
-    fprintf(stderr, "Can not find interupt pin with name %s in TCL file\n", INTERUPT_PIN_CONFIG_KEY);
+    fprintf(stderr, "Can not find interupt pin with name %s in TCL file\n", core_interupt_pin_keys[core_index]);
     exit(EXIT_FAILURE);
   }
 
@@ -514,9 +514,9 @@ static void initialiseMicroblaze(int core_index) {
     exit(EXIT_FAILURE);
   }
 
-  struct config_memory_node * microblaze_memory_config=findMemoryConfigRecord(MICROBLAZE_MEMORY_CONFIG_KEY);
+  struct config_memory_node * microblaze_memory_config=findMemoryConfigRecord(core_mb_memory_keys[core_index]);
   if (microblaze_memory_config == NULL) {
-    fprintf(stderr, "Can not find memory configuration entry %s in TCL file\n", MICROBLAZE_MEMORY_CONFIG_KEY);
+    fprintf(stderr, "Can not find memory configuration entry %s in TCL file\n", core_mb_memory_keys[core_index]);
     exit(EXIT_FAILURE);
   }
 
@@ -528,17 +528,28 @@ static void initialiseMicroblaze(int core_index) {
   writeGPIO(reset_pins[core_index], 1); // Reset Microblaze
 
   // Set up boostrapper mailbox, this is telling the MB what ID it is and the address of the shared memory
-  int myid_flag=0;
-  writeMMIO(microblaze_memories[core_index], MAILBOX_START, &myid_flag, 4); // The id, this is 0 for now as only one MB
+  writeMMIO(microblaze_memories[core_index], MAILBOX_START, &core_index, 4); // The core ID
   // Copy the physical address of shared memory onto the Microblaze so it can access it
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
   writeMMIO(microblaze_memories[core_index], MAILBOX_START+4, &physical_address, 4);
 
-  place_ePythonVMOnMicroblaze(PROGRAM_NAME, microblaze_memories[core_index]);
+  place_ePythonVMOnMicroblaze(core_program_names[core_index], microblaze_memories[core_index]);
   writeGPIO(reset_pins[core_index], 0); // Run code on Microblaze
   // Clear the interupt
   writeGPIO(interupt_pins[core_index], 1);
   writeGPIO(interupt_pins[core_index], 0);
+}
+
+static void place_ePythonVMOnMicroblaze(char * exec_name, struct mmio_state * microblaze_memory) {
+  int handle=open(exec_name, O_RDONLY);
+  struct stat st;
+  fstat(handle, &st);
+  int code_size = (int) (ceil(((double) st.st_size) / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE));
+  char * exec_buffer=(char*) malloc(code_size);
+  read(handle, exec_buffer, code_size);
+  writeMMIO(microblaze_memory, 0, exec_buffer, code_size);
+  free(exec_buffer);
+  close(handle);
 }
 
 static void startApplicableCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
@@ -609,18 +620,6 @@ static void placeByteCode(struct shared_basic * basicState, int codeOnCore) {
     basicState->edata=(void*) CORE_DATA_START+(basicState->symbol_size*
         (sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA));
   }
-}
-
-static void place_ePythonVMOnMicroblaze(char * exec_name, struct mmio_state * microblaze_memory) {
-  int handle=open(exec_name, O_RDONLY);
-  struct stat st;
-  fstat(handle, &st);
-  int code_size = (int) (ceil(((double) st.st_size) / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE));
-  char * exec_buffer=(char*) malloc(code_size);
-  read(handle, exec_buffer, code_size);
-  writeMMIO(microblaze_memory, 0, exec_buffer, code_size);
-  free(exec_buffer);
-  close(handle);
 }
 
 static struct mmio_state * createMMIO(unsigned int address_base, unsigned int length) {
