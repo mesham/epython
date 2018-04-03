@@ -46,14 +46,28 @@
 #define PROGRAM_NAME "epython-microblaze.bin"
 #define GPIO_DIR "/sys/class/gpio"
 
-#define RESET_PIN_CONFIG_KEY "mb_iop_pmoda_reset"
-#define INTERUPT_PIN_CONFIG_KEY "mb_iop_pmoda_intr_ack"
-#define MICROBLAZE_MEMORY_CONFIG_KEY "iop_pmoda/mb_bram_ctrl"
+#define RESET_PIN_CONFIG_KEY_PMODA "mb_iop_pmoda_reset"
+#define RESET_PIN_CONFIG_KEY_PMODB "mb_iop_pmodb_reset"
+#define RESET_PIN_CONFIG_KEY_ARDUINO "mb_iop_arduino_reset"
+
+#define INTERUPT_PIN_CONFIG_KEY_PMODA "mb_iop_pmoda_intr_ack"
+#define INTERUPT_PIN_CONFIG_KEY_PMODB "mb_iop_pmodb_intr_ack"
+#define INTERUPT_PIN_CONFIG_KEY_ARDUINO "mb_iop_arduino_intr_ack"
+
+#define MICROBLAZE_MEMORY_CONFIG_KEY_PMODA "iop_pmoda/mb_bram_ctrl"
+#define MICROBLAZE_MEMORY_CONFIG_KEY_PMODB "iop_pmodb/mb_bram_ctrl"
+#define MICROBLAZE_MEMORY_CONFIG_KEY_ARDUINO "iop_arduino/mb_bram_ctrl"
 
 #define SHARED_MEMORY_SIZE 1024*1024*32
 #define SYMBOL_TABLE_EXTRA 2
 #define GPIO_MIN_USER_PIN 54
 #define MAILBOX_START 0xA000
+
+static int max_cores=3;
+static char * core_program_name[3] = {PROGRAM_NAME, PROGRAM_NAME, PROGRAM_NAME};
+static char * core_reset_pin_key[3] = {RESET_PIN_CONFIG_KEY_PMODA, RESET_PIN_CONFIG_KEY_PMODB, RESET_PIN_CONFIG_KEY_ARDUINO};
+static char * core_interupt_pin_key[3] = {INTERUPT_PIN_CONFIG_KEY_PMODA, INTERUPT_PIN_CONFIG_KEY_PMODB, INTERUPT_PIN_CONFIG_KEY_ARDUINO};
+static char * core_mb_memory_key[3] = {MICROBLAZE_MEMORY_CONFIG_KEY_PMODA, MICROBLAZE_MEMORY_CONFIG_KEY_PMODB, MICROBLAZE_MEMORY_CONFIG_KEY_ARDUINO}
 
 struct gpio_state {
   int index, direction; // direction is 0 for out and 1 for everything else (specifically in)
@@ -79,8 +93,9 @@ struct config_memory_node {
 };
 
 struct timeval tval_before[TOTAL_CORES];
-struct gpio_state * reset_pin, * interupt_pin;
-struct mmio_state * microblaze_memory;
+struct gpio_state ** reset_pins, ** interupt_pins;
+struct mmio_state ** microblaze_memories;
+int num_initialised_microblazes;
 char * shared_buffer;
 int totalActive;
 static short active[TOTAL_CORES];
@@ -90,7 +105,7 @@ struct config_memory_node * head_memory_config=NULL;
 
 void _xlnk_reset();
 static void allocateSharedBuffer(void);
-static void initialiseMicroblaze(void);
+static void initialiseMicroblaze(int);
 static void initialiseCores(struct shared_basic*, int, struct interpreterconfiguration*);
 static void checkStatusFlagsOfCore(struct shared_basic*, struct interpreterconfiguration*, int);
 static void startApplicableCores(struct shared_basic*, struct interpreterconfiguration*);
@@ -102,7 +117,7 @@ static void raiseError(int, struct core_ctrl*);
 static void stringConcatenate(int, struct core_ctrl*);
 static void deactivateCore(struct interpreterconfiguration*, int);
 static void placeByteCode(struct shared_basic*, int);
-static void place_ePythonVMOnMicroblaze(char*);
+static void place_ePythonVMOnMicroblaze(char*, struct mmio_state*);
 static struct mmio_state * createMMIO(unsigned int, unsigned int);
 static void closeMMIO(struct mmio_state*);
 static void writeMMIO(struct mmio_state*, unsigned int, void*, unsigned int);
@@ -146,14 +161,21 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 	basicCode->baseHostPid=configuration->coreProcs;
 
+	reset_pins=(struct gpio_state **) malloc(sizeof(struct gpio_state *) * configuration->coreProcs);
+	interupt_pins=(struct gpio_state **) malloc(sizeof(struct gpio_state *) * configuration->coreProcs);
+  microblaze_memories=(struct mmio_state **) malloc(sizeof(struct mmio_state *) * configuration->coreProcs);
+  num_initialised_microblazes=configuration->coreProcs;
+
   initialiseCores(basicCode, codeOnCore, configuration);
 	placeByteCode(basicCode, codeOnCore);
-	initialiseMicroblaze();
+	int i;
+	for (i=0;i<configuration->coreProcs;i++) {
+	  initialiseMicroblaze();
+	}
 	cleanConfigurationRecords();
 	startApplicableCores(basicCode, configuration);
 
 	pb=(unsigned int*) malloc(sizeof(unsigned int) * TOTAL_CORES);
-	int i;
 	for (i=0;i<TOTAL_CORES;i++) {
 		pb[i]=1;
 	}
@@ -174,9 +196,15 @@ void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfi
 
 void finaliseMicroblaze(void) {
   cma_free(shared_buffer);
-  closeMMIO(microblaze_memory);
-  closeGPIO(reset_pin);
-  closeGPIO(interupt_pin);
+  int i;
+  for (i=0;i<num_initialised_microblazes;i++) {
+    closeMMIO(microblaze_memories[i]);
+    closeGPIO(reset_pins[i]);
+    closeGPIO(interupt_pins[i]);
+  }
+  free(microblaze_memories);
+  free(reset_pins);
+  free(interupt_pins);
 }
 
 
@@ -468,7 +496,7 @@ static void deactivateCore(struct interpreterconfiguration* configuration, int c
 	totalActive--;
 }
 
-static void initialiseMicroblaze(void) {
+static void initialiseMicroblaze(int core_index) {
   struct config_gpio_node * reset_pin_config=findGPIOConfigRecord(RESET_PIN_CONFIG_KEY);
   if (reset_pin_config == NULL) {
     fprintf(stderr, "Can not find reset pin with name %s in TCL file\n", RESET_PIN_CONFIG_KEY);
@@ -486,30 +514,31 @@ static void initialiseMicroblaze(void) {
     exit(EXIT_FAILURE);
   }
 
-  reset_pin=openGPIO(reset_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
-  interupt_pin=openGPIO(interupt_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
-
   struct config_memory_node * microblaze_memory_config=findMemoryConfigRecord(MICROBLAZE_MEMORY_CONFIG_KEY);
   if (microblaze_memory_config == NULL) {
     fprintf(stderr, "Can not find memory configuration entry %s in TCL file\n", MICROBLAZE_MEMORY_CONFIG_KEY);
     exit(EXIT_FAILURE);
   }
-  microblaze_memory=createMMIO(microblaze_memory_config->address, microblaze_memory_config->range);
 
-  writeGPIO(reset_pin, 1); // Reset Microblaze
+  reset_pins[core_index]=openGPIO(reset_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
+  interupt_pins[core_index]=openGPIO(interupt_pin_config->index + chipId + GPIO_MIN_USER_PIN, "out");
+
+  microblaze_memories[core_index]=createMMIO(microblaze_memory_config->address, microblaze_memory_config->range);
+
+  writeGPIO(reset_pins[core_index], 1); // Reset Microblaze
 
   // Set up boostrapper mailbox, this is telling the MB what ID it is and the address of the shared memory
   int myid_flag=0;
-  writeMMIO(microblaze_memory, MAILBOX_START, &myid_flag, 4); // The id, this is 0 for now as only one MB
+  writeMMIO(microblaze_memories[core_index], MAILBOX_START, &myid_flag, 4); // The id, this is 0 for now as only one MB
   // Copy the physical address of shared memory onto the Microblaze so it can access it
   unsigned int physical_address=cma_get_phy_addr((void*) shared_buffer);
-  writeMMIO(microblaze_memory, MAILBOX_START+4, &physical_address, 4);
+  writeMMIO(microblaze_memories[core_index], MAILBOX_START+4, &physical_address, 4);
 
-  place_ePythonVMOnMicroblaze(PROGRAM_NAME);
-  writeGPIO(reset_pin, 0); // Run code on Microblaze
+  place_ePythonVMOnMicroblaze(PROGRAM_NAME, microblaze_memories[core_index]);
+  writeGPIO(reset_pins[core_index], 0); // Run code on Microblaze
   // Clear the interupt
-  writeGPIO(interupt_pin, 1);
-  writeGPIO(interupt_pin, 0);
+  writeGPIO(interupt_pins[core_index], 1);
+  writeGPIO(interupt_pins[core_index], 0);
 }
 
 static void startApplicableCores(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
@@ -582,7 +611,7 @@ static void placeByteCode(struct shared_basic * basicState, int codeOnCore) {
   }
 }
 
-static void place_ePythonVMOnMicroblaze(char * exec_name) {
+static void place_ePythonVMOnMicroblaze(char * exec_name, struct mmio_state * microblaze_memory) {
   int handle=open(exec_name, O_RDONLY);
   struct stat st;
   fstat(handle, &st);

@@ -27,7 +27,7 @@
 #ifndef MICROBLAZE_SHARED_H_
 #define MICROBLAZE_SHARED_H_
 
-#define TOTAL_CORES 1
+#define TOTAL_CORES 3
 // Start location in shared memory where we place the data structures
 #define EXTERNAL_MEM_ABSOLUTE_START 0x01000000
 
