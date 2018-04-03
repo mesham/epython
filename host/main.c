@@ -397,6 +397,9 @@ static void displayParsedBasicInfo() {
 #if defined(EPIPHANY_TARGET)
 	printf("%d bytes for code, %lu bytes for symbol table (%d entries), %d bytes free\n",
 			memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries, (0x8000-CORE_DATA_START)-(memSize+(symbolEntries*5)));
+#elif defined(MICROBLAZE_TARGET)
+  printf("%d bytes for code, %lu bytes for symbol table (%d entries), %d bytes free\n",
+			memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries, (0x10000-CORE_DATA_START)-(memSize+(symbolEntries*5)));
 #elif defined(HOST_STANDALONE)
 	printf("%d bytes for code, %lu bytes for symbol table (%d entries)\n", memSize, symbolEntries*sizeof(struct symbol_node), symbolEntries);
 #endif
