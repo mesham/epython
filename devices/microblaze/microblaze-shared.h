@@ -37,7 +37,7 @@
 #define SHARED_CODE_AREA_START 0x00100000
 #define SHARED_DATA_SIZE 0x01000000
 #define LOCAL_CORE_MEMORY_MAP_TOP 0x10000
-#define LOCAL_CORE_STACK_SIZE 0x400
+#define LOCAL_CORE_STACK_SIZE 0xC00
 
 struct core_ctrl {
 	unsigned int core_run, core_busy, core_command;
