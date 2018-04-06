@@ -225,9 +225,16 @@ static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, 
  * Displays the help message with usage information
  */
 static void displayHelp() {
-	printf("Epiphany Python version %s\n", VERSION_IDENT);
-	printf("epython [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
 #ifdef EPIPHANY_TARGET
+	char * arch="the Epiphany"
+#elifdef MICROBLAZE_TARGET
+  char * arch="the Microblaze"
+#elifdef HOST_STANDALONE
+  char * arch="Linux"
+#endif // MICROBLAZE_TARGET
+  printf("ePython version %s, VM running on %s\n", VERSION_IDENT, arch);
+	printf("epython [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
+#if defined(EPIPHANY_TARGET) || defined(MICROBLAZE_TARGET)
 	printf("-c placement   Specify core placement; can be a single id, all, a range (a:b) or a list (a,b,c,d)\n");
 	printf("-d processes   Specify number of process on the device\n");
 	printf("-h processes   Specify number of process on the host\n");

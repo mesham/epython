@@ -109,6 +109,9 @@ char* translateErrorCodeToMessage(unsigned char errorCode) {
     case ERR_NBSEND_NOT_SUPPORTED:
         errorMessage="Non-blocking sends between device and virtual cores on the host are not yet supported";
         break;
+    case ERR_NATIVE_COMMAND_NOT_SUPPORTED:
+        errorMessage="Native command not supported on this target architecture";
+        break;
     }
     if (errorMessage != NULL) {
         char * msgToRet=(char*) malloc(strlen(errorMessage) + 1);

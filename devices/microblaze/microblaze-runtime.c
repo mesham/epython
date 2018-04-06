@@ -190,21 +190,9 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 			raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		}
 	} else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
-		value->type=parameters[0].type;
-		value->dtype=parameters[0].dtype;
-		char * ptr;
-		cpy(&ptr, parameters[0].data, sizeof(char*));
-		// TODO - need to go from MB address space to another space
-		//int row=localCoreId/e_group_config.group_cols;
-		//int col=localCoreId-(row*e_group_config.group_cols);
-		char * remoteMemory=NULL; //(char*) e_get_global_address(row, col, ptr);
-		cpy(value->data, &remoteMemory, sizeof(char*));
-	} else if (fnIdentifier==NATIVE_FN_RTL_DEREFERENCE) {
-		value->type=parameters[0].type & 0x1F;
-		value->dtype=(parameters[0].type >> 5 & 0x3) + 2;
-		cpy(value->data, parameters[0].data, sizeof(char*));
+		raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
 	} else {
-        raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
+    raiseError(ERR_UNKNOWN_NATIVE_COMMAND);
 	}
 };
 
