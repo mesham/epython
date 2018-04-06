@@ -52,7 +52,7 @@ while norm >= 1e-4 and its < MAX_ITS:
         tmpnorm=reduce(tmpnorm, "sum")
         norm=sqrt(tmpnorm)/bnorm
 
-        if coreid()==0 and its%1000 == 0: print "RNorm is "+norm+" at "+its+" iterations"
+        if coreid()==0 and its%100 == 0: print "RNorm is "+norm+" at "+its+" iterations"
 
         # Performs the Jacobi iteration for Laplace
         i=1
