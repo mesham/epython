@@ -597,11 +597,15 @@ static void initialiseCores(struct shared_basic * basicState, int codeOnCore, st
 }
 
 static void allocateSharedBuffer(void) {
-  _xlnk_reset();  // Reset the link which should free up any previously allocated but not freed memory
   unsigned int page_size=sysconf(_SC_PAGESIZE);
   if (SHARED_MEMORY_SIZE >= page_size*cma_pages_available()) {
-    fprintf(stderr, "Unable to allocate shared memory as %d bytes is needed but only %d bytes available\n", SHARED_MEMORY_SIZE, page_size*cma_pages_available());
-    exit(EXIT_FAILURE);
+    // If we haven't got enough shared memory then first reset the link which should free up any previously allocated but not freed memory
+    _xlnk_reset();
+    // Now recheck how much shared memory there is and error if we don't have enough available
+    if (SHARED_MEMORY_SIZE >= page_size*cma_pages_available()) {
+      fprintf(stderr, "Unable to allocate shared memory as %d bytes is needed but only %d bytes available\n", SHARED_MEMORY_SIZE, page_size*cma_pages_available());
+      exit(EXIT_FAILURE);
+    }
   }
   shared_buffer=(char*) cma_alloc(SHARED_MEMORY_SIZE, 0);
   if (shared_buffer == 0) {
