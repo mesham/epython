@@ -225,13 +225,14 @@ static void parseCoreActiveInfo(struct interpreterconfiguration* configuration, 
  * Displays the help message with usage information
  */
 static void displayHelp() {
-#ifdef EPIPHANY_TARGET
-	char * arch="the Epiphany"
-#elifdef MICROBLAZE_TARGET
-  char * arch="the Microblaze"
-#elifdef HOST_STANDALONE
-  char * arch="Linux"
-#endif // MICROBLAZE_TARGET
+#if defined(EPIPHANY_TARGET)
+	char * arch="the Epiphany";
+#elif defined(MICROBLAZE_TARGET)
+  char * arch="the Microblaze";
+#elif defined(HOST_STANDALONE)
+  char * arch="Linux";
+#endif
+
   printf("ePython version %s, VM running on %s\n", VERSION_IDENT, arch);
 	printf("epython [arguments] filename\n\nWhere filename is the source code to execute by default on all cores\n\nArguments\n--------\n");
 #if defined(EPIPHANY_TARGET) || defined(MICROBLAZE_TARGET)
