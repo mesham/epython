@@ -569,6 +569,7 @@ static void startApplicableCores(struct shared_basic * basicState, struct interp
 
 static void initialiseCores(struct shared_basic * basicState, int codeOnCore, struct interpreterconfiguration* configuration) {
   char * core_shared_mem_address=cma_get_phy_addr((void*) shared_buffer) | 0x20000000;
+  char * postbox_starting_mem_address=((char*) basicState) + (sizeof(struct shared_basic) + 1024);
 	unsigned int i, j;
 	char allActive=1;
 	for (i=0;i<TOTAL_CORES;i++) {
@@ -577,11 +578,11 @@ static void initialiseCores(struct shared_basic * basicState, int codeOnCore, st
 		basicState->core_ctrl[i].core_busy=0;
 		basicState->core_ctrl[i].core_command=0;
 		basicState->core_ctrl[i].symbol_table=(void*) CORE_DATA_START;
-		basicState->core_ctrl[i].postbox_start=(void*) (CORE_DATA_START+(basicState->symbol_size*
-				(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA))+(codeOnCore?basicState->length:0));
+		basicState->core_ctrl[i].postbox_start=postbox_starting_mem_address + (i * 100);
+
 		if (!configuration->forceDataOnShared) {
 			// If on core then store after the symbol table and code
-			basicState->core_ctrl[i].stack_start=basicState->core_ctrl[i].postbox_start+100;
+			basicState->core_ctrl[i].stack_start=(void*) (CORE_DATA_START+(basicState->symbol_size*(sizeof(struct symbol_node)+SYMBOL_TABLE_EXTRA))+(codeOnCore?basicState->length:0));
 			basicState->core_ctrl[i].heap_start=basicState->core_ctrl[i].stack_start+LOCAL_CORE_STACK_SIZE;
 		} else {
 			basicState->core_ctrl[i].stack_start=SHARED_DATA_AREA_START+(i*(SHARED_STACK_DATA_AREA_PER_CORE+SHARED_HEAP_DATA_AREA_PER_CORE))+(void*)core_shared_mem_address;

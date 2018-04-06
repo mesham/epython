@@ -648,15 +648,44 @@ static void sendDataToHostProcess(struct value_defn to_send, int hostProcessTarg
 }
 
 static void sendDataToDeviceCore(struct value_defn to_send, int target, char blocking) {
-	// TODO
+	if (!sharedData->core_ctrl[target].active) {
+		raiseError(ERR_SEND_TO_INACTIVE_CORE);
+	} else {
+		communication_data[0]=to_send.type;
+		cpy(&communication_data[1], to_send.data, 4);
+		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
+		communication_data[5]=syncValues[target];
+		char * remoteMemory=(char*) sharedData->core_ctrl[target].postbox_start + (myId*6);
+		cpy(remoteMemory, communication_data, 6);
+		syncValues[target]=syncValues[target]==255 ? 0 : syncValues[target]+1;
+		if (blocking) {
+      while (communication_data[5] != syncValues[target]) {
+        cpy(communication_data, remoteMemory, 6);
+      }
+		}
+	}
 }
 
 static struct value_defn test_or_wait_for_sent_message(int target, char is_wait) {
-  // TODO
   struct value_defn toreturn;
   toreturn.type=BOOLEAN_TYPE;
   toreturn.dtype=SCALAR;
-  raiseError(ERR_PROBE_NOT_SUPPORTED);
+  if (target < getLargestCoreId(target)) {
+		int boolVal;
+		char * remoteMemory=sharedData->core_ctrl[target].postbox_start + (myId*6);
+		cpy(communication_data, remoteMemory, 6);
+    if (is_wait) {
+      while (communication_data[5] != syncValues[target]) {
+        cpy(communication_data, remoteMemory, 6);
+      }
+      boolVal=1;
+    } else {
+      boolVal=communication_data[5] == syncValues[target];
+    }
+    cpy(toreturn.data, &boolVal, sizeof(int));
+	} else {
+    raiseError(ERR_PROBE_NOT_SUPPORTED);
+	}
 	return toreturn;
 }
 
@@ -676,11 +705,18 @@ static int getLargestCoreId(int source) {
 }
 
 static struct value_defn probeForMessage(int source) {
-  // TODO
   struct value_defn toreturn;
   toreturn.type=BOOLEAN_TYPE;
   toreturn.dtype=SCALAR;
-	raiseError(ERR_PROBE_NOT_SUPPORTED);
+	if (source < getLargestCoreId(source)) {
+    if (!sharedData->core_ctrl[source].active) raiseError(ERR_RECV_FROM_INACTIVE_CORE);
+    cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
+		volatile unsigned char searchingSVal=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		int boolVal=communication_data[5] == searchingSVal;
+		cpy(toreturn.data, &boolVal, sizeof(int));
+	} else {
+    raiseError(ERR_PROBE_NOT_SUPPORTED);
+	}
 	return toreturn;
 }
 
@@ -709,8 +745,22 @@ static struct value_defn recvDataFromHostProcess(int hostSource) {
  * Gets some data from another core (blocking operation)
  */
 static struct value_defn recvDataFromDeviceCore(int source) {
-  // TODO
-	struct value_defn to_recv;
+  struct value_defn to_recv;
+	if (!sharedData->core_ctrl[source].active) {
+		raiseError(ERR_RECV_FROM_INACTIVE_CORE);
+	} else {
+		cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
+		syncValues[source]=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		while (communication_data[5] != syncValues[source]) {
+			cpy(communication_data, sharedData->core_ctrl[myId].postbox_start + (source*6), 6);
+		}
+		syncValues[source]=syncValues[source]==255 ? 0 : syncValues[source]+1;
+		communication_data[5]=syncValues[source];
+		cpy(sharedData->core_ctrl[myId].postbox_start + (source*6), communication_data, 6);
+		to_recv.type=communication_data[0];
+		cpy(to_recv.data, &communication_data[1], 4);
+	}
+	to_recv.dtype=SCALAR;
 	return to_recv;
 }
 
@@ -744,8 +794,22 @@ static struct value_defn sendRecvDataWithHostProcess(struct value_defn to_send, 
 }
 
 static struct value_defn sendRecvDataWithDeviceCore(struct value_defn to_send, int target) {
-  // TODO
-	struct value_defn receivedData;
+  struct value_defn receivedData;
+	if (!sharedData->core_ctrl[target].active) {
+		raiseError(ERR_SEND_TO_INACTIVE_CORE);
+	} else {
+		communication_data[0]=to_send.type;
+		cpy(&communication_data[1], to_send.data, 4);
+		communication_data[5]=syncValues[target]==255 ? 0 : syncValues[target]+1;
+		char * remoteMemory=sharedData->core_ctrl[target].postbox_start + (myId*6);
+		cpy(remoteMemory, communication_data, 6);
+		receivedData=recvData(target);
+		communication_data[5]=syncValues[target]==0 ? 255 : syncValues[target]-1;
+		while (communication_data[5] != syncValues[target]) {
+			cpy(communication_data, remoteMemory, 6);
+		}
+	}
+	receivedData.dtype=SCALAR;
 	return receivedData;
 }
 
