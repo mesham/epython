@@ -29,6 +29,7 @@
 #include "microblaze-shared.h"
 
 extern volatile struct shared_basic * sharedData;
+extern volatile unsigned char syncValues[TOTAL_CORES];
 extern int myId, lowestCoreId;
 
 #endif /* MAIN_H_ */

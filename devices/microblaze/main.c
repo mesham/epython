@@ -33,6 +33,7 @@
 #define BOOTSTRAP_MAILBOX_ADDR 0xA000
 
 volatile struct shared_basic * sharedData;
+volatile unsigned char syncValues[TOTAL_CORES];
 int myId, lowestCoreId;
 
 /**
@@ -49,6 +50,15 @@ int main() {
   }
   sharedData->core_ctrl[myId].core_busy=1;
 	sharedData->core_ctrl[myId].core_run=1;
+
+	int i;
+	lowestCoreId=TOTAL_CORES;
+	for (i=0;i<TOTAL_CORES;i++) {
+		syncValues[i]=0;
+		if (sharedData->core_ctrl[i].active) {
+			if (i< lowestCoreId) lowestCoreId=i;
+		}
+	}
 
   if (sharedData->codeOnCores) {
     cpy(sharedData->edata, sharedData->esdata, sharedData->length);
