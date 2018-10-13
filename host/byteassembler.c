@@ -156,119 +156,67 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
     } else if (strcmp(functionName, NATIVE_RTL_ISDEVICE_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_ISDEVICE, position);
     } else if (strcmp(functionName, NATIVE_RTL_PRINT_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_PRINT;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_PRINT, position);
     } else if (strcmp(functionName, NATIVE_RTL_NUMDIMS_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_NUMDIMS;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMDIMS, position);
     } else if (strcmp(functionName, NATIVE_RTL_DSIZE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_DSIZE;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_DSIZE, position);
     } else if (strcmp(functionName, NATIVE_RTL_INPUT_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUT, position);
     } else if (strcmp(functionName, NATIVE_RTL_INPUTPRINT_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_INPUTPRINT;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_INPUTPRINT, position);
     } else if (strcmp(functionName, NATIVE_RTL_SYNC_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_SYNC, position);
     } else if (strcmp(functionName, NATIVE_RTL_GC_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_GC, position);
     } else if (strcmp(functionName, NATIVE_RTL_FREE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_FREE;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_FREE, position);
     } else if (strcmp(functionName, NATIVE_RTL_SEND_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_SEND;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND, position);
     } else if (strcmp(functionName, NATIVE_RTL_RECV_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_RECV;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_RECV, position);
     } else if (strcmp(functionName, NATIVE_RTL_SENDRECV_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_SENDRECV;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SENDRECV, position);
     } else if (strcmp(functionName, NATIVE_RTL_BCAST_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_BCAST;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_BCAST, position);
     } else if (strcmp(functionName, NATIVE_RTL_NUMCORES_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_NUMCORES, position);
     } else if (strcmp(functionName, NATIVE_RTL_COREID_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_COREID, position);
     } else if (strcmp(functionName, NATIVE_RTL_REDUCE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_REDUCE;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_REDUCE, position);
     } else if (strcmp(functionName, NATIVE_RTL_ALLOCATEARRAY_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_ALLOCARRAY;
-				unsigned char args=0b11100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCARRAY, position);
     } else if (strcmp(functionName, NATIVE_RTL_ALLOCATESHAREDARRAY_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_ALLOCSHAREDARRAY;
-				unsigned char args=0b11100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_ALLOCSHAREDARRAY, position);
     } else if (strcmp(functionName, NATIVE_RTL_MATH_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_MATH;
-				unsigned char args=0b11100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_MATH, position);
     } else if (strcmp(functionName, NATIVE_RTL_PROBE_FOR_MESSAGE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_PROBE_FOR_MESSAGE;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_PROBE_FOR_MESSAGE, position);
     } else if (strcmp(functionName, NATIVE_RTL_TEST_FOR_SEND_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_TEST_FOR_SEND;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TEST_FOR_SEND, position);
     } else if (strcmp(functionName, NATIVE_RTL_WAIT_FOR_SEND_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_WAIT_FOR_SEND;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_WAIT_FOR_SEND, position);
     } else if (strcmp(functionName, NATIVE_RTL_SEND_NB_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_SEND_NB;
-				unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SEND_NB, position);
     } else if (strcmp(functionName, NATIVE_RTL_GLOBAL_REFRENCE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_GLOBAL_REFERENCE;
-				unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GLOBAL_REFERENCE, position);
     } else if (strcmp(functionName, NATIVE_RTL_DEREFRENCE_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_DEREFERENCE;
-				unsigned char args=0b00100000;
-				position=appendStatement(memoryContainer, args | command, position);
+				position=appendStatement(memoryContainer, NATIVE_FN_RTL_DEREFERENCE, position);
 		} else if (strcmp(functionName, NATIVE_RTL_FLATTEN_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_FLATTEN;
-				unsigned char args=0b01000000;
-				position=appendStatement(memoryContainer, args | command, position);
+				position=appendStatement(memoryContainer, NATIVE_FN_RTL_FLATTEN, position);
 		} else if (strcmp(functionName, NATIVE_RTL_ARRAY_COPY_STR)==0) {
-				unsigned char command=NATIVE_FN_RTL_ARRAYCOPY;
-				unsigned char args=0b10100000;
-				position=appendStatement(memoryContainer, args | command, position);
+				position=appendStatement(memoryContainer, NATIVE_FN_RTL_ARRAYCOPY, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_OPEN_DEVICE_STR)==0) {
-        unsigned char command=NATIVE_FN_RTL_I2C_OPEN_DEVICE;
-        unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_OPEN_DEVICE, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_OPEN_STR)==0) {
-        unsigned char command=NATIVE_FN_RTL_I2C_OPEN;
-        unsigned char args=0b01000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_OPEN, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_READ_STR)==0) {
-        unsigned char command=NATIVE_FN_RTL_I2C_READ;
-        unsigned char args=0b10000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_READ, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_WRITE_STR)==0) {
-        unsigned char command=NATIVE_FN_RTL_I2C_WRITE;
-        unsigned char args=0b10000000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_WRITE, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_CLOSE_STR)==0) {
-        unsigned char command=NATIVE_FN_RTL_I2C_CLOSE;
-        unsigned char args=0b00100000;
-        position=appendStatement(memoryContainer, args | command, position);
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_CLOSE, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_GET_NUM_DEVICES_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_GET_NUM_DEVICES, position);
     } else {
