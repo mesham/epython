@@ -30,7 +30,7 @@
 #include "functions.h"
 #include "mb_interface.h"
 
-#define BOOTSTRAP_MAILBOX_ADDR 0xA800
+#define BOOTSTRAP_MAILBOX_ADDR 0xB800
 
 volatile struct shared_basic * sharedData;
 volatile unsigned char syncValues[TOTAL_CORES];
