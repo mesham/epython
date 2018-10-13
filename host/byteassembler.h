@@ -58,6 +58,12 @@
 #define NATIVE_RTL_DEREFRENCE_STR "rtl_dereference"
 #define NATIVE_RTL_FLATTEN_STR "rtl_flatten"
 #define NATIVE_RTL_ARRAY_COPY_STR "rtl_arraycopy"
+#define NATIVE_RTL_I2C_OPEN_DEVICE_STR "rtl_i2c_open_device"
+#define NATIVE_RTL_I2C_OPEN_STR "rtl_i2c_open"
+#define NATIVE_RTL_I2C_READ_STR "rtl_i2c_read"
+#define NATIVE_RTL_I2C_WRITE_STR "rtl_i2c_write"
+#define NATIVE_RTL_I2C_CLOSE_STR "rtl_i2c_close"
+#define NATIVE_RTL_I2C_GET_NUM_DEVICES_STR "rtl_i2c_get_num_devices"
 
 extern int line_num;
 extern char * fn_decorator;

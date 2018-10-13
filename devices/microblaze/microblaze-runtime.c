@@ -29,6 +29,7 @@
 #include "basictokens.h"
 #include "interpreter.h"
 #include "microblaze-shared.h"
+#include "i2c.h"
 
 #define NULL 0
 typedef unsigned int size_t; // Microblaze is 32 bit hence we can get away with this
@@ -189,6 +190,32 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		} else {
 			raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		}
+	} else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE) {
+	  unsigned int device;
+	  cpy(&device, parameters[0].data, sizeof(int));
+	  i2c returnedHandle=i2c_open_device(device);
+	  value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &returnedHandle, sizeof(int));
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN) {
+	  unsigned int sda, sc1;
+	  cpy(&sda, parameters[0].data, sizeof(int));
+	  cpy(&sc1, parameters[1].data, sizeof(int));
+	  i2c returnedHandle=i2c_open(sda, sc1);
+	  value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &returnedHandle, sizeof(int));
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_READ) {
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE) {
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE) {
+    i2c handle;
+    cpy(value->data, &handle, sizeof(int));
+    i2c_close(handle);
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_GET_NUM_DEVICES) {
+    unsigned int num_devices=i2c_get_num_devices();
+    value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &num_devices, sizeof(int));
 	} else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
 		raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
 	} else {

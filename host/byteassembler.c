@@ -249,6 +249,28 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
 				unsigned char command=NATIVE_FN_RTL_ARRAYCOPY;
 				unsigned char args=0b10100000;
 				position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_OPEN_DEVICE_STR)==0) {
+        unsigned char command=NATIVE_FN_RTL_I2C_OPEN_DEVICE;
+        unsigned char args=0b00100000;
+        position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_OPEN_STR)==0) {
+        unsigned char command=NATIVE_FN_RTL_I2C_OPEN;
+        unsigned char args=0b01000000;
+        position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_READ_STR)==0) {
+        unsigned char command=NATIVE_FN_RTL_I2C_READ;
+        unsigned char args=0b10000000;
+        position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_WRITE_STR)==0) {
+        unsigned char command=NATIVE_FN_RTL_I2C_WRITE;
+        unsigned char args=0b10000000;
+        position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_CLOSE_STR)==0) {
+        unsigned char command=NATIVE_FN_RTL_I2C_CLOSE;
+        unsigned char args=0b00100000;
+        position=appendStatement(memoryContainer, args | command, position);
+    } else if (strcmp(functionName, NATIVE_RTL_I2C_GET_NUM_DEVICES_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_GET_NUM_DEVICES, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);
