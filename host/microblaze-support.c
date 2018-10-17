@@ -61,7 +61,7 @@
 #define SHARED_MEMORY_SIZE 1024*1024*6
 #define SYMBOL_TABLE_EXTRA 2
 #define GPIO_MIN_USER_PIN 54
-#define MAILBOX_START 0xC000
+#define MAILBOX_START 0xC800
 
 static int max_cores=3;
 static char * core_program_names[3] = {PROGRAM_NAME, PROGRAM_NAME, PROGRAM_NAME};
