@@ -1,19 +1,22 @@
 #!/usr/bin/python
+from __future__ import print_function
 import os
 import stat
 import sys
 import functools
-import thread
 import atexit
 import os.path
 import subprocess
 from threading import Thread, Lock, Condition
 import inspect
 import re
+import __main__ as main
 
 useNumpy=False
 
 if useNumpy: import numpy as np
+
+interactivePython=not hasattr(main, '__file__')
 
 toepython_pipe_name="/tmp/toepython"
 fromepython_pipe_name="/tmp/fromepython"
@@ -35,33 +38,34 @@ EPIPHANY_DEVICE=1
 def executeOnCoProcessor():
 	global popen
 	for line in iter(popen.stdout.readline, b''):
-		print line,
+		print(line, end="")
 	popen.stdout.close()
 
 def pingEpython():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "10\n")
+	os.write(wp, "10\n".encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	raw_data=os.read(rp, 1024)
+	raw_data=str(os.read(rp, 1024))
 	os.close(rp)
 
 def stopEpython():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "11\n")
+	os.write(wp, "11\n".encode())
 	os.close(wp)
 
 def getExportableFunctionTable():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "9\n")
+	os.write(wp, "9\n".encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	raw_data=os.read(rp, 8192)
+	raw_data=str(os.read(rp, 8192).decode('ascii'))
 	os.close(rp)
 	exportedFunctions={}
 	if raw_data != "-":
 		for line in raw_data.splitlines():
-			exportedFunctions[line.split('>')[0]]=int(line.split('>')[1])
+		  if (line.count(">") > 0):
+			  exportedFunctions[line.split('>')[0]]=int(line.split('>')[1])
 	return exportedFunctions
 
 def getTypeFromData(data):
@@ -79,20 +83,20 @@ def getTypeFromData(data):
 				return 1
 			elif type(data) is np.bool:
 				return 3
-	print "Error, can not map data to type "+str(type(data))
+	print ("Error, can not map data to type "+str(type(data)))
 	quit()
 
 def sendrecv(data, pid):
 	command_to_send="8 "+str(pid)+" "+str(getTypeFromData(data))+" "
 	command_to_send+="0 "+str(data)+"\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, command_to_send)
+	os.write(wp, command_to_send.encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	items = recv_data.split(" ")
-        if items[0]=="0":
+	if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
 		return float(items[2])
@@ -119,7 +123,7 @@ def underlyingSend(data, pid, length, isFunctionPointer=False):
 
 	command_to_send+="\n"
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, command_to_send)
+	os.write(wp, command_to_send.encode())
 	os.close(wp)
 
 def send(data, pid, length=None, isFunctionPointer=False):
@@ -132,23 +136,23 @@ def send(data, pid, length=None, isFunctionPointer=False):
 
 def probe(pid):
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "12 "+str(pid)+"\n")
+	os.write(wp, ("12 "+str(pid)+"\n").encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	items = recv_data.split(" ")
 	return bool(items[2])
 
 def underlyingRecv(pid):
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "2 "+str(pid)+"\n")
+	os.write(wp, ("2 "+str(pid)+"\n").encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	items = recv_data.split(" ")
-        if items[0]=="0":
+	if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
 		return float(items[2])
@@ -177,20 +181,20 @@ def reduce(data, operator):
 	elif operator=="prod":
 		command_to_send+="3 "
 	else:
-		print "Operator "+operator+" not found"
+		print ("Operator "+operator+" not found")
 
 	command_to_send+=str(getTypeFromData(data))+" "
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, command_to_send)
+	os.write(wp, command_to_send.encode())
 	os.close(wp)
 
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	items = recv_data.split(" ")
-        if items[0]=="0":
+	if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
 		return float(items[2])
@@ -204,14 +208,14 @@ def bcast(data, root):
 	command_to_send+="0 "+str(data)+"\n"
 
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, command_to_send)
+	os.write(wp, command_to_send.encode())
 	os.close(wp)
 
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
 	recv_data=os.read(rp, 1024)
 	os.close(rp)
-	items = recv_data.split(" ")
-        if items[0]=="0":
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
+	if items[0]=="0":
 		return int(items[2])
 	if items[0]=="1":
 		return float(items[2])
@@ -220,28 +224,28 @@ def bcast(data, root):
 
 def numcores():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "3\n")
+	os.write(wp, "3\n".encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	return int(recv_data)
 
 def coreid():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "4\n")
+	os.write(wp, "4\n".encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 	return int(recv_data)
 
 def sync():
 	wp=os.open(toepython_pipe_name, os.O_WRONLY)
-	os.write(wp, "5\n")
+	os.write(wp, "5\n".encode())
 	os.close(wp)
 	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
-	recv_data=os.read(rp, 1024)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 
 def ishost():
@@ -374,7 +378,7 @@ def copy_from_device(var, target=None, async=False):
 		varId=globalVars.index(var)
 		return issueKernelLaunches("copyFromGlobal", async, target, None, True if target == None else False, [varId])
 	except ValueError:
-		print "Error, can not find global variable " +str(var)+" for copying from the device"
+		print ("Error, can not find global variable " +str(var)+" for copying from the device")
 		quit()
 
 def define_on_device(var):
@@ -385,7 +389,7 @@ def copy_to_device(var, data, target=None, async=False):
 		varId=globalVars.index(var)
 		return issueKernelLaunches("copyToGlobal", async, target, None, True if target == None else False, [varId, data])
 	except ValueError:
-		print "Error, can not find global variable " +str(var)+" for copying to device"
+		print ("Error, can not find global variable " +str(var)+" for copying to device")
 		quit()
 
 def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
@@ -407,7 +411,7 @@ def issueKernelLaunches(kernelName, isAsync, myTarget, myAuto, myAll, args):
 		else:
 			pidtarget=[myTarget]
 	elif myAll:
-		pidtarget=range(0,number_of_cores)
+		pidtarget=list(range(0,number_of_cores))
 		pidtarget.remove(thisCore)
 	schuedulerMutex.acquire()
 	busyPids=[]
@@ -452,7 +456,7 @@ def offload(test_func=None,async=False,target=None, auto=None, all=True, device=
 				myAuto=kwargs[arg]
 			elif (arg == "all"):
 				myAll=kwargs[arg]
-		return issueKernelLaunches(test_func.func_name, isAsync, myTarget, myAuto, myAll, args)
+		return issueKernelLaunches(test_func.__name__, isAsync, myTarget, myAuto, myAll, args)
 	return f
 
 def offload_single(test_func=None, device=ALL_DEVICES):
@@ -460,7 +464,7 @@ def offload_single(test_func=None, device=ALL_DEVICES):
 
 def offload_multiple(test_func=None, cores=None, device=ALL_DEVICES):
 	if cores is None:
-		print "Error - you must specify the number of device cores to use with the multiple decorator"
+		print ("Error - you must specify the number of device cores to use with the multiple decorator")
 		quit()
 	return offload(test_func=test_func, async=True, target=None, auto=cores, all=False, device=device)
 
@@ -527,7 +531,7 @@ def pollScheduler():
 		schedulerCondition.wait()
 		schedulerCondition.release()
 
-def initialise():
+def parseSourceCode(source_text):
 	global globalVars
 	insideKernel=False
 	firstAddition=False
@@ -536,47 +540,56 @@ def initialise():
 	generatedCode=""
 	kernelsCode=""
 	global_definitions={}
-	with open(sys.argv[0], 'rU') as f:
-		for line in f:
-			if line.isspace(): continue
-			if not line.startswith((' ', '\t')):
-				if (re.search(r'\w+=.+',line)):
-					global_definitions[line.split('=')[0]]=line.split('=')[1]
-			if firstAddition and not line.startswith((' ', '\t')):
-				insideKernel=False
-			if insideKernel:
-				if (re.search(r'\s*import .*',line) or re.search(r'\s*from .*',line)):
-					importCode+=line.lstrip()
-				else:
-					kernelsCode+=line
-				firstAddition=True
-			if "define_on_device(" in line or "epython.define_on_device(" in line:
-				var=line.split('(')[1].replace(',',')').split(')')[0]
-				if not var in globalVars:
-					globalVars.append(var)
-					generatedCode+=var+"="+global_definitions[var]+"\nregisterGlobalVariable("+var+")\n"
-			if "@offload" in line or "@epython.offload" in line:
-				runningCoProcessor=True
-				insideKernel=True
-				firstAddition=False
-				kernelsCode+="@exportable\n"
+
+	for line in source_text:
+		if line.isspace(): continue
+		if not line.startswith((' ', '\t')):
+			if (re.search(r'\w+=.+',line)):
+				global_definitions[line.split('=')[0]]=line.split('=')[1]
+		if firstAddition and not line.startswith((' ', '\t')):
+			insideKernel=False
+		if insideKernel:
+			if (re.search(r'\s*import .*',line) or re.search(r'\s*from .*',line)):
+				importCode+=line.lstrip()
+			else:
+				kernelsCode+=line
+			firstAddition=True
+		if "define_on_device(" in line or "epython.define_on_device(" in line:
+			var=line.split('(')[1].replace(',',')').split(')')[0]
+			if not var in globalVars:
+				globalVars.append(var)
+				generatedCode+=var+"="+global_definitions[var]+"\nregisterGlobalVariable("+var+")\n"
+		if "@offload" in line or "@epython.offload" in line:
+			runningCoProcessor=True
+			insideKernel=True
+			firstAddition=False
+			kernelsCode+="@exportable\n"
+	return runningCoProcessor, importCode+generatedCode+"worker()\n"+kernelsCode
+
+
+def initialise(sourceCodeContent):
+	runningCoProcessor, targetKernels=parseSourceCode(sourceCodeContent)
 	if runningCoProcessor:
 		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
-		fo = open(epythonfile_name, "wb")
-		fo.write(importCode+generatedCode+"worker()\n"+kernelsCode);
+		fo = open(epythonfile_name, "w")
+		fo.write(targetKernels)
 		fo.close()
 		try:
-			os.mkfifo(toepython_pipe_name, 0644)
+			os.mkfifo(toepython_pipe_name, 0o644)
 		except OSError:
 			pass
 		try:
-                        os.mkfifo(fromepython_pipe_name, 0644)
-                except OSError:
-                        pass
-		popen = subprocess.Popen("epython -fullpython "+epythonfile_name, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
-		thread.start_new_thread(executeOnCoProcessor,())
-		thread.start_new_thread(pollScheduler,())
+			os.mkfifo(fromepython_pipe_name, 0o644)
+		except OSError:
+			pass
+		popen = subprocess.Popen("sudo /home/xilinx/epython/epython-microblaze -fullpython "+epythonfile_name, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		t1=Thread(target=executeOnCoProcessor)
+		t2=Thread(target=pollScheduler)
+		t1.setDaemon(True)
+		t2.setDaemon(True)
+		t1.start()
+		t2.start()
 		pingEpython()
 		ePythonFunctionTable=getExportableFunctionTable()
 		number_of_cores=numcores()
@@ -584,4 +597,7 @@ def initialise():
 		activeCores=[False]*number_of_cores
 		activeCores[thisCore]=True
 
-initialise()
+if (not interactivePython):
+	with open(sys.argv[0], 'rU') as f:
+		content = f.readlines()
+	initialise(content)
