@@ -219,6 +219,56 @@ struct memorycontainer* appendNativeCallFunctionStatement(char* functionName, st
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_CLOSE, position);
     } else if (strcmp(functionName, NATIVE_RTL_I2C_GET_NUM_DEVICES_STR)==0) {
         position=appendStatement(memoryContainer, NATIVE_FN_RTL_I2C_GET_NUM_DEVICES, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SPI_OPEN_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SPI_OPEN, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SPI_OPEN_DEVICE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SPI_OPEN_DEVICE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SPI_CONFIGURE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SPI_CONFIGURE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SPI_TRANSFER_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SPI_TRANSFER, position);
+    } else if (strcmp(functionName, NATIVE_RTL_SPI_CLOSE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_SPI_CLOSE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_OPEN_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_OPEN, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_OPEN_DEVICE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_OPEN_DEVICE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_CONFIGURE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_CONFIGURE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_SET_DIRECTION_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_SET_DIRECTION, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_WRITE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_WRITE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_READ_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_READ, position);
+    } else if (strcmp(functionName, NATIVE_RTL_GPIO_CLOSE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_GPIO_CLOSE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_OPEN_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_OPEN, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_OPEN_DEVICE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_OPEN_DEVICE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_DELAY_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_DELAY, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_PWM_GENERATE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_PWM_GENERATE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_PWM_STOP_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_PWM_STOP, position);
+    } else if (strcmp(functionName, NATIVE_RTL_TIMER_CLOSE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_TIMER_CLOSE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_DELAY_US_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_DELAY_US, position);
+    } else if (strcmp(functionName, NATIVE_RTL_DELAY_MS_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_DELAY_MS, position);
+    } else if (strcmp(functionName, NATIVE_RTL_UART_OPEN_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_UART_OPEN, position);
+    } else if (strcmp(functionName, NATIVE_RTL_UART_OPEN_DEVICE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_UART_OPEN_DEVICE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_UART_READ_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_UART_READ, position);
+    } else if (strcmp(functionName, NATIVE_RTL_UART_WRITE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_UART_WRITE, position);
+    } else if (strcmp(functionName, NATIVE_RTL_UART_CLOSE_STR)==0) {
+        position=appendStatement(memoryContainer, NATIVE_FN_RTL_UART_CLOSE, position);
     } else {
         fprintf(stderr, "Native function call of '%s' is not found\n", functionName);
         exit(EXIT_FAILURE);

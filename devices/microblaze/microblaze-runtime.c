@@ -187,32 +187,120 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 		} else {
 			raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
 		}
-	} else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE) {
+	} else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE || fnIdentifier==NATIVE_FN_RTL_SPI_OPEN_DEVICE ||
+            fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN_DEVICE || fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN_DEVICE ||
+            fnIdentifier==NATIVE_FN_RTL_UART_OPEN_DEVICE) {
 	  unsigned int device;
 	  cpy(&device, parameters[0].data, sizeof(int));
-	  i2c returnedHandle=i2c_open_device(device);
+	  int returnedHandle;
+	  if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE) returnedHandle=(int) i2c_open_device(device);
+	  if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN_DEVICE) returnedHandle=(int) spi_open_device(device);
+	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN_DEVICE) returnedHandle=(int) gpio_open_device(device);
+	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN_DEVICE) returnedHandle=(int) timer_open_device(device);
+	  if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN_DEVICE) returnedHandle=(int) uart_open_device(device);
 	  value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &returnedHandle, sizeof(int));
-  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN) {
-	  unsigned int sda, sc1;
-	  cpy(&sda, parameters[0].data, sizeof(int));
-	  cpy(&sc1, parameters[1].data, sizeof(int));
-	  i2c returnedHandle=i2c_open(sda, sc1);
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN || fnIdentifier==NATIVE_FN_RTL_SPI_OPEN ||
+             fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN || fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN ||
+             fnIdentifier==NATIVE_FN_RTL_UART_OPEN) {
+	  unsigned int slot[4];
+	  cpy(slot, parameters[0].data, sizeof(int));
+	  if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN || fnIdentifier==NATIVE_FN_RTL_UART_OPEN ||
+       fnIdentifier==NATIVE_FN_RTL_SPI_OPEN) {
+	    cpy(&slot[1], parameters[1].data, sizeof(int));
+	  }
+    if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN) {
+      cpy(&slot[2], parameters[2].data, sizeof(int));
+      cpy(&slot[3], parameters[3].data, sizeof(int));
+    }
+    int returnedHandle;
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN) returnedHandle=(int) i2c_open(slot[0], slot[1]);
+	  if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN) returnedHandle=(int) spi_open(slot[0], slot[1], slot[2], slot[3]);
+	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN) returnedHandle=(int) gpio_open(slot[0]);
+	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN) returnedHandle=(int) timer_open(slot[0]);
+	  if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN) returnedHandle=(int) uart_open(slot[0], slot[1]);
 	  value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &returnedHandle, sizeof(int));
   } else if (fnIdentifier==NATIVE_FN_RTL_I2C_READ) {
+    // TODO
   } else if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE) {
-  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE) {
-    i2c handle;
+    // TODO
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE || fnIdentifier==NATIVE_FN_RTL_SPI_CLOSE ||
+             fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE || fnIdentifier==NATIVE_FN_RTL_TIMER_CLOSE ||
+             fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) {
+    int handle;
     cpy(value->data, &handle, sizeof(int));
-    i2c_close(handle);
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE) i2c_close((i2c) handle);
+	  if (fnIdentifier==NATIVE_FN_RTL_SPI_CLOSE) spi_close((spi) handle);
+	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE) gpio_close((gpio_device) handle);
+	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_CLOSE) timer_close((timer) handle);
+	  if (fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) uart_close((uart) handle);
   } else if (fnIdentifier==NATIVE_FN_RTL_I2C_GET_NUM_DEVICES) {
     unsigned int num_devices=i2c_get_num_devices();
     value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &num_devices, sizeof(int));
+  } else if (fnIdentifier==NATIVE_FN_RTL_SPI_CONFIGURE) {
+    unsigned int clk_phase, unsigned int clk_polarity;
+    spi dev_id;
+    cpy(&dev_id, parameters[0].data, sizeof(int));
+    cpy(&clk_phase, parameters[1].data, sizeof(int));
+    cpy(&clk_polarity, parameters[2].data, sizeof(int));
+    int returnHandle=(int) spi_configure(dev_id, clk_phase, clk_polarity);
+    value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &num_devices, sizeof(int));
+  } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_CONFIGURE) {
+    int low, int hi, int channel;
+    gpio parent;
+    cpy(&parent, parameters[0].data, sizeof(int));
+    cpy(&low, parameters[1].data, sizeof(int));
+    cpy(&hi, parameters[2].data, sizeof(int));
+    cpy(&channel, parameters[3].data, sizeof(int));
+    int returnHandle=(int) gpio_configure(parent, low, hi, channel);
+  } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_SET_DIRECTION) {
+    gpio device;
+    int direction;
+    cpy(&device, parameters[0].data, sizeof(int));
+    cpy(&direction, parameters[1].data, sizeof(int));
+    gpio_set_direction(device, direction);
+  } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_WRITE) {
+    gpio device;
+    unsigned int value;
+    cpy(&device, parameters[0].data, sizeof(int));
+    cpy(&value, parameters[1].data, sizeof(int));
+    gpio_write(device, value);
+  } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_READ) {
+    gpio device;
+    cpy(&device, parameters[0].data, sizeof(int));
+    int returnHandle=(int) gpio_read(device);
+    value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &num_devices, sizeof(int));
+  } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_DELAY) {
+    timer t;
+    unsigned int cycles;
+    cpy(&t, parameters[0].data, sizeof(int));
+    cpy(&cycles, parameters[1].data, sizeof(int));
+    timer_delay(t, cycles);
+  } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_PWM_GENERATE) {
+    timer t;
+    unsigned int period, pulse;
+    cpy(&t, parameters[0].data, sizeof(int));
+    cpy(&period, parameters[1].data, sizeof(int));
+    cpy(&pulse, parameters[1].data, sizeof(int));
+    timer_pwm_generate(t, period, pulse);
+  } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_PWM_STOP) {
+    timer t;
+    cpy(&t, parameters[0].data, sizeof(int));
+    timer_pwm_stop(t);
+  } else if (fnIdentifier==NATIVE_FN_RTL_DELAY_US || fnIdentifier==NATIVE_FN_RTL_DELAY_MS) {
+    unsigned int value;
+    cpy(&value, parameters[0].data, sizeof(int));
+    if (fnIdentifier==NATIVE_FN_RTL_DELAY_US) delay_us(value);
+    if (fnIdentifier==NATIVE_FN_RTL_DELAY_MS) delay_ms(value);
 	} else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
 		raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
 	} else {
