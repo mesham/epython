@@ -55,7 +55,7 @@ def timer_delay(device, cycles):
 def timer_pwm_generate(device, period, pulse):
 	native rtl_timer_pwm_generate(device, period, pulse)
 
-def timer_pwm_stop(device)
+def timer_pwm_stop(device):
 	native rtl_timer_pwm_stop(device)
 
 def timer_close(device):
