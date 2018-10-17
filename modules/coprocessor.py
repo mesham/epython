@@ -28,4 +28,4 @@ def copyFromGlobal(gid):
 	alias(srcdata, globalLookup[gid])
 	return srcdata
 
-initTaskFarm(16)
+initTaskFarm(3)

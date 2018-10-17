@@ -146,6 +146,13 @@ int main (int argc, char *argv[]) {
 		w->configuration=configuration;
 		w->deviceState=deviceState;
 		pthread_create(&microblaze_management_thread, NULL, runCodeOnMicroblaze, (void*)w);
+		if (configuration->fullPythonHost) {
+			struct fullPythonInteractivityThreadWrapper * wrapperForInteract=(struct fullPythonInteractivityThreadWrapper *) malloc(sizeof(struct fullPythonInteractivityThreadWrapper));
+			wrapperForInteract->configuration=configuration;
+			wrapperForInteract->deviceState=deviceState;
+			wrapperForInteract->emanagementThread=&microblaze_management_thread;
+			pthread_create(&fullPythonInteractivityThread, NULL, runCodeForFullPythonInteractivity, (void*) wrapperForInteract);
+		}
 		runCodeOnHost(configuration, deviceState);
 #elif defined(HOST_STANDALONE)
 		pthread_t fullPythonInteractivityThread;
