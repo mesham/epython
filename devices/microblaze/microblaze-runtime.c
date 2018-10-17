@@ -277,7 +277,7 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
     cpy(&xfer_data, parameters[2].data, sizeof(char*));
     cpy(&data_length, parameters[3].data, sizeof(int));
 
-    if (value.type != STRING_TYPE) data_length*=4;
+    if (parameters[2].type != STRING_TYPE) data_length*=4;
     if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE) i2c_write(dev_id, slave_address, xfer_data, data_length);
     if (fnIdentifier==NATIVE_FN_RTL_I2C_READ) i2c_read(dev_id, slave_address, xfer_data, data_length);
 #else
@@ -292,7 +292,7 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
     cpy(&xfer_data, parameters[1].data, sizeof(char*));
     cpy(&data_length, parameters[2].data, sizeof(int));
 
-    if (value.type != STRING_TYPE) data_length*=4;
+    if (parameters[1].type != STRING_TYPE) data_length*=4;
     if (fnIdentifier==NATIVE_FN_RTL_UART_WRITE) uart_write(dev_id, xfer_data, data_length);
     if (fnIdentifier==NATIVE_FN_RTL_UART_READ) uart_read(dev_id, xfer_data, data_length);
 #else
