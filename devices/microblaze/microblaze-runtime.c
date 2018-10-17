@@ -30,6 +30,10 @@
 #include "interpreter.h"
 #include "microblaze-shared.h"
 #include "i2c.h"
+#include "spi.h"
+#include "gpio.h"
+#include "timer.h"
+#include "uart.h"
 
 #define NULL 0
 typedef unsigned int size_t; // Microblaze is 32 bit hence we can get away with this
@@ -193,11 +197,31 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 	  unsigned int device;
 	  cpy(&device, parameters[0].data, sizeof(int));
 	  int returnedHandle;
+#ifdef XPAR_XIIC_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE) returnedHandle=(int) i2c_open_device(device);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN_DEVICE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XSPI_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN_DEVICE) returnedHandle=(int) spi_open_device(device);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN_DEVICE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XGPIO_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN_DEVICE) returnedHandle=(int) gpio_open_device(device);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN_DEVICE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN_DEVICE) returnedHandle=(int) timer_open_device(device);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN_DEVICE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XUART_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN_DEVICE) returnedHandle=(int) uart_open_device(device);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN_DEVICE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
 	  value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &returnedHandle, sizeof(int));
@@ -215,11 +239,31 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
       cpy(&slot[3], parameters[3].data, sizeof(int));
     }
     int returnedHandle;
+#ifdef XPAR_XIIC_NUM_INSTANCES
     if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN) returnedHandle=(int) i2c_open(slot[0], slot[1]);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_OPEN) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XSPI_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN) returnedHandle=(int) spi_open(slot[0], slot[1], slot[2], slot[3]);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_SPI_OPEN) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XGPIO_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN) returnedHandle=(int) gpio_open(slot[0]);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_GPIO_OPEN) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN) returnedHandle=(int) timer_open(slot[0]);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_TIMER_OPEN) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XUART_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN) returnedHandle=(int) uart_open(slot[0], slot[1]);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_UART_OPEN) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
 	  value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &returnedHandle, sizeof(int));
@@ -232,18 +276,43 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
              fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) {
     int handle;
     cpy(value->data, &handle, sizeof(int));
+#ifdef XPAR_XIIC_NUM_INSTANCES
     if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE) i2c_close((i2c) handle);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XSPI_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_SPI_CLOSE) spi_close((spi) handle);
-	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE) gpio_close((gpio_device) handle);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_SPI_CLOSE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XGPIO_NUM_INSTANCES
+	  if (fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE) gpio_close((gpio) handle);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_TIMER_CLOSE) timer_close((timer) handle);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_TIMER_CLOSE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+#ifdef XPAR_XUART_NUM_INSTANCES
 	  if (fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) uart_close((uart) handle);
+#else
+    if (fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_I2C_GET_NUM_DEVICES) {
+#ifdef XPAR_XIIC_NUM_INSTANCES
     unsigned int num_devices=i2c_get_num_devices();
     value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &num_devices, sizeof(int));
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_SPI_CONFIGURE) {
-    unsigned int clk_phase, unsigned int clk_polarity;
+#ifdef XPAR_XSPI_NUM_INSTANCES
+    unsigned int clk_phase, clk_polarity;
     spi dev_id;
     cpy(&dev_id, parameters[0].data, sizeof(int));
     cpy(&clk_phase, parameters[1].data, sizeof(int));
@@ -251,56 +320,94 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
     int returnHandle=(int) spi_configure(dev_id, clk_phase, clk_polarity);
     value->type=INT_TYPE;
 		value->dtype=SCALAR;
-		cpy(value->data, &num_devices, sizeof(int));
+		cpy(value->data, &returnHandle, sizeof(int));
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_CONFIGURE) {
-    int low, int hi, int channel;
+#ifdef XPAR_XGPIO_NUM_INSTANCES
+    int low, hi, channel;
     gpio parent;
     cpy(&parent, parameters[0].data, sizeof(int));
     cpy(&low, parameters[1].data, sizeof(int));
     cpy(&hi, parameters[2].data, sizeof(int));
     cpy(&channel, parameters[3].data, sizeof(int));
     int returnHandle=(int) gpio_configure(parent, low, hi, channel);
+    value->type=INT_TYPE;
+		value->dtype=SCALAR;
+		cpy(value->data, &returnHandle, sizeof(int));
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_SET_DIRECTION) {
+#ifdef XPAR_XGPIO_NUM_INSTANCES
     gpio device;
     int direction;
     cpy(&device, parameters[0].data, sizeof(int));
     cpy(&direction, parameters[1].data, sizeof(int));
     gpio_set_direction(device, direction);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_WRITE) {
+#ifdef XPAR_XGPIO_NUM_INSTANCES
     gpio device;
     unsigned int value;
     cpy(&device, parameters[0].data, sizeof(int));
     cpy(&value, parameters[1].data, sizeof(int));
     gpio_write(device, value);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_GPIO_READ) {
+#ifdef XPAR_XGPIO_NUM_INSTANCES
     gpio device;
     cpy(&device, parameters[0].data, sizeof(int));
     int returnHandle=(int) gpio_read(device);
     value->type=INT_TYPE;
 		value->dtype=SCALAR;
-		cpy(value->data, &num_devices, sizeof(int));
+		cpy(value->data, &returnHandle, sizeof(int));
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_DELAY) {
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
     timer t;
     unsigned int cycles;
     cpy(&t, parameters[0].data, sizeof(int));
     cpy(&cycles, parameters[1].data, sizeof(int));
     timer_delay(t, cycles);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_PWM_GENERATE) {
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
     timer t;
     unsigned int period, pulse;
     cpy(&t, parameters[0].data, sizeof(int));
     cpy(&period, parameters[1].data, sizeof(int));
     cpy(&pulse, parameters[1].data, sizeof(int));
     timer_pwm_generate(t, period, pulse);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_TIMER_PWM_STOP) {
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
     timer t;
     cpy(&t, parameters[0].data, sizeof(int));
     timer_pwm_stop(t);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_DELAY_US || fnIdentifier==NATIVE_FN_RTL_DELAY_MS) {
+#ifdef XPAR_XTMRCTR_NUM_INSTANCES
     unsigned int value;
     cpy(&value, parameters[0].data, sizeof(int));
     if (fnIdentifier==NATIVE_FN_RTL_DELAY_US) delay_us(value);
     if (fnIdentifier==NATIVE_FN_RTL_DELAY_MS) delay_ms(value);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
 	} else if (fnIdentifier==NATIVE_FN_RTL_GLOBAL_REFERENCE) {
 		raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
 	} else {
