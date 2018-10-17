@@ -4,6 +4,12 @@ def i2c_open_device(device_id):
 def i2c_open(sda, sc1):
 	return native rtl_i2c_open(sda, sc1)
 
+def i2c_write(device, address, data, length):
+	native rtl_i2c_write(device, address, data, length)
+
+def i2c_read(device, address, read_data, length):
+	native rtl_i2c_read(device, address, read_data, length)
+
 def i2c_close(device_id):
 	native rtl_i2c_close()
 
@@ -18,6 +24,9 @@ def spi_open(spiclk, miso, mosi, ss):
 
 def spi_configure(dev_id, clk_phase, clk_polarity):
 	return native rtl_spi_configure(dev_id, clk_phase, clk_polarity)
+
+def spi_transfer(dev_id, write_data, read_data, length):
+	native rtl_spi_transfer(dev_id, write_data, read_data, length)
 
 def spi_close(dev_id):
 	native rtl_spi_close(dev_id)
@@ -72,6 +81,12 @@ def uart_open(tx, rx):
 
 def uart_open_device(device):
 	return native rtl_uart_open_device(device)
+
+def uart_write(device, data, length):
+	native rtl_uart_write(device, data, length)
+
+def uart_read(device, read_data, length):
+	native rtl_uart_read(device, read_data, length)
 
 def uart_close(device):
 	native rtl_uart_close(device)

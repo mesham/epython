@@ -267,10 +267,59 @@ void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, i
 	  value->type=INT_TYPE;
 		value->dtype=SCALAR;
 		cpy(value->data, &returnedHandle, sizeof(int));
-  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_READ) {
-    // TODO
-  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE) {
-    // TODO
+  } else if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE || fnIdentifier==NATIVE_FN_RTL_I2C_READ) {
+#ifdef XPAR_XIIC_NUM_INSTANCES
+    i2c dev_id;
+    unsigned int slave_address, data_length;
+    char * xfer_data;
+    cpy(&dev_id, parameters[0].data, sizeof(int));
+    cpy(&slave_address, parameters[1].data, sizeof(int));
+    cpy(&xfer_data, parameters[2].data, sizeof(char*));
+    cpy(&data_length, parameters[3].data, sizeof(int));
+
+    if (value.type != STRING_TYPE) data_length*=4;
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_WRITE) i2c_write(dev_id, slave_address, xfer_data, data_length);
+    if (fnIdentifier==NATIVE_FN_RTL_I2C_READ) i2c_read(dev_id, slave_address, xfer_data, data_length);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+  } else if (fnIdentifier==NATIVE_FN_RTL_UART_WRITE || fnIdentifier==NATIVE_FN_RTL_UART_READ) {
+#ifdef XPAR_XUART_NUM_INSTANCES
+    uart dev_id;
+    unsigned int data_length;
+    char * xfer_data;
+    cpy(&dev_id, parameters[0].data, sizeof(int));
+    cpy(&xfer_data, parameters[1].data, sizeof(char*));
+    cpy(&data_length, parameters[2].data, sizeof(int));
+
+    if (value.type != STRING_TYPE) data_length*=4;
+    if (fnIdentifier==NATIVE_FN_RTL_UART_WRITE) uart_write(dev_id, xfer_data, data_length);
+    if (fnIdentifier==NATIVE_FN_RTL_UART_READ) uart_read(dev_id, xfer_data, data_length);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
+  } else if (fnIdentifier==NATIVE_FN_RTL_SPI_TRANSFER) {
+#ifdef XPAR_XSPI_NUM_INSTANCES
+    spi dev_id;
+    unsigned int length;
+    char * write_data, * read_data;
+
+    cpy(&dev_id, parameters[0].data, sizeof(int));
+    cpy(&length, parameters[3].data, sizeof(int));
+    if (parameters[1].type == NONE_TYPE) {
+      write_data=NULL;
+    } else {
+      cpy(&write_data, parameters[1].data, sizeof(char*));
+    }
+    if (parameters[2].type == NONE_TYPE) {
+      read_data=NULL;
+    } else {
+      cpy(&read_data, parameters[2].data, sizeof(char*));
+    }
+    spi_transfer(dev_id, (const char*) write_data, read_data, length);
+#else
+    raiseError(ERR_NATIVE_COMMAND_NOT_SUPPORTED);
+#endif
   } else if (fnIdentifier==NATIVE_FN_RTL_I2C_CLOSE || fnIdentifier==NATIVE_FN_RTL_SPI_CLOSE ||
              fnIdentifier==NATIVE_FN_RTL_GPIO_CLOSE || fnIdentifier==NATIVE_FN_RTL_TIMER_CLOSE ||
              fnIdentifier==NATIVE_FN_RTL_UART_CLOSE) {
