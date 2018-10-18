@@ -40,19 +40,19 @@
 #define LOCAL_CORE_STACK_SIZE 0xC00
 
 struct core_ctrl {
-	unsigned int core_run, core_busy, core_command;
+	char core_run, core_busy, active;
+	unsigned int core_command;
 	char *symbol_table, *stack_start, *heap_start,
 			*shared_heap_start, *shared_stack_start, *postbox_start,
 			*host_shared_data_start;
 	char data[15];
-	char active;
 } __attribute__((aligned(8)));
 
 struct shared_basic {
 	struct core_ctrl core_ctrl[16];
 	unsigned int length, num_procs, baseHostPid;
 	unsigned short symbol_size;
-	char *edata, *data, *esdata, allInSharedMemory, codeOnCores;
+	char *edata, *data, *esdata, allInSharedMemory, codeOnCores, interactive;
 } __attribute__((aligned(8)));
 
 #endif /* MICROBLAZE_SHARED_H_ */
