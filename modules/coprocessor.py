@@ -28,4 +28,8 @@ def copyFromGlobal(gid):
 	alias(srcdata, globalLookup[gid])
 	return srcdata
 
+@exportable
+def stopCores():
+	quit()
+
 initTaskFarm(3)
