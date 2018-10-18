@@ -32,7 +32,7 @@
 // Configuration structure which is filled based upon command line arguments
 struct interpreterconfiguration {
 	char * intentActive;
-	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared, displayPPCode;
+	char displayStats, displayTiming, forceCodeOnCore, forceCodeOnShared, forceDataOnShared, displayPPCode, interactive;
 	char * filename, *compiledByteFilename, *loadByteFilename, *pipedInContents;
 	int hostProcs, coreProcs, loadElf, loadSrec, fullPythonHost;
 };

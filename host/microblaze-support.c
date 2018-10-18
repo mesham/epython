@@ -158,6 +158,7 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	basicCode->symbol_size=getNumberEntriesInSymbolTable();
 	basicCode->allInSharedMemory=configuration->forceDataOnShared;
 	basicCode->codeOnCores=codeOnCore==1;
+	basicCode->interactive=configuration->interactive;
 	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 	basicCode->baseHostPid=configuration->coreProcs;
 

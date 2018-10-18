@@ -75,6 +75,7 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 		configuration->hostProcs=0;
 #endif
 		configuration->coreProcs=0;
+		configuration->interactive=0;
 		configuration->loadElf=1;
 		configuration->loadSrec=0;
 		configuration->fullPythonHost=0;
@@ -95,6 +96,8 @@ static void parseCommandLineArguments(struct interpreterconfiguration* configura
 			} else if (areStringsEqualIgnoreCase(argv[i], "-fullpython")) {
 				configuration->fullPythonHost=1;
 				configuration->hostProcs=1;
+			} else if (areStringsEqualIgnoreCase(argv[i], "-interactive")) {
+				configuration->interactive=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-datashared")) {
 				configuration->forceDataOnShared=1;
 			} else if (areStringsEqualIgnoreCase(argv[i], "-codecore")) {
