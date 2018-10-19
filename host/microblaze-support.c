@@ -97,6 +97,7 @@ struct gpio_state ** reset_pins, ** interupt_pins;
 struct mmio_state ** microblaze_memories;
 int num_initialised_microblazes;
 char * shared_buffer;
+volatile char ePythonActive;
 int totalActive;
 static short active[TOTAL_CORES];
 volatile unsigned int * pb;
@@ -157,8 +158,8 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	}
 	basicCode->symbol_size=getNumberEntriesInSymbolTable();
 	basicCode->allInSharedMemory=configuration->forceDataOnShared;
-	basicCode->codeOnCores=codeOnCore==1;
 	basicCode->interactive=configuration->interactive;
+	basicCode->codeOnCores=basicCode->interactive==0 && codeOnCore==1;
 	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 	basicCode->baseHostPid=configuration->coreProcs;
 
@@ -184,15 +185,29 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   return basicCode;
 }
 
+void restartMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
+	// The monitor thread will track the active cores, so we can leave it to that to update the total number of active ones
+	while (totalActive > 0) { }
+	placeByteCode(basicState, 0);
+	startApplicableCores(basicCode, configuration);
+}
+
+void stopMicroblazeMonitor() {
+	ePythonActive=0;
+}
+
 void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration * configuration) {
   int i;
-	while (totalActive > 0) {
-		for (i=0;i<TOTAL_CORES;i++) {
-			if (active[i]) {
-				checkStatusFlagsOfCore(basicState, configuration, i);
+  ePythonActive=1;
+  while (configuration->interactive && ePythonActive) {
+		while (totalActive > 0) {
+			for (i=0;i<TOTAL_CORES;i++) {
+				if (active[i]) {
+					checkStatusFlagsOfCore(basicState, configuration, i);
+				}
 			}
 		}
-	}
+  }
 }
 
 void finaliseMicroblaze(void) {

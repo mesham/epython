@@ -44,6 +44,7 @@ struct exportableFunctionTableNode {
 extern struct exportableFunctionTableNode* exportableFunctionTable;
 extern int numberExportableFunctionsInTable;
 
+void resetMemoryManager(void);
 int getNumberOfSymbolEntriesNotUsed(void);
 void addFunction(struct functionDefinition*);
 int getNumberSymbolTableEntriesForRecursion(void);

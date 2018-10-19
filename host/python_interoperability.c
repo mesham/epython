@@ -34,6 +34,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <signal.h>
+#include "byteassembler.h"
 #include "python_interoperability.h"
 #include "configuration.h"
 #include "interpreter.h"
@@ -46,6 +47,7 @@
 #include "epiphany-shared.h"
 #elif defined(MICROBLAZE_TARGET)
 #include "microblaze-shared.h"
+#include "microblaze-support.h"
 #elif defined(HOST_STANDALONE)
 #include "host-shared.h"
 #endif
@@ -54,7 +56,7 @@
 #define WRITER_PIPE_NAME "/tmp/fromepython"
 #define MAX_PIPE_COMMAND_LENGTH 1024*1024
 
-enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING, PROBE};
+enum command {SEND, RECV, NUMCORES, COREID, NONE, SYNC, REDUCE, BCAST, EXIT, SENDRECV, GETFUNCTIONINFO, PING, PROBE, RESTART};
 
 static char * buffered_line;
 static int listener_pipe_handle, writer_pipe_handle;
@@ -72,6 +74,7 @@ static void issueSendRecv(struct interpreterconfiguration*);
 static void sendBackFunctionInformation(struct interpreterconfiguration*);
 static void sendPongToPython(struct interpreterconfiguration*);
 static void issueProbeForMessage(struct interpreterconfiguration*);
+static void restartePythonOnMicroblaze(struct shared_basic*, struct interpreterconfiguration*);
 
 /**
  * Runs interactivity with full Python on this host CPU, will send over commands to different Epiphany cores
@@ -91,9 +94,24 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 		if (cmd == SENDRECV) issueSendRecv(configuration);
 		if (cmd == GETFUNCTIONINFO) sendBackFunctionInformation(configuration);
 		if (cmd == PING) sendPongToPython(configuration);
-		if (cmd == EXIT) return;
+		if (cmd == EXIT) {
+#if defined(MICROBLAZE_TARGET)
+				stopMicroblazeMonitor();
+#endif
+				return;
+		}
 		if (cmd == PROBE) issueProbeForMessage(configuration);
+		if (cmd == RESTART) restartePythonOnMicroblaze(basicState, configuration);
 	}
+}
+
+static void restartePythonOnMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
+  resetMemoryManager();
+	void * contents=preprocessSourceFile(configuration->filename);
+	parseSourceCode(contents);
+#if defined(MICROBLAZE_TARGET)
+	restartMicroblaze(basicState, configuration);
+#endif
 }
 
 /**

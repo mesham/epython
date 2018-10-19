@@ -47,6 +47,14 @@ static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*, 
 static struct functionDefinition* findFunctionDefinition(char*);
 static int doesFunctionAlreadyExistInExportableTable(char*);
 
+void resetMemoryManager(void) {
+	assembledMemory=NULL;
+	functionListHead=NULL;
+	exportableFunctionTable=NULL;
+	numberExportableFunctionsInTable=0;
+	mainCodeCallTree.number_of_calls=0;
+}
+
 int getNumberOfSymbolEntriesNotUsed(void) {
     int ignoreSymbolEntries=0;
     struct functionListNode * fnHead=functionListHead;
