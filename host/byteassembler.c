@@ -76,6 +76,18 @@ static struct memorycontainer* createExpression(unsigned char, struct memorycont
 static struct memorycontainer* appendLetIfNoAliasStatement(struct memorycontainer*, struct memorycontainer*);
 
 /**
+ * Calls out to do the lexing and parsing of the source code
+ */
+static void doParse(char * contents) {
+	enterScope();
+	initStack(&indent_stack);
+	initStack(&filenameStack);
+	initStack(&lineNumberStack);
+	yy_scan_string(contents);
+	yyparse();
+}
+
+/**
  * Function entry, used for tracking recursive functions and the call tree
  */
 void enterFunction(char* fn_name) {
