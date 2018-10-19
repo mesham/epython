@@ -189,7 +189,7 @@ void restartMicroblaze(struct shared_basic * basicState, struct interpreterconfi
 	// The monitor thread will track the active cores, so we can leave it to that to update the total number of active ones
 	while (totalActive > 0) { }
 	placeByteCode(basicState, 0);
-	startApplicableCores(basicCode, configuration);
+	startApplicableCores(basicState, configuration);
 }
 
 void stopMicroblazeMonitor() {
