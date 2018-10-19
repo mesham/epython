@@ -83,7 +83,14 @@ static struct memorycontainer* appendLetIfNoAliasStatement(struct memorycontaine
 /**
  * Calls out to do the lexing and parsing of the source code
  */
- void doParse(char * contents) {
+ void parseSourceCode(char * contents) {
+ 	// Reset state in-case this is an interactive session
+ 	currentForLine=-1;
+ 	currentFunctionName=NULL;
+ 	current_var_id=1;
+ 	scope=NULL;
+ 	currentCall=NULL;
+	// Do processing of soure code
 	enterScope();
 	initStack(&indent_stack);
 	initStack(&filenameStack);

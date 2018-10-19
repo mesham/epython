@@ -27,6 +27,6 @@
 #ifndef PREPROCESSOR_H_
 #define PREPROCESSOR_H_
 
-char * getSourceFileContents(char*);
+char * preprocessSourceFile(char*);
 
 #endif /* PREPROCESSOR_H_ */

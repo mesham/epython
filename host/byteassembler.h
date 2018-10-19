@@ -122,7 +122,7 @@ struct functionDefinition {
 	char ** functionCalls;
 };
 
-void doParse(char*);
+void parseSourceCode(char*);
 void enterFunction(char*);
 unsigned short getNumberEntriesInSymbolTable(void);
 void setNumberEntriesInSymbolTable(unsigned short);

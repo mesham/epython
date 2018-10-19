@@ -95,14 +95,14 @@ int main (int argc, char *argv[]) {
 	srand((unsigned) time(NULL) * getpid());
 	struct interpreterconfiguration* configuration=readConfiguration(argc, argv);
 	if (configuration->filename != NULL) {
-		char * contents = getSourceFileContents(configuration->filename);
+		char * contents = preprocessSourceFile(configuration->filename);
 		if (configuration->displayPPCode) printf("%s\n", contents);
-		doParse(contents);
+		parseSourceCode(contents);
 	} else if (configuration->loadByteFilename != NULL) {
 		loadByteCode(configuration->loadByteFilename);
 	} else if (configuration->pipedInContents != NULL) {
 		if (configuration->displayPPCode) printf("%s\n", configuration->pipedInContents);
-		doParse(configuration->pipedInContents);
+		parseSourceCode(configuration->pipedInContents);
 	}
 	if (configuration->displayStats) displayParsedBasicInfo();
 	if (configuration->compiledByteFilename != NULL) {

@@ -9,21 +9,27 @@
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
 
 struct included_source_files {
-    char * fileName;
-    struct included_source_files * next;
+	char * fileName;
+	struct included_source_files * next;
 };
 
 struct included_source_files * included_src_root=NULL;
 
+static char * getSourceFileContents(char*);
 static void appendIncludedSourceFileToStore(char*);
 static int hasSourceFileAlreadyBeenIncluded(char*);
 static char* getIncludeFileWithPath(char*);
+
+char * preprocessSourceFile(char * filename) {
+	included_src_root=NULL;
+	return getSourceFileContents(filename);
+}
 
 /**
  * Given the name of a file will read it and return the char array containing the contents, an error
  * is reported along with program exit if the file cannot be read for whatever reason
  */
-char * getSourceFileContents(char * filename) {
+static char * getSourceFileContents(char * filename) {
 	unsigned int contentsSize=TEXTUAL_BASIC_SIZE_STRIDE;
 	char * contents=(char*) malloc(contentsSize);
 	char buffer[1024];
