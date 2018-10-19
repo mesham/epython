@@ -72,8 +72,6 @@ struct fullPythonInteractivityThreadWrapper {
     pthread_t* emanagementThread;
 };
 
-#define TEXTUAL_BASIC_SIZE_STRIDE 5000
-
 extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
 
 static void displayParsedBasicInfo(void);
