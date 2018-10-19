@@ -4,6 +4,13 @@ static void appendIncludedSourceFileToStore(char*);
 static int hasSourceFileAlreadyBeenIncluded(char*);
 static char* getIncludeFileWithPath(char*);
 
+struct included_source_files {
+    char * fileName;
+    struct included_source_files * next;
+};
+
+struct included_source_files * included_src_root=NULL;
+
 /**
  * Given the name of a file will read it and return the char array containing the contents, an error
  * is reported along with program exit if the file cannot be read for whatever reason

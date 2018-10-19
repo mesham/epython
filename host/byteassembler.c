@@ -57,6 +57,11 @@ struct variable_node {
 	struct variable_node * next;
 };
 
+struct stack_t indent_stack, filenameStack, lineNumberStack;
+
+extern int yyparse();
+extern int yy_scan_string(const char*);
+
 // The current for line, this is is used in conjunction with GOTO to code for repetition
 int currentForLine=-1;
 int currentSymbolTableId, isFnRecursive;
@@ -78,7 +83,7 @@ static struct memorycontainer* appendLetIfNoAliasStatement(struct memorycontaine
 /**
  * Calls out to do the lexing and parsing of the source code
  */
-static void doParse(char * contents) {
+ void doParse(char * contents) {
 	enterScope();
 	initStack(&indent_stack);
 	initStack(&filenameStack);

@@ -72,19 +72,9 @@ struct fullPythonInteractivityThreadWrapper {
     pthread_t* emanagementThread;
 };
 
-struct included_source_files {
-    char * fileName;
-    struct included_source_files * next;
-};
-
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
 
-extern int yyparse();
-extern int yy_scan_string(const char*);
 extern void initThreadedAspectsForInterpreter(int, int, struct shared_basic*);
-
-struct stack_t indent_stack, filenameStack, lineNumberStack;
-struct included_source_files * included_src_root=NULL;
 
 static void displayParsedBasicInfo(void);
 void writeOutByteCode(char*);
