@@ -199,7 +199,9 @@ void stopMicroblazeMonitor() {
 void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration * configuration) {
   int i;
   ePythonActive=1;
-  while (configuration->interactive && ePythonActive) {
+  char firstrun=1;
+  while ((firstrun || configuration->interactive) && ePythonActive) {
+		firstrun=0;
 		while (totalActive > 0) {
 			for (i=0;i<TOTAL_CORES;i++) {
 				if (active[i]) {
