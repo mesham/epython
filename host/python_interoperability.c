@@ -112,6 +112,10 @@ static void restartePythonOnMicroblaze(struct shared_basic * basicState, struct 
 #if defined(MICROBLAZE_TARGET)
 	restartMicroblaze(basicState, configuration);
 #endif
+	char dataToWrite[20];
+	sprintf(dataToWrite, "0");
+	errorCheck(write(writer_pipe_handle, dataToWrite, strlen(dataToWrite)), "Writing data to python pipe");
+	fsync(writer_pipe_handle);
 }
 
 /**
@@ -391,6 +395,7 @@ static enum command blockOnCommand(pthread_t* emanagementthread) {
 	if (strcmp(commandStr, "10") == 0) return PING;
 	if (strcmp(commandStr, "11") == 0) return EXIT;
 	if (strcmp(commandStr, "12") == 0) return PROBE;
+	if (strcmp(commandStr, "13") == 0) return RESTART;
 	return NONE;
 }
 
