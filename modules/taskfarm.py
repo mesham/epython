@@ -3,6 +3,7 @@ import array
 
 _remoteFunctionCallState=array(numcores())
 _masterTask=0
+_running=True
 
 def initTaskFarm(masterTask):
 	_masterTask=masterTask
@@ -58,7 +59,11 @@ def sendArgument(pid, arg):
 	else:
 		send(arg, pid)
 
+def stopTaskFarm():
+	 _running=False
+
 def worker():
+	if (not _running): return
 	num_args=recv(_masterTask)
 	while num_args >= 0:
 		op=recv(_masterTask)
@@ -78,6 +83,7 @@ def worker():
 				send(retVal, _masterTask)
 			else:
 				send(retVal, _masterTask, datalen)
+		if (not _running): return
 		num_args=recv(_masterTask)
 
 def recvArgument(pid):

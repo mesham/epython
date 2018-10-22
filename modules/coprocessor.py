@@ -30,6 +30,6 @@ def copyFromGlobal(gid):
 
 @exportable
 def stopCores():
-	quit()
+	stopTaskFarm()
 
 initTaskFarm(3)
