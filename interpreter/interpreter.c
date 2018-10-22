@@ -158,7 +158,10 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0, threadId);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1, threadId);
-		if (command == STOP_TOKEN) return empty;
+		if (command == STOP_TOKEN) {
+				stopInterpreter[threadId]=1;
+				return empty;
+		}
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length, threadId);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length, threadId);
@@ -194,7 +197,10 @@ struct value_defn processAssembledCode(char * assembled, unsigned int currentPoi
 		i+=sizeof(unsigned char);
 		if (command == LET_TOKEN) i=handleLet(assembled, i, length, 0);
 		if (command == LETNOALIAS_TOKEN) i=handleLet(assembled, i, length, 1);
-		if (command == STOP_TOKEN) return empty;
+		if (command == STOP_TOKEN) {
+				stopInterpreter=1;
+				return empty;
+		}
 		if (command == IF_TOKEN) i=handleIf(assembled, i, length);
 		if (command == IFELSE_TOKEN) i=handleIf(assembled, i, length);
 		if (command == FOR_TOKEN) i=handleFor(assembled, i, length);
