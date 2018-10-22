@@ -98,7 +98,7 @@ struct mmio_state ** microblaze_memories;
 int num_initialised_microblazes;
 char * shared_buffer;
 volatile char ePythonActive;
-int totalActive;
+volatile int totalActive;
 static short active[TOTAL_CORES];
 volatile unsigned int * pb;
 struct config_gpio_node * head_gpio_config = NULL;
