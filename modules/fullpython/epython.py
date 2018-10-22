@@ -32,8 +32,19 @@ outstandingLaunches=[]
 schuedulerMutex = Lock()
 schedulerCondition = Condition()
 
+interactive_sourcecode=""
+
 ALL_DEVICES=0
 EPIPHANY_DEVICE=1
+
+def getInteractiveSourceCode(ref_module):
+	source_code=""
+	all_functions=inspect.getmembers(ref_module)
+	for function in all_functions:
+		if (function[0]=="In"):
+			for line in function[1]:
+				source_code+=line+"\n"
+	return source_code
 
 def executeOnCoProcessor():
 	global popen
@@ -248,6 +259,14 @@ def sync():
 	recv_data=str(os.read(rp, 1024).decode('ascii'))
 	os.close(rp)
 
+def restartePython():
+	wp=os.open(toepython_pipe_name, os.O_WRONLY)
+	os.write(wp, "13\n".encode())
+	os.close(wp)
+	rp = os.open(fromepython_pipe_name, os.O_RDONLY)
+	recv_data=str(os.read(rp, 1024).decode('ascii'))
+	os.close(rp)
+
 def ishost():
 		return True
 
@@ -443,6 +462,9 @@ def offload(test_func=None,async=False,target=None, auto=None, all=True, device=
 	@functools.wraps(test_func)
 	def f(*args, **kwargs):
 		global outstandingLaunches
+		if (interactivePython):
+			newSource=getInteractiveSourceCode(inspect.getmodule(test_func))
+			refreshePythonSourceExecutionIfNeeded(newSource)			
 		isAsync=async
 		myTarget=target
 		myAuto=auto
@@ -541,7 +563,10 @@ def parseSourceCode(source_text):
 	kernelsCode=""
 	global_definitions={}
 
-	for line in source_text:
+	split_by_line=source_text
+	if (isinstance(split_by_line, str)): split_by_line=split_by_line.splitlines()
+
+	for line in split_by_line:
 		if line.isspace(): continue
 		if not line.startswith((' ', '\t')):
 			if (re.search(r'\w+=.+',line)):
@@ -553,6 +578,7 @@ def parseSourceCode(source_text):
 				importCode+=line.lstrip()
 			else:
 				kernelsCode+=line
+				if (not line.endswith("\n")): kernelsCode+="\n"
 			firstAddition=True
 		if "define_on_device(" in line or "epython.define_on_device(" in line:
 			var=line.split('(')[1].replace(',',')').split(')')[0]
@@ -566,10 +592,23 @@ def parseSourceCode(source_text):
 			kernelsCode+="@exportable\n"
 	return runningCoProcessor, importCode+generatedCode+"worker()\n"+kernelsCode
 
-
-def initialise(sourceCodeContent):
+def refreshePythonSourceExecutionIfNeeded(sourceCodeContent):
+	global interactive_sourcecode
 	runningCoProcessor, targetKernels=parseSourceCode(sourceCodeContent)
-	if runningCoProcessor:
+	if (runningCoProcessor and interactive_sourcecode != targetKernels):
+		global ePythonFunctionTable
+		issueKernelLaunches("stopCores", False, None, None, True, [])
+		interactive_sourcecode=targetKernels
+		fo = open(epythonfile_name, "w")
+		fo.write(targetKernels)
+		fo.close()
+		restartePython()
+		pingEpython()
+		ePythonFunctionTable=getExportableFunctionTable()
+
+def initialise(sourceCodeContent, interactive=False):
+	runningCoProcessor, targetKernels=parseSourceCode(sourceCodeContent)
+	if runningCoProcessor or interactive:
 		global popen, ePythonFunctionTable, number_of_cores, activeCores, thisCore
 		atexit.register(shutdownEpython)
 		fo = open(epythonfile_name, "w")
@@ -583,7 +622,8 @@ def initialise(sourceCodeContent):
 			os.mkfifo(fromepython_pipe_name, 0o644)
 		except OSError:
 			pass
-		popen = subprocess.Popen("sudo /home/xilinx/epython/epython-microblaze -fullpython "+epythonfile_name, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+		command_to_exec="sudo /home/xilinx/epython/epython-microblaze -fullpython "+("-interactive " if interactive else "") +epythonfile_name+" 2>&1"
+		popen = subprocess.Popen(command_to_exec, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		t1=Thread(target=executeOnCoProcessor)
 		t2=Thread(target=pollScheduler)
 		t1.setDaemon(True)
@@ -601,3 +641,5 @@ if (not interactivePython):
 	with open(sys.argv[0], 'rU') as f:
 		content = f.readlines()
 	initialise(content)
+else:
+	initialise("", True)
