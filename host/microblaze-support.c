@@ -143,15 +143,17 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   }
   allocateSharedBuffer();
   struct shared_basic * basicCode=(void*) shared_buffer;
-  int codeOnCore=0;
+  basicCode->codeOnCores=0;
 
   basicCode->length=getMemoryFilledSize();
-  if (configuration->forceCodeOnCore) {
-		codeOnCore=1;
+  if (configuration->interactive) {
+		basicCode->codeOnCores=0;
+  } else if (configuration->forceCodeOnCore) {
+		basicCode->codeOnCores=1;
 	} else if (configuration->forceCodeOnShared) {
-		codeOnCore=0;
+		basicCode->codeOnCores=0;
 	} else {
-		codeOnCore=basicCode->length <= CORE_CODE_MAX_SIZE;
+		basicCode->codeOnCores=basicCode->length <= CORE_CODE_MAX_SIZE;
 		if (!codeOnCore) {
 			printf("Warning: Your code size of %d bytes exceeds the %d byte limit for placement on cores so storing in shared memory\n", basicCode->length, CORE_CODE_MAX_SIZE);
 		}
@@ -159,7 +161,6 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 	basicCode->symbol_size=getNumberEntriesInSymbolTable();
 	basicCode->allInSharedMemory=configuration->forceDataOnShared;
 	basicCode->interactive=configuration->interactive;
-	basicCode->codeOnCores=basicCode->interactive==0 && codeOnCore==1;
 	basicCode->num_procs=configuration->coreProcs+configuration->hostProcs;
 	basicCode->baseHostPid=configuration->coreProcs;
 
@@ -168,8 +169,8 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   microblaze_memories=(struct mmio_state **) malloc(sizeof(struct mmio_state *) * configuration->coreProcs);
   num_initialised_microblazes=configuration->coreProcs;
 
-  initialiseCores(basicCode, codeOnCore, configuration);
-	placeByteCode(basicCode, codeOnCore);
+  initialiseCores(basicCode, basicCode->codeOnCores, configuration);
+	placeByteCode(basicCode, basicCode->codeOnCores);
 	int i;
 	for (i=0;i<configuration->coreProcs;i++) {
 	  initialiseMicroblaze(i);
