@@ -154,7 +154,7 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
 		basicCode->codeOnCores=0;
 	} else {
 		basicCode->codeOnCores=basicCode->length <= CORE_CODE_MAX_SIZE;
-		if (!codeOnCore) {
+		if (!basicCode->codeOnCores) {
 			printf("Warning: Your code size of %d bytes exceeds the %d byte limit for placement on cores so storing in shared memory\n", basicCode->length, CORE_CODE_MAX_SIZE);
 		}
 	}
