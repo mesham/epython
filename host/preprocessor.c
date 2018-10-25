@@ -1,3 +1,29 @@
+/*
+ * Copyright (c) 2016, Nick Brown
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -20,15 +46,18 @@ static void appendIncludedSourceFileToStore(char*);
 static int hasSourceFileAlreadyBeenIncluded(char*);
 static char* getIncludeFileWithPath(char*);
 
+/**
+ * Given the name of a file will read it and return the char array containing the contents, an error
+ * is reported along with program exit if the file cannot be read for whatever reason
+ */
 char * preprocessSourceFile(char * filename) {
 	included_src_root=NULL;
 	return getSourceFileContents(filename);
 }
 
 /**
- * Given the name of a file will read it and return the char array containing the contents, an error
- * is reported along with program exit if the file cannot be read for whatever reason
- */
+* Returns the preprocessed source based on the file provided. It will recursively visit included files to build up preprocessed representations of these also
+*/
 static char * getSourceFileContents(char * filename) {
 	unsigned int contentsSize=TEXTUAL_BASIC_SIZE_STRIDE;
 	char * contents=(char*) malloc(contentsSize);
@@ -104,6 +133,9 @@ static char * getSourceFileContents(char * filename) {
 	}
 }
 
+/**
+* Appends the name of a source file to the store, this is used to keep track of what files have been included and what not to avoid duplication
+*/
 static void appendIncludedSourceFileToStore(char * filename) {
 	struct included_source_files * newNode=(struct included_source_files *) malloc(sizeof(struct included_source_files));
 	newNode->fileName=(char*) malloc(strlen(filename) + 1);
@@ -112,6 +144,9 @@ static void appendIncludedSourceFileToStore(char * filename) {
 	included_src_root=newNode;
 }
 
+/**
+* Determines whether a source file has already been included or not
+*/
 static int hasSourceFileAlreadyBeenIncluded(char * filename) {
 	struct included_source_files * head=included_src_root;
 	while (head != NULL) {
@@ -121,6 +156,9 @@ static int hasSourceFileAlreadyBeenIncluded(char * filename) {
 	return 0;
 }
 
+/**
+* Given the name of the file will search paths to locate where that file is stored and return the full path to the file
+*/
 static char* getIncludeFileWithPath(char * filename) {
 	if(access(filename, F_OK) != -1 ) {
 		char * tr=(char*) malloc(strlen(filename) + 1);

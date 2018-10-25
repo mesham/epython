@@ -46,6 +46,7 @@ int main() {
 
 	char first_pass=1;
   while (first_pass || sharedData->interactive) {
+		// Loops round if it is interactive
 		first_pass=0;
 		if (sharedData->core_ctrl[myId].core_run == 0) {
 			microblaze_invalidate_dcache_range((u32) &(sharedData->core_ctrl[myId].core_run), 4);
@@ -69,7 +70,7 @@ int main() {
 		}
 
 		runIntepreter(sharedData->edata, sharedData->length, sharedData->symbol_size, myId, sharedData->num_procs, sharedData->baseHostPid);
-		stopInterpreter=0;
+		stopInterpreter=0;	// Reset the stop interpreter flag as we might be looping round interactive style
 		sharedData->core_ctrl[myId].core_busy=0;
 		sharedData->core_ctrl[myId].core_run=0;
   }

@@ -186,6 +186,10 @@ struct shared_basic * loadCodeOntoMicroblaze(struct interpreterconfiguration* co
   return basicCode;
 }
 
+/**
+* Performs a restart on the microblazes, used by interactive mode this refreshes the byte code and sends start signals
+* to the cores. It doesn't change any variable data held by the cores
+*/
 void restartMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
 	// The monitor thread will track the active cores, so we can leave it to that to update the total number of active ones
 	while (totalActive > 0) { }
@@ -193,10 +197,16 @@ void restartMicroblaze(struct shared_basic * basicState, struct interpreterconfi
 	startApplicableCores(basicState, configuration);
 }
 
+/**
+* Stops the monitor, this is especially important for the interactive mode
+*/
 void stopMicroblazeMonitor() {
 	ePythonActive=0;
 }
 
+/**
+* Monitors the microblazes
+*/
 void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration * configuration) {
   int i;
   ePythonActive=1;
@@ -213,6 +223,9 @@ void monitorMicroblaze(struct shared_basic * basicState, struct interpreterconfi
   }
 }
 
+/**
+* Finalises the microblazes, frees up the shared memory and GPIO interface
+*/
 void finaliseMicroblaze(void) {
   cma_free(shared_buffer);
   int i;

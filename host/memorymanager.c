@@ -47,6 +47,9 @@ static unsigned short findLocationOfFunctionName(struct lineDefinition*, char*, 
 static struct functionDefinition* findFunctionDefinition(char*);
 static int doesFunctionAlreadyExistInExportableTable(char*);
 
+/**
+* Resets the state of the memory manager, this is used in interactive mode when multiple source code files can be executed in succession
+*/
 void resetMemoryManager(void) {
 	assembledMemory=NULL;
 	functionListHead=NULL;

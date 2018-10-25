@@ -105,6 +105,10 @@ void runFullPythonInteractivityOnHost(struct interpreterconfiguration* configura
 	}
 }
 
+/**
+* Issues a restart of the Python VMs running on the microblazes, this will also reparse and rebuild the source code and transfer it onto the
+* the FPGA
+*/
 static void restartePythonOnMicroblaze(struct shared_basic * basicState, struct interpreterconfiguration* configuration) {
   resetMemoryManager();
 	void * contents=preprocessSourceFile(configuration->filename);
@@ -138,6 +142,9 @@ static void issueNumcores(struct interpreterconfiguration* configuration) {
 	fsync(writer_pipe_handle);
 }
 
+/**
+* Retrieves the function table, mapping function names to their ID numbers that can then be used for remote invocation
+*/
 static void sendBackFunctionInformation(struct interpreterconfiguration* configuration) {
     char line[100];
     char * dataToWrite=(char*) malloc(numberExportableFunctionsInTable * 100);
