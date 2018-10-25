@@ -11,6 +11,7 @@ int line_indent=0, fake_outdent_symbol=0;
 extern struct stack_t indent_stack, filenameStack, lineNumberStack;
 
 void yyget_INTEGER(YYSTYPE*, char*, size_t);
+void yyget_HEX(YYSTYPE*, char*, size_t);
 void yyget_REAL (YYSTYPE*, char*, size_t);
 void yyget_STRING(YYSTYPE*, char*, size_t);
 
@@ -23,6 +24,10 @@ void yyget_STRING(YYSTYPE*, char*, size_t);
 
 void yyget_INTEGER(YYSTYPE *outval, char *text, size_t len) {
 	outval->integer = atoi(text);
+}
+
+void yyget_HEX(YYSTYPE *outval, char *text, size_t len) {
+	outval->integer = (int) strtol(text, NULL, 0);
 }
 
 void yyget_REAL(YYSTYPE *outval, char *text, size_t len) {
@@ -132,7 +137,7 @@ STRING_CHARS [[:print:]]{-}[\"]
 [ \t\n]                 				;
 \"{STRING_CHARS}*\"                     SAVE_VALUE(STRING);
 
-{HP}{H}+{IS}?							SAVE_VALUE(INTEGER); 
+{HP}{H}+{IS}?							SAVE_VALUE(HEX); 
 {NZ}{D}*{IS}?							SAVE_VALUE(INTEGER);
 "0"{O}*{IS}?							SAVE_VALUE(INTEGER);
 {CP}?"'"([^'\\\n]|{ES})+"'"				SAVE_VALUE(INTEGER);

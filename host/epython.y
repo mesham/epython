@@ -28,7 +28,7 @@ void yyerror (char const *msg) {
 	struct stack_t * stack;
 }
 
-%token <integer> INTEGER
+%token <integer> INTEGER HEX
 %token <real>    REAL
 %token <string>  STRING IDENTIFIER
 
@@ -229,6 +229,7 @@ ident
 
 constant
         : INTEGER { $$=createIntegerExpression($1); }
+	| HEX { $$=createIntegerExpression($1); }
         | REAL { $$=createRealExpression($1); }
 	| unary_operator INTEGER { $$=createIntegerExpression($1 * $2); }	
 	| unary_operator REAL { $$=createRealExpression($1 * $2); }		

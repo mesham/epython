@@ -46,142 +46,144 @@ extern int yydebug;
   enum yytokentype
   {
     INTEGER = 258,
-    REAL = 259,
-    STRING = 260,
-    IDENTIFIER = 261,
-    NEWLINE = 262,
-    INDENT = 263,
-    OUTDENT = 264,
-    DIM = 265,
-    SDIM = 266,
-    EXIT = 267,
-    QUIT = 268,
-    ELSE = 269,
-    ELIF = 270,
-    COMMA = 271,
-    WHILE = 272,
-    PASS = 273,
-    AT = 274,
-    FOR = 275,
-    TO = 276,
-    FROM = 277,
-    NEXT = 278,
-    GOTO = 279,
-    PRINT = 280,
-    INPUT = 281,
-    IF = 282,
-    NATIVE = 283,
-    ADD = 284,
-    SUB = 285,
-    COLON = 286,
-    DEF = 287,
-    RET = 288,
-    NONE = 289,
-    FILESTART = 290,
-    IN = 291,
-    ADDADD = 292,
-    SUBSUB = 293,
-    MULMUL = 294,
-    DIVDIV = 295,
-    MODMOD = 296,
-    POWPOW = 297,
-    FLOORDIVFLOORDIV = 298,
-    FLOORDIV = 299,
-    MULT = 300,
-    DIV = 301,
-    MOD = 302,
-    AND = 303,
-    OR = 304,
-    NEQ = 305,
-    LEQ = 306,
-    GEQ = 307,
-    LT = 308,
-    GT = 309,
-    EQ = 310,
-    IS = 311,
-    NOT = 312,
-    STR = 313,
-    ID = 314,
-    SYMBOL = 315,
-    ALIAS = 316,
-    LPAREN = 317,
-    RPAREN = 318,
-    SLBRACE = 319,
-    SRBRACE = 320,
-    TRUE = 321,
-    FALSE = 322,
-    ASSGN = 323,
-    POW = 324
+    HEX = 259,
+    REAL = 260,
+    STRING = 261,
+    IDENTIFIER = 262,
+    NEWLINE = 263,
+    INDENT = 264,
+    OUTDENT = 265,
+    DIM = 266,
+    SDIM = 267,
+    EXIT = 268,
+    QUIT = 269,
+    ELSE = 270,
+    ELIF = 271,
+    COMMA = 272,
+    WHILE = 273,
+    PASS = 274,
+    AT = 275,
+    FOR = 276,
+    TO = 277,
+    FROM = 278,
+    NEXT = 279,
+    GOTO = 280,
+    PRINT = 281,
+    INPUT = 282,
+    IF = 283,
+    NATIVE = 284,
+    ADD = 285,
+    SUB = 286,
+    COLON = 287,
+    DEF = 288,
+    RET = 289,
+    NONE = 290,
+    FILESTART = 291,
+    IN = 292,
+    ADDADD = 293,
+    SUBSUB = 294,
+    MULMUL = 295,
+    DIVDIV = 296,
+    MODMOD = 297,
+    POWPOW = 298,
+    FLOORDIVFLOORDIV = 299,
+    FLOORDIV = 300,
+    MULT = 301,
+    DIV = 302,
+    MOD = 303,
+    AND = 304,
+    OR = 305,
+    NEQ = 306,
+    LEQ = 307,
+    GEQ = 308,
+    LT = 309,
+    GT = 310,
+    EQ = 311,
+    IS = 312,
+    NOT = 313,
+    STR = 314,
+    ID = 315,
+    SYMBOL = 316,
+    ALIAS = 317,
+    LPAREN = 318,
+    RPAREN = 319,
+    SLBRACE = 320,
+    SRBRACE = 321,
+    TRUE = 322,
+    FALSE = 323,
+    ASSGN = 324,
+    POW = 325
   };
 #endif
 /* Tokens.  */
 #define INTEGER 258
-#define REAL 259
-#define STRING 260
-#define IDENTIFIER 261
-#define NEWLINE 262
-#define INDENT 263
-#define OUTDENT 264
-#define DIM 265
-#define SDIM 266
-#define EXIT 267
-#define QUIT 268
-#define ELSE 269
-#define ELIF 270
-#define COMMA 271
-#define WHILE 272
-#define PASS 273
-#define AT 274
-#define FOR 275
-#define TO 276
-#define FROM 277
-#define NEXT 278
-#define GOTO 279
-#define PRINT 280
-#define INPUT 281
-#define IF 282
-#define NATIVE 283
-#define ADD 284
-#define SUB 285
-#define COLON 286
-#define DEF 287
-#define RET 288
-#define NONE 289
-#define FILESTART 290
-#define IN 291
-#define ADDADD 292
-#define SUBSUB 293
-#define MULMUL 294
-#define DIVDIV 295
-#define MODMOD 296
-#define POWPOW 297
-#define FLOORDIVFLOORDIV 298
-#define FLOORDIV 299
-#define MULT 300
-#define DIV 301
-#define MOD 302
-#define AND 303
-#define OR 304
-#define NEQ 305
-#define LEQ 306
-#define GEQ 307
-#define LT 308
-#define GT 309
-#define EQ 310
-#define IS 311
-#define NOT 312
-#define STR 313
-#define ID 314
-#define SYMBOL 315
-#define ALIAS 316
-#define LPAREN 317
-#define RPAREN 318
-#define SLBRACE 319
-#define SRBRACE 320
-#define TRUE 321
-#define FALSE 322
-#define ASSGN 323
-#define POW 324
+#define HEX 259
+#define REAL 260
+#define STRING 261
+#define IDENTIFIER 262
+#define NEWLINE 263
+#define INDENT 264
+#define OUTDENT 265
+#define DIM 266
+#define SDIM 267
+#define EXIT 268
+#define QUIT 269
+#define ELSE 270
+#define ELIF 271
+#define COMMA 272
+#define WHILE 273
+#define PASS 274
+#define AT 275
+#define FOR 276
+#define TO 277
+#define FROM 278
+#define NEXT 279
+#define GOTO 280
+#define PRINT 281
+#define INPUT 282
+#define IF 283
+#define NATIVE 284
+#define ADD 285
+#define SUB 286
+#define COLON 287
+#define DEF 288
+#define RET 289
+#define NONE 290
+#define FILESTART 291
+#define IN 292
+#define ADDADD 293
+#define SUBSUB 294
+#define MULMUL 295
+#define DIVDIV 296
+#define MODMOD 297
+#define POWPOW 298
+#define FLOORDIVFLOORDIV 299
+#define FLOORDIV 300
+#define MULT 301
+#define DIV 302
+#define MOD 303
+#define AND 304
+#define OR 305
+#define NEQ 306
+#define LEQ 307
+#define GEQ 308
+#define LT 309
+#define GT 310
+#define EQ 311
+#define IS 312
+#define NOT 313
+#define STR 314
+#define ID 315
+#define SYMBOL 316
+#define ALIAS 317
+#define LPAREN 318
+#define RPAREN 319
+#define SLBRACE 320
+#define SRBRACE 321
+#define TRUE 322
+#define FALSE 323
+#define ASSGN 324
+#define POW 325
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -197,7 +199,7 @@ union YYSTYPE
 	char *string;
 	struct stack_t * stack;
 
-#line 201 "parser.h" /* yacc.c:1909  */
+#line 203 "parser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

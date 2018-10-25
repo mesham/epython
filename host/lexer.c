@@ -716,6 +716,7 @@ int line_indent=0, fake_outdent_symbol=0;
 extern struct stack_t indent_stack, filenameStack, lineNumberStack;
 
 void yyget_INTEGER(YYSTYPE*, char*, size_t);
+void yyget_HEX(YYSTYPE*, char*, size_t);
 void yyget_REAL (YYSTYPE*, char*, size_t);
 void yyget_STRING(YYSTYPE*, char*, size_t);
 
@@ -730,6 +731,10 @@ void yyget_INTEGER(YYSTYPE *outval, char *text, size_t len) {
 	outval->integer = atoi(text);
 }
 
+void yyget_HEX(YYSTYPE *outval, char *text, size_t len) {
+	outval->integer = (int) strtol(text, NULL, 0);
+}
+
 void yyget_REAL(YYSTYPE *outval, char *text, size_t len) {
 	outval->real = atof(text);
 }
@@ -742,7 +747,7 @@ http://www.benbarbour.com/implementing-python-style-indention-syntax-using-flex-
 
 
 
-#line 746 "lexer.c"
+#line 751 "lexer.c"
 
 #define INITIAL 0
 #define COMMENTS 1
@@ -963,10 +968,10 @@ YY_DECL
 		}
 
 	{
-#line 62 "epython.l"
+#line 68 "epython.l"
 
 
-#line 970 "lexer.c"
+#line 975 "lexer.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1026,7 +1031,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 64 "epython.l"
+#line 70 "epython.l"
 { 
 									if (parsing_filename != NULL) {
 										pushIdentifier(&filenameStack, parsing_filename); 
@@ -1042,7 +1047,7 @@ YY_RULE_SETUP
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 75 "epython.l"
+#line 81 "epython.l"
 {
 									if (getStackSize(&filenameStack) > 0) {
 										parsing_filename=popIdentifier(&filenameStack);
@@ -1052,49 +1057,49 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 82 "epython.l"
+#line 88 "epython.l"
 {BEGIN(COMMENTS);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 83 "epython.l"
+#line 89 "epython.l"
 {BEGIN(INITIAL);}
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 84 "epython.l"
+#line 90 "epython.l"
 { ++line_num; }
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 85 "epython.l"
+#line 91 "epython.l"
 { ++line_num;BEGIN(INITIAL); return NEWLINE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 86 "epython.l"
+#line 92 "epython.l"
 ;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 88 "epython.l"
+#line 94 "epython.l"
 { line_indent++; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 89 "epython.l"
+#line 95 "epython.l"
 { line_indent+=TAB_WIDTH; }
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 90 "epython.l"
+#line 96 "epython.l"
 { line_indent=0; }
 	YY_BREAK
 case YY_STATE_EOF(INDENT_MODE):
-#line 91 "epython.l"
+#line 97 "epython.l"
 { 	if (peek(&indent_stack) > 0) {
 						pop(&indent_stack);
 						if (line_indent < peek(&indent_stack)) {
@@ -1112,7 +1117,7 @@ case YY_STATE_EOF(INDENT_MODE):
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 105 "epython.l"
+#line 111 "epython.l"
 {
 					if (!fake_outdent_symbol) unput(*yytext);					
 					fake_outdent_symbol=0;
@@ -1142,376 +1147,376 @@ YY_RULE_SETUP
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 131 "epython.l"
+#line 137 "epython.l"
 { ++line_num; line_indent=0; indent_caller = YY_START; BEGIN(INDENT_MODE); return NEWLINE; }
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 132 "epython.l"
+#line 138 "epython.l"
 ;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 133 "epython.l"
+#line 139 "epython.l"
 SAVE_VALUE(STRING);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 135 "epython.l"
-SAVE_VALUE(INTEGER); 
+#line 141 "epython.l"
+SAVE_VALUE(HEX); 
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 136 "epython.l"
+#line 142 "epython.l"
 SAVE_VALUE(INTEGER);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 137 "epython.l"
+#line 143 "epython.l"
 SAVE_VALUE(INTEGER);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 138 "epython.l"
+#line 144 "epython.l"
 SAVE_VALUE(INTEGER);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 140 "epython.l"
+#line 146 "epython.l"
 SAVE_VALUE(REAL); 
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 141 "epython.l"
+#line 147 "epython.l"
 SAVE_VALUE(REAL);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 142 "epython.l"
+#line 148 "epython.l"
 SAVE_VALUE(REAL);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 143 "epython.l"
+#line 149 "epython.l"
 SAVE_VALUE(REAL); 
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 144 "epython.l"
+#line 150 "epython.l"
 SAVE_VALUE(REAL);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 145 "epython.l"
+#line 151 "epython.l"
 SAVE_VALUE(REAL);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 147 "epython.l"
+#line 153 "epython.l"
 return AND;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 148 "epython.l"
+#line 154 "epython.l"
 return OR;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 149 "epython.l"
+#line 155 "epython.l"
 return NOT;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 150 "epython.l"
+#line 156 "epython.l"
 return NEQ;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 151 "epython.l"
+#line 157 "epython.l"
 return LEQ;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 152 "epython.l"
+#line 158 "epython.l"
 return GEQ;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 153 "epython.l"
+#line 159 "epython.l"
 return LT;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 154 "epython.l"
+#line 160 "epython.l"
 return GT;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 155 "epython.l"
+#line 161 "epython.l"
 return ASSGN;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 156 "epython.l"
+#line 162 "epython.l"
 return EQ;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 157 "epython.l"
+#line 163 "epython.l"
 return POW;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 158 "epython.l"
+#line 164 "epython.l"
 return COMMA;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 159 "epython.l"
+#line 165 "epython.l"
 return COLON;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 160 "epython.l"
+#line 166 "epython.l"
 return ADD;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 161 "epython.l"
+#line 167 "epython.l"
 return SUB;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 162 "epython.l"
+#line 168 "epython.l"
 return MULT;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 163 "epython.l"
+#line 169 "epython.l"
 return DIV;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 164 "epython.l"
+#line 170 "epython.l"
 return MOD;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 165 "epython.l"
+#line 171 "epython.l"
 return FLOORDIV;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 166 "epython.l"
+#line 172 "epython.l"
 return ADDADD;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 167 "epython.l"
+#line 173 "epython.l"
 return SUBSUB;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 168 "epython.l"
+#line 174 "epython.l"
 return MULMUL;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 169 "epython.l"
+#line 175 "epython.l"
 return DIVDIV;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 170 "epython.l"
+#line 176 "epython.l"
 return MODMOD;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 171 "epython.l"
+#line 177 "epython.l"
 return POWPOW;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 172 "epython.l"
+#line 178 "epython.l"
 return FLOORDIVFLOORDIV;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 173 "epython.l"
+#line 179 "epython.l"
 return SLBRACE;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 174 "epython.l"
+#line 180 "epython.l"
 return SRBRACE;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 175 "epython.l"
+#line 181 "epython.l"
 return LPAREN;
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 176 "epython.l"
+#line 182 "epython.l"
 return RPAREN;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 177 "epython.l"
+#line 183 "epython.l"
 return AT;
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 178 "epython.l"
+#line 184 "epython.l"
 return TRUE;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 179 "epython.l"
+#line 185 "epython.l"
 return FALSE;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 180 "epython.l"
+#line 186 "epython.l"
 return DEF;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 181 "epython.l"
+#line 187 "epython.l"
 return RET;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 182 "epython.l"
+#line 188 "epython.l"
 return NONE;
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 183 "epython.l"
+#line 189 "epython.l"
 return ELSE;
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 184 "epython.l"
+#line 190 "epython.l"
 return ELIF;
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 185 "epython.l"
+#line 191 "epython.l"
 return IN;
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 186 "epython.l"
+#line 192 "epython.l"
 return IS;
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 187 "epython.l"
+#line 193 "epython.l"
 return WHILE;
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 188 "epython.l"
+#line 194 "epython.l"
 return PASS;
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 189 "epython.l"
+#line 195 "epython.l"
 return EXIT;
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 190 "epython.l"
+#line 196 "epython.l"
 return QUIT;
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 191 "epython.l"
+#line 197 "epython.l"
 return FOR;
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 192 "epython.l"
+#line 198 "epython.l"
 return TO;
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 193 "epython.l"
+#line 199 "epython.l"
 return FROM;
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 194 "epython.l"
+#line 200 "epython.l"
 return NEXT;
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 195 "epython.l"
+#line 201 "epython.l"
 return GOTO;
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 196 "epython.l"
+#line 202 "epython.l"
 return IF;
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 197 "epython.l"
+#line 203 "epython.l"
 return PRINT;
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 198 "epython.l"
+#line 204 "epython.l"
 return INPUT;
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 199 "epython.l"
+#line 205 "epython.l"
 return NATIVE;
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 200 "epython.l"
+#line 206 "epython.l"
 return STR;
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 201 "epython.l"
+#line 207 "epython.l"
 return ID;
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 202 "epython.l"
+#line 208 "epython.l"
 return SYMBOL;
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 203 "epython.l"
+#line 209 "epython.l"
 return ALIAS;
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 204 "epython.l"
+#line 210 "epython.l"
 BEGIN(SINGLELINECOMMENT);
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 206 "epython.l"
+#line 212 "epython.l"
 return yytext[0];
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 208 "epython.l"
+#line 214 "epython.l"
 SAVE_VALUE(IDENTIFIER);
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 209 "epython.l"
+#line 215 "epython.l"
 ECHO;
 	YY_BREAK
-#line 1515 "lexer.c"
+#line 1520 "lexer.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENTS):
 case YY_STATE_EOF(SINGLELINECOMMENT):
@@ -2514,7 +2519,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 209 "epython.l"
+#line 215 "epython.l"
 
 
 
