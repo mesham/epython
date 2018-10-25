@@ -107,9 +107,6 @@ void initHostCommunicationData(int total_number_threads, struct shared_basic * p
 
 void callNativeFunction(struct value_defn * value, unsigned char fnIdentifier, int numArgs, struct value_defn* parameters,
                                        int numActiveCores, int localCoreId, int currentSymbolEntries, struct symbol_node* symbolTable, int threadId) {
-	unsigned char expectedArgs=(fnIdentifier & 0b11100000) >> 5;
-  fnIdentifier=fnIdentifier & 0b00011111;
-  if (expectedArgs < 7 && numArgs != (int) expectedArgs) raiseError(ERR_INCORRECT_NUM_NATIVE_PARAMS);
     if (fnIdentifier==NATIVE_FN_RTL_ISHOST || fnIdentifier==NATIVE_FN_RTL_ISDEVICE) {
         value->type=BOOLEAN_TYPE;
         value->dtype=SCALAR;
