@@ -44,17 +44,18 @@ clean:
 
 install:
 	@mkdir -p $(DESTDIR)$(bindir)
-	@cp epython-host epython-epiphany.srec epython-epiphany.elf $(DESTDIR)$(bindir)
+	@cp epython-microblaze epython-microblaze.bin $(DESTDIR)$(bindir)
 	@cp epython.sh $(DESTDIR)$(bindir)/epython
 	@mkdir -p $(DESTDIR)$(includedir)/epython
 	@cp -R modules $(DESTDIR)$(includedir)/epython/.
 	@echo 'export EPYTHONPATH=$$EPYTHONPATH:$(includedir)/epython/modules:$(shell pwd)' >> ~/.bashrc
 	@echo 'export PYTHONPATH=$$PYTHONPATH:$(includedir)/epython/modules/fullpython' >> ~/.bashrc
+	@ln -s $(DESTDIR)$(includedir)/epython/modules/fullpython/epython.py /root/.ipython/epython.py
 	@echo "ePython installed, start a new bash session by executing bash before running ePython"
 
 uninstall:
-	@rm $(DESTDIR)$(bindir)/epython-host
-	@rm $(DESTDIR)$(bindir)/epython-epiphany.srec
-	@rm $(DESTDIR)$(bindir)/epython-epiphany.elf
+	@rm $(DESTDIR)$(bindir)/epython-microblaze
+	@rm $(DESTDIR)$(bindir)/epython-microblaze.bin
 	@rm $(DESTDIR)$(bindir)/epython
-	@rm $(DESTDIR)$(includedir)/epython/modules/*.py
+	@rm -Rf $(DESTDIR)$(includedir)/epython
+	@rm /root/.ipython/epython.py

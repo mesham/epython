@@ -1,28 +1,14 @@
 #!/bin/bash
 
-set -e
+export EPYTHONPATH=$EPYTHONPATH:`pwd`:/usr/include/epython/modules
 
-ELIBS="${EPIPHANY_HOME}/tools/host/lib"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ELIBS}
-EHDF=/opt/adapteva/esdk/bsps/current/parallella_E16G3_1GB.hdf
-
-export EPYTHONPATH=$EPYTHONPATH:`pwd`
-
-OS_MAJ="$(uname -a | cut -d' ' -f3 | cut -d'.' -f1)"
-OS_VER="$(uname -a | cut -d' ' -f3 | cut -d'.' -f2)"
-
-FILE=epython-host
+FILE=epython-microblaze
 
 if [ -f $FILE ]
 then
-FILE=./epython-host
+FILE=./epython-microblaze
 else
-FILE=/usr/bin/epython-host
+FILE=/usr/bin/epython-microblaze
 fi
 
-if [[ "$OS_VER" -ge "14" || "$OS_MAJ" -gt "3" ]]
-then
-$FILE "$@"
-else
-sudo -E LD_LIBRARY_PATH=${ELIBS} EPIPHANY_HDF=${EHDF} $FILE -srec "$@"
-fi
+sudo $FILE "$@"

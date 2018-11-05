@@ -576,6 +576,7 @@ def parseSourceCode(source_text):
 		if insideKernel:
 			if (re.search(r'\s*import .*',line) or re.search(r'\s*from .*',line)):
 				importCode+=line.lstrip()
+				if (not line.endswith("\n")): importCode+="\n"
 			else:
 				kernelsCode+=line
 				if (not line.endswith("\n")): kernelsCode+="\n"
@@ -622,7 +623,7 @@ def initialise(sourceCodeContent, interactive=False):
 			os.mkfifo(fromepython_pipe_name, 0o644)
 		except OSError:
 			pass
-		command_to_exec="sudo /home/xilinx/epython/epython-microblaze -fullpython "+("-interactive " if interactive else "") +epythonfile_name+" 2>&1"
+		command_to_exec="sudo epython -fullpython "+("-interactive " if interactive else "") +epythonfile_name+" 2>&1"
 		popen = subprocess.Popen(command_to_exec, shell=True, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
 		t1=Thread(target=executeOnCoProcessor)
 		t2=Thread(target=pollScheduler)

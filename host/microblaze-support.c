@@ -44,6 +44,7 @@
 
 #define OVERLAY_TCL_FILE "/opt/python3.6/lib/python3.6/site-packages/pynq/overlays/base/base.tcl"
 #define PROGRAM_NAME "epython-microblaze.bin"
+#define INSTALLED_SEARCH_PATH "/usr/bin/"
 #define GPIO_DIR "/sys/class/gpio"
 
 #define RESET_PIN_CONFIG_KEY_PMODA "mb_iop_pmoda_reset"
@@ -574,6 +575,14 @@ static void initialiseMicroblaze(int core_index) {
 
 static void place_ePythonVMOnMicroblaze(char * exec_name, struct mmio_state * microblaze_memory) {
   int handle=open(exec_name, O_RDONLY);
+  if (handle < 0) {
+		char * combinedfilename=(char*) malloc(strlen(INSTALLED_SEARCH_PATH) + strlen(exec_name) + 2);
+		sprintf(combinedfilename, "%s/%s", INSTALLED_SEARCH_PATH, exec_name);
+		handle=open(combinedfilename, O_RDONLY);
+		if (handle < 0) {
+			fprintf(stderr, "Error: Can not open microblaze epython binary called %s, either in local directory or installed location of %s\n", INSTALLED_SEARCH_PATH);
+		}
+	}
   struct stat st;
   fstat(handle, &st);
   int code_size = (int) (ceil(((double) st.st_size) / sysconf(_SC_PAGESIZE)) * sysconf(_SC_PAGESIZE));

@@ -33,6 +33,7 @@
 #include "preprocessor.h"
 
 #define TEXTUAL_BASIC_SIZE_STRIDE 5000
+#define INSTALL_MODULE_LOCATION "/usr/include/epython/modules"
 
 struct included_source_files {
 	char * fileName;
@@ -165,8 +166,12 @@ static char* getIncludeFileWithPath(char * filename) {
 		strcpy(tr, filename);
 		return tr;
 	} else {
-		char * testFilename=(char*) malloc(strlen(filename) + 10);
+		char * testFilename=(char*) malloc(strlen(filename) + 10 + strlen(INSTALL_MODULE_LOCATION));
 		sprintf(testFilename, "modules/%s", filename);
+		if(access(testFilename, F_OK) != -1 ) {
+			return testFilename;
+		}
+		sprintf(testFilename, "%s/%s", INSTALL_MODULE_LOCATION, filename);
 		if(access(testFilename, F_OK) != -1 ) {
 			return testFilename;
 		} else {
